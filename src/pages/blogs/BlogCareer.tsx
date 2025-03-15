@@ -1,6 +1,5 @@
 // blog/tuyen-dung
 
-import React from 'react'
 
 const BlogCareer = () => {
     return (

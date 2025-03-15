@@ -1,6 +1,5 @@
 // blog/news/:id
 
-import React from 'react'
 
 const BlogNewsSlug = () => {
     return (

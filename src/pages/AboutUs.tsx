@@ -1,6 +1,5 @@
 // pages/about-us
 
-import React from 'react'
 
 const AboutUs = () => {
     return (

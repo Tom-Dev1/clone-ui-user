@@ -1,5 +1,4 @@
 // blogs/news
-import React from 'react'
 
 const BlogNews = () => {
     return (

@@ -1,5 +1,4 @@
 //blog/tuyen-dung/:id
-import React from 'react'
 
 const BlogCareerSlug = () => {
     return (

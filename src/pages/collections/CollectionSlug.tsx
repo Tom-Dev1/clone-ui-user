@@ -1,6 +1,5 @@
 //collection/:id
 
-import React from 'react'
 
 const CollectionSlug = () => {
     return (

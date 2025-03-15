@@ -1,6 +1,5 @@
 // pages/lien-he
 
-import React from 'react'
 
 const ContactPage = () => {
     return (
