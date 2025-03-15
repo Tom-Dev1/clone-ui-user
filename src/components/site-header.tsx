@@ -166,7 +166,7 @@ export function SiteHeader({ isHomePage = false }: SiteHeaderProps) {
                 !isHomePage && !isVisible && "-translate-y-full",
             )}
         >
-            <div className="container flex h-[102px] items-center">
+            <div className="px-6 flex h-[102px] items-center">
                 <Link to="/" className="mr-14">
                     <img
                         src="https://theme.hstatic.net/200000907029/1001282128/14/logo.png?v=318"
@@ -176,11 +176,11 @@ export function SiteHeader({ isHomePage = false }: SiteHeaderProps) {
                 </Link>
 
                 {/* Desktop Navigation */}
-                <div className="hidden lg:flex items-center space-x-6">
+                <div className="hidden lg:flex items-center space-x-2">
                     {menuItems.map((item) => (
                         <div
                             key={item.href}
-                            className="relative "
+                            className="relative"
                             onMouseEnter={() => item.items && handleDropdownEnter(item.href)}
                             onMouseLeave={handleDropdownLeave}
                         >
@@ -195,7 +195,7 @@ export function SiteHeader({ isHomePage = false }: SiteHeaderProps) {
                                     >
                                         {item.title}{" "}
                                         <ChevronDown
-                                            className={cn("ml-1 h-3 w-3 transition-transform", activeDropdown === item.href && "rotate-180")}
+                                            className={cn("ml-1 h-4 w-3 transition-transform", activeDropdown === item.href && "rotate-180")}
                                         />
                                     </Link>
                                     <div

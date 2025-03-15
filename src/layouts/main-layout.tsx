@@ -22,7 +22,7 @@ export function MainLayout({ children, showBreadcrumb = true, maxWidth = "2xl", 
 
             <main className={`flex-1 ${isHomePage ? "mt-0" : ""}`}>
                 {showBreadcrumb && !isHomePathname && (
-                    <div className="border-b py-3">
+                    <div className="border-b py-3 mt-32 px-20">
                         <ResponsiveContainer maxWidth={maxWidth}>
                             <Breadcrumb />
                         </ResponsiveContainer>
