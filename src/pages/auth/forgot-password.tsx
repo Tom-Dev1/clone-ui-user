@@ -1,109 +1,137 @@
+"use client";
 
-import type React from "react"
-
-import { useState } from "react"
-import { Link } from "react-router-dom"
+import type React from "react";
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardFooter,
+} from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Mail, ArrowLeft, CheckCircle, Loader2 } from "lucide-react";
 
 export default function ForgotPassword() {
-    const [email, setEmail] = useState("")
-    const [isSubmitted, setIsSubmitted] = useState(false)
-    const [error, setError] = useState("")
-    const [isLoading, setIsLoading] = useState(false)
+  const [email, setEmail] = useState("");
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-        setError("")
-        setIsLoading(true)
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setIsLoading(true);
 
-        try {
-            // In a real app, you would call your API to send a password reset email
-            // This is just a mock implementation
-            await new Promise((resolve) => setTimeout(resolve, 1000)) // Simulate API call
-            setIsSubmitted(true)
-        } catch (err: unknown) {
-            setError(err instanceof Error ? err.message : 'An error occurred')
-        } finally {
-            setIsLoading(false)
-        }
+    try {
+      // In a real app, you would call your API to send a password reset email
+      // This is just a mock implementation
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate API call
+      setIsSubmitted(true);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    return (
-        <div className="flex min-h-screen items-center justify-center bg-muted py-12 px-4 sm:px-6 lg:px-8">
-            <div className="w-full max-w-md space-y-8 bg-white p-8 rounded-lg shadow-md">
-                <div>
-                    <h2 className="mt-6 text-center text-3xl font-bold tracking-tight">Quên mật khẩu</h2>
-                    <p className="mt-2 text-center text-sm text-muted-foreground">
-                        Nhập email của bạn và chúng tôi sẽ gửi cho bạn liên kết để đặt lại mật khẩu
-                    </p>
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-slate-50 to-slate-100 px-4 py-8 dark:from-slate-900 dark:to-slate-800">
+      <div className="w-full max-w-md">
+        <div className="mb-8 text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+            {isSubmitted ? (
+              <CheckCircle className="h-6 w-6 text-primary" />
+            ) : (
+              <Mail className="h-6 w-6 text-primary" />
+            )}
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
+            {isSubmitted ? "Email đã được gửi" : "Quên mật khẩu"}
+          </h1>
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+            {isSubmitted
+              ? "Vui lòng kiểm tra hộp thư của bạn để tiếp tục"
+              : "Nhập email của bạn và chúng tôi sẽ gửi cho bạn liên kết để đặt lại mật khẩu"}
+          </p>
+        </div>
+
+        <Card className="border-slate-200 shadow-lg dark:border-slate-800">
+          <CardHeader className="pb-4">
+            {error && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+          </CardHeader>
+          <CardContent>
+            {isSubmitted ? (
+              <div className="space-y-4 text-center">
+                <div className="rounded-lg bg-green-50 p-4 dark:bg-green-900/20">
+                  <p className="text-sm text-green-800 dark:text-green-300">
+                    Chúng tôi đã gửi email hướng dẫn đặt lại mật khẩu đến{" "}
+                    <strong>{email}</strong>. Vui lòng kiểm tra hộp thư của bạn
+                    và làm theo hướng dẫn để đặt lại mật khẩu.
+                  </p>
+                </div>
+                <Button asChild className="w-full">
+                  <Link to="/login">
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Quay lại trang đăng nhập
+                  </Link>
+                </Button>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-3 flex items-center">
+                      <Mail className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="name@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="pl-10"
+                      required
+                    />
+                  </div>
                 </div>
 
-                {isSubmitted ? (
-                    <div className="rounded-md bg-green-50 p-4">
-                        <div className="flex">
-                            <div className="flex-shrink-0">
-                                <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
-                                    <path
-                                        fillRule="evenodd"
-                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                                        clipRule="evenodd"
-                                    />
-                                </svg>
-                            </div>
-                            <div className="ml-3">
-                                <h3 className="text-sm font-medium text-green-800">Email đã được gửi</h3>
-                                <div className="mt-2 text-sm text-green-700">
-                                    <p>
-                                        Chúng tôi đã gửi email hướng dẫn đặt lại mật khẩu đến {email}. Vui lòng kiểm tra hộp thư của bạn.
-                                    </p>
-                                </div>
-                                <div className="mt-4">
-                                    <Link to="/login" className="text-sm font-medium text-primary hover:text-primary/90">
-                                        Quay lại trang đăng nhập
-                                    </Link>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                ) : (
-                    <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-                        {error && <div className="bg-destructive/10 text-destructive p-3 rounded-md text-sm">{error}</div>}
-
-                        <div>
-                            <label htmlFor="email" className="block text-sm font-medium">
-                                Email
-                            </label>
-                            <input
-                                id="email"
-                                name="email"
-                                type="email"
-                                autoComplete="email"
-                                required
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                className="mt-1 block w-full rounded-md border border-input px-3 py-2 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                                placeholder="Email"
-                            />
-                        </div>
-
-                        <div>
-                            <button
-                                type="submit"
-                                disabled={isLoading}
-                                className="group relative flex w-full justify-center rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 focus:outline-none disabled:opacity-70"
-                            >
-                                {isLoading ? "Đang xử lý..." : "Gửi liên kết đặt lại mật khẩu"}
-                            </button>
-                        </div>
-
-                        <div className="flex items-center justify-center">
-                            <Link to="/login" className="text-sm font-medium text-primary hover:text-primary/90">
-                                Quay lại trang đăng nhập
-                            </Link>
-                        </div>
-                    </form>
-                )}
-            </div>
-        </div>
-    )
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Đang xử lý...
+                    </>
+                  ) : (
+                    "Gửi liên kết đặt lại mật khẩu"
+                  )}
+                </Button>
+              </form>
+            )}
+          </CardContent>
+          <CardFooter className="flex flex-col space-y-4 border-t bg-slate-50 px-6 py-4 dark:border-slate-800 dark:bg-slate-900/50">
+            {!isSubmitted && (
+              <div className="text-center text-sm">
+                <Link
+                  to="/login"
+                  className="inline-flex items-center font-medium text-primary hover:underline"
+                >
+                  <ArrowLeft className="mr-1 h-3 w-3" />
+                  Quay lại trang đăng nhập
+                </Link>
+              </div>
+            )}
+          </CardFooter>
+        </Card>
+      </div>
+    </div>
+  );
 }
-
