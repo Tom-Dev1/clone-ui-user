@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import { PageHeader } from "@/components/page-header"
 import { ResponsiveContainer } from "@/components/responsive-container"
 import { ProductCategoriesSection } from "@/components/product-categories-section"
+import { FeaturedProductsSection } from "@/components/featured-products-section"
 
 export default function Home() {
     // Slideshow state and images
@@ -101,16 +102,18 @@ export default function Home() {
                 {/* Rest of the content */}
                 <div className="mt-10">
                     <ResponsiveContainer maxWidth="3xl">
-                        <PageHeader
-                            title="Sản phẩm nổi bật"
-                            description="Khám phá các sản phẩm chất lượng cao của chúng tôi"
-                            className="text-center "
-                        />
 
                         <ProductCategoriesSection />
 
                     </ResponsiveContainer>
                 </div>
+
+
+
+                <FeaturedProductsSection />
+
+
+
 
                 <div className="bg-muted py-16">
                     <ResponsiveContainer maxWidth="2xl">

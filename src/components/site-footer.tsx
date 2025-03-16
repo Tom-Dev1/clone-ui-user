@@ -10,7 +10,7 @@ export function SiteFooter() {
                         <img src="https://theme.hstatic.net/200000907029/1001282128/14/footer_logobct_img_large.png?v=318" alt="" />
                     </div>
                     <div>
-                        <h3 className="font-bold text-lg mb-4">GIỚI THIỆU</h3>
+                        <h3 className="font-bold text-xl mb-4">GIỚI THIỆU</h3>
                         <ul className="space-y-2">
                             <li>
                                 <RouterLink to="/gioi-thieu/ve-chung-toi" className="text-gray-300 hover:text-primary">

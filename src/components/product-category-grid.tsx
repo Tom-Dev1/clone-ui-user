@@ -15,7 +15,7 @@ export function ProductCategory({ title, href, image, className }: ProductCatego
                 <img
                     src={image || "/placeholder.svg"}
                     alt={title}
-                    className="w-full max-h-[369px] object-cover transition-transform duration-500 group-hover:scale-105"
+                    className="w-full min-h-[369px] object-cover transition-transform duration-500 group-hover:scale-105"
                 />
 
 

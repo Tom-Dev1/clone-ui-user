@@ -49,11 +49,6 @@ const menuItems = [
 
     },
     {
-        title: "TUYỂN DỤNG",
-        href: "/blogs/tuyen-dung",
-
-    },
-    {
         title: "LIÊN HỆ",
         href: "/pages/lien-he",
     },
@@ -189,7 +184,7 @@ export function SiteHeader({ isHomePage = false }: SiteHeaderProps) {
                                     <Link
                                         to={item.href}
                                         className={cn(
-                                            "flex items-center text-base font-medium text-gray-700",
+                                            "flex items-center text-base font-semibold text-gray-700",
                                             location.pathname === item.href && "text-primary",
                                         )}
                                     >

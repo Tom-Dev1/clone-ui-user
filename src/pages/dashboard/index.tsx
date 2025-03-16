@@ -10,7 +10,7 @@ const Profile = lazy(() => import("@/pages/dashboard/profile"))
 const Orders = lazy(() => import("@/pages/dashboard/order"))
 const Settings = lazy(() => import("@/pages/dashboard/settting"))
 const DashboardHome = lazy(() => import("./home"))
-
+const ManagerDebt = lazy(() => import("@/pages/dashboard/manager-debt"))
 export default function Dashboard() {
     const { user, logout } = useAuth()
     const location = useLocation()
@@ -85,6 +85,15 @@ export default function Dashboard() {
                                 >
                                     Cài đặt
                                 </Link>
+                                <Link
+                                    to="/dashboard/manager-debt"
+                                    className={`block px-4 py-2 rounded-md ${isActive("/dashboard/settings")
+                                        ? "bg-primary text-primary-foreground"
+                                        : "text-muted-foreground hover:bg-muted"
+                                        }`}
+                                >
+                                    Quản lý công nợ
+                                </Link>
                             </nav>
                         </div>
                     </div>
@@ -98,6 +107,7 @@ export default function Dashboard() {
                                     <Route path="/profile" element={<Profile />} />
                                     <Route path="/orders" element={<Orders />} />
                                     <Route path="/settings" element={<Settings />} />
+                                    <Route path="/manager-debt" element={<ManagerDebt />} />
                                 </Routes>
                             </Suspense>
                         </div>

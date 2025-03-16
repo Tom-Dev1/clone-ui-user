@@ -13,7 +13,6 @@ const CollectionsHome = lazy(() => import("@/pages/collections/CollectionsHome")
 const ProductCategory = lazy(() => import("@/pages/collections/product-category"))
 const BlogHome = lazy(() => import("@/pages/blogs/BlogHome"))
 const BlogNews = lazy(() => import("@/pages/blogs/BlogNews"))
-const BlogCareer = lazy(() => import("@/pages/blogs/BlogCareer"))
 const ContactPage = lazy(() => import("@/pages/ContactPage"))
 const Login = lazy(() => import("@/pages/auth/login"))
 const Register = lazy(() => import("@/pages/auth/register"))
@@ -106,24 +105,6 @@ export const AppRouter = () => {
                         element={
                             <MainLayout>
                                 <BlogNews />
-                            </MainLayout>
-                        }
-                    />
-
-                    {/* TUYỂN DỤNG */}
-                    <Route
-                        path="/blogs/tuyen-dung"
-                        element={
-                            <MainLayout>
-                                <BlogCareer />
-                            </MainLayout>
-                        }
-                    />
-                    <Route
-                        path="/blogs/tuyen-dung/:slug"
-                        element={
-                            <MainLayout>
-                                <BlogCareer />
                             </MainLayout>
                         }
                     />
