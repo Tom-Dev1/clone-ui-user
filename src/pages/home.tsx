@@ -213,7 +213,7 @@ export default function Home() {
 
       {/* Features Section */}
       <section className="py-16 bg-white dark:bg-slate-900">
-        <ResponsiveContainer maxWidth="5xl">
+        <ResponsiveContainer maxWidth="4xl">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {features.map((feature, index) => (
               <div
@@ -233,7 +233,7 @@ export default function Home() {
 
       {/* Product Categories Section */}
       <section className="py-16 bg-slate-50 dark:bg-slate-800/50">
-        <ResponsiveContainer maxWidth="5xl">
+        <ResponsiveContainer maxWidth="4xl">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">Danh mục sản phẩm</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
@@ -247,7 +247,7 @@ export default function Home() {
 
       {/* Featured Products Section */}
       <section className="py-16 bg-white dark:bg-slate-900">
-        <ResponsiveContainer maxWidth="5xl">
+        <ResponsiveContainer maxWidth="4xl">
           <div className="flex justify-between items-center mb-12">
             <div>
               <h2 className="text-3xl font-bold mb-2">Sản phẩm nổi bật</h2>
@@ -276,7 +276,7 @@ export default function Home() {
 
       {/* Blog Section */}
       <section className="py-16 bg-slate-50 dark:bg-slate-800/50">
-        <ResponsiveContainer maxWidth="5xl">
+        <ResponsiveContainer maxWidth="4xl">
           <PageHeader
             title="Kiến thức cây trồng"
             description="Những kiến thức hữu ích về cách trồng và chăm sóc cây"
