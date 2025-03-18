@@ -71,7 +71,7 @@ const CollectionSlug = () => {
 
     return (
         <div className="py-12">
-            <ResponsiveContainer maxWidth="3xl">
+            <ResponsiveContainer maxWidth="2xl">
                 <PageHeader
                     title={category?.categoryName || "Category"}
                     description={category?.notes || "Loading category details..."}

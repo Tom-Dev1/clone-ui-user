@@ -19,9 +19,6 @@ export default function ProductDetail() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [activeImageIndex, setActiveImageIndex] = useState(0)
-    const [prevImageIndex, setPrevImageIndex] = useState(0)
-    const [isAnimating, setIsAnimating] = useState(false)
-    const [slideDirection, setSlideDirection] = useState<"left" | "right">("right")
     const [quantity, setQuantity] = useState(1)
     const { addItem } = useCart()
     const isSales = isSalesManager()
@@ -70,50 +67,15 @@ export default function ProductDetail() {
         loadProduct()
     }, [id, navigate])
 
-    const changeImage = (newIndex: number) => {
-        if (newIndex === activeImageIndex || !product?.images?.length) return
-
-        setPrevImageIndex(activeImageIndex)
-
-        // Determine slide direction based on index change
-        if (
-            (newIndex > activeImageIndex && !(activeImageIndex === 0 && newIndex === product.images.length - 1)) ||
-            (activeImageIndex === product.images.length - 1 && newIndex === 0)
-        ) {
-            setSlideDirection("right")
-        } else {
-            setSlideDirection("left")
-        }
-
-        setIsAnimating(true)
-        setActiveImageIndex(newIndex)
-
-        // Reset animation state after animation completes
-        setTimeout(() => {
-            setIsAnimating(false)
-        }, 500)
-    }
-
     const handlePrevImage = () => {
         if (!product?.images?.length) return
-        const newIndex = activeImageIndex === 0 ? product.images.length - 1 : activeImageIndex - 1
-        changeImage(newIndex)
+        setActiveImageIndex((prev) => (prev === 0 ? product.images.length - 1 : prev - 1))
     }
 
     const handleNextImage = () => {
         if (!product?.images?.length) return
-        const newIndex = activeImageIndex === product.images.length - 1 ? 0 : activeImageIndex + 1
-        changeImage(newIndex)
+        setActiveImageIndex((prev) => (prev === product.images.length - 1 ? 0 : prev + 1))
     }
-
-    // const formatDate = (dateString: string) => {
-    //     const date = new Date(dateString)
-    //     return new Intl.DateTimeFormat("vi-VN", {
-    //         year: "numeric",
-    //         month: "2-digit",
-    //         day: "2-digit",
-    //     }).format(date)
-    // }
 
     const incrementQuantity = () => {
         setQuantity((prev) => prev + 1)
@@ -175,8 +137,6 @@ export default function ProductDetail() {
     return (
         <div className="py-12">
             <ResponsiveContainer>
-                {/* Breadcrumbs */}
-
                 <div className="flex flex-col md:flex-row gap-8">
                     {/* Product Images */}
                     <div className="md:w-1/2">
@@ -184,59 +144,18 @@ export default function ProductDetail() {
                             <div className="aspect-square bg-white rounded-lg border overflow-hidden">
                                 {product.images && product.images.length > 0 ? (
                                     <div className="relative w-full h-full">
-                                        {/* Previous Image (for animation) */}
-                                        {isAnimating && (
-                                            <div
-                                                className="absolute inset-0 w-full h-full transition-transform duration-500 ease-in-out"
-                                                style={{
-                                                    transform: slideDirection === "right" ? "translateX(-100%)" : "translateX(100%)",
-                                                }}
-                                            >
-                                                <img
-                                                    src={product.images[prevImageIndex] || "/placeholder.svg?height=500&width=500"}
-                                                    alt={`${product.productName} - Previous`}
-                                                    className="w-full h-full object-contain"
-                                                    onError={(e) => {
-                                                        ; (e.target as HTMLImageElement).src = "/placeholder.svg?height=500&width=500"
-                                                    }}
-                                                />
-                                            </div>
-                                        )}
-
-                                        {/* Current Image */}
-                                        <div
-                                            className="absolute inset-0 w-full h-full transition-transform duration-500 ease-in-out"
-                                            style={{
-                                                transform: isAnimating
-                                                    ? "translateX(0)"
-                                                    : slideDirection === "right"
-                                                        ? "translateX(100%)"
-                                                        : "translateX(-100%)",
-                                            }}
-                                        >
+                                        {/* Main Image */}
+                                        <div className="w-full h-full">
                                             <img
+                                                key={activeImageIndex} // Key helps React recognize this is a new image
                                                 src={product.images[activeImageIndex] || "/placeholder.svg?height=500&width=500"}
                                                 alt={product.productName}
-                                                className="w-full h-full object-contain"
+                                                className="w-full h-full object-contain transition-opacity duration-300"
                                                 onError={(e) => {
                                                     ; (e.target as HTMLImageElement).src = "/placeholder.svg?height=500&width=500"
                                                 }}
                                             />
                                         </div>
-
-                                        {/* Static Image (when not animating) */}
-                                        {!isAnimating && (
-                                            <div className="absolute inset-0 w-full h-full">
-                                                <img
-                                                    src={product.images[activeImageIndex] || "/placeholder.svg?height=500&width=500"}
-                                                    alt={product.productName}
-                                                    className="w-full h-full object-contain"
-                                                    onError={(e) => {
-                                                        ; (e.target as HTMLImageElement).src = "/placeholder.svg?height=500&width=500"
-                                                    }}
-                                                />
-                                            </div>
-                                        )}
                                     </div>
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center bg-muted/20">
@@ -250,12 +169,14 @@ export default function ProductDetail() {
                                     <button
                                         onClick={handlePrevImage}
                                         className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 rounded-full p-2 shadow-md hover:bg-white"
+                                        aria-label="Previous image"
                                     >
                                         <ChevronLeft className="h-5 w-5" />
                                     </button>
                                     <button
                                         onClick={handleNextImage}
                                         className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 rounded-full p-2 shadow-md hover:bg-white"
+                                        aria-label="Next image"
                                     >
                                         <ChevronRight className="h-5 w-5" />
                                     </button>
@@ -269,9 +190,13 @@ export default function ProductDetail() {
                                 {product.images.map((image, index) => (
                                     <button
                                         key={index}
-                                        onClick={() => changeImage(index)}
-                                        className={`w-20 h-20 rounded-md border overflow-hidden flex-shrink-0 ${activeImageIndex === index ? "ring-2 ring-primary" : ""
+                                        onClick={() => setActiveImageIndex(index)}
+                                        className={`w-20 h-20 rounded-md border overflow-hidden flex-shrink-0 transition-all duration-200 ${activeImageIndex === index
+                                                ? "ring-2 ring-primary scale-105"
+                                                : "hover:ring-1 hover:ring-primary/50 hover:scale-[1.02]"
                                             }`}
+                                        aria-label={`View image ${index + 1}`}
+                                        aria-current={activeImageIndex === index ? "true" : "false"}
                                     >
                                         <img
                                             src={image || "/placeholder.svg?height=80&width=80"}
@@ -310,38 +235,36 @@ export default function ProductDetail() {
                                 <span className="text-sm">Hạn sử dụng:</span>
                                 <span className="text-sm font-medium">{product.defaultExpiration} days</span>
                             </div>
-                            {/* <div className="flex justify-between border-b pb-2">
-                                <span className="text-sm">Available Stock:</span>
-                                <span className="text-sm font-medium">{product.availableStock}</span>
-                            </div> */}
-                            {/* <div className="flex justify-between border-b pb-2">
-                                <span className="text-sm">Thời hạn cập nhật:</span>
-                                <span className="text-sm font-medium">{formatDate(product.updatedDate)}</span>
-                            </div> */}
-                            {/* <div className="flex justify-between border-b pb-2">
-                                <span className="text-sm">Created Date:</span>
-                                <span className="text-sm font-medium">{formatDate(product.createdDate)}</span>
-                            </div> */}
                         </div>
+
                         {isSales && (
                             <div className="mt-6 border-t pt-6 mb-5">
                                 <h3 className="font-medium mb-4">Số lượng đặt hàng</h3>
                                 <div className="flex items-center gap-4">
                                     <div className="flex items-center border rounded-md">
-                                        <button onClick={decrementQuantity} className="px-3 py-2 border-r hover:bg-muted/20">
+                                        <button
+                                            onClick={decrementQuantity}
+                                            className="px-3 py-2 border-r hover:bg-muted/20"
+                                            aria-label="Decrease quantity"
+                                        >
                                             <Minus className="h-4 w-4" />
                                         </button>
                                         <span className="px-4 py-2">{quantity}</span>
-                                        <button onClick={incrementQuantity} className="px-3 py-2 border-l hover:bg-muted/20">
+                                        <button
+                                            onClick={incrementQuantity}
+                                            className="px-3 py-2 border-l hover:bg-muted/20"
+                                            aria-label="Increase quantity"
+                                        >
                                             <Plus className="h-4 w-4" />
                                         </button>
                                     </div>
                                     <span className="text-sm text-muted-foreground">
-                                        Chọn số lượng và nhấn "Đặt hàng" để thêm vào đơn hàng
+                                        Chọn số lượng và nhấn "Thêm vào giỏ hàng" để thêm vào đơn hàng
                                     </span>
                                 </div>
                             </div>
                         )}
+
                         <div className="flex gap-4">
                             {isSales ? (
                                 <button
@@ -365,8 +288,8 @@ export default function ProductDetail() {
                         </div>
                     </div>
                 </div>
-
             </ResponsiveContainer>
+
             <div className="fixed bottom-6 right-6 z-30">
                 <div className="relative">
                     <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping"></div>

@@ -44,8 +44,8 @@ export default function CollectionsHome() {
 
     return (
         <div className="py-12 mx-auto">
-            <ResponsiveContainer maxWidth="3xl">
-                <PageHeader title="All Products" description="Browse our complete collection of high-quality products" />
+            <ResponsiveContainer maxWidth="2xl">
+                <PageHeader title="Tất cả sản phẩm" description="Sản phẩm chất lượng với những thương hiệu lớn" />
 
                 {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">{error}</div>}
 
@@ -53,7 +53,7 @@ export default function CollectionsHome() {
                     {/* Categories sidebar */}
                     <div className="lg:w-1/5 xl:w-1/6">
                         <div className="bg-white p-6 rounded-lg border sticky top-24">
-                            <h3 className="font-medium text-lg mb-4">Categories</h3>
+                            <h3 className="font-medium text-lg mb-4">Loại</h3>
                             {loading && categories.length === 0 ? (
                                 <div className="space-y-2">
                                     {Array.from({ length: 6 }).map((_, i) => (
@@ -64,7 +64,7 @@ export default function CollectionsHome() {
                                 <ul className="space-y-2">
                                     <li>
                                         <Link to="/collections" className="text-primary font-medium hover:text-primary">
-                                            All Products
+                                            Tất cả
                                         </Link>
                                     </li>
                                     {categories &&

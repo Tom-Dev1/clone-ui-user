@@ -21,14 +21,16 @@ export function MainLayout({ children, maxWidth = "2xl", isHomePage = false }: M
 
             <main className={`flex-1${isHomePage ? "mt-0" : ""}`}>
                 {!isHomePathname && (
-                    <div className="border-b py-3 mt-32 px-10">
+                    <div className=" py-3 mt-32 px-10">
                         <ResponsiveContainer maxWidth={maxWidth}>
                             <div className="mt-1 mx-auto" />
                         </ResponsiveContainer>
                     </div>
                 )}
 
+
                 {children}
+
             </main>
 
             <SiteFooter />
