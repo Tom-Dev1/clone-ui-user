@@ -49,7 +49,7 @@ interface TouchedFields {
 
 export function RegisterForm() {
 
-    const baseURL = `https://minhlong.gahonghac.net`
+    const baseURL = `https://minhlong.mlhr.org`
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [errors, setErrors] = useState<Partial<Record<keyof RegisterFormData, string>>>({})
     const [touched, setTouched] = useState<TouchedFields>({
