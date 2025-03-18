@@ -1,23 +1,24 @@
-"use client"
-
 import { Navigate, Outlet } from "react-router-dom"
-import { useAuth } from "@/hooks/use-auth"
-import LoadingSpinner from "@/components/loading-spinner"
+import { isAuthenticated, isTokenExpired, getUserRole } from "@/utils/auth-utils"
+import { UserRole } from "@/types/auth-type"
 
 export const GuestGuard = () => {
-    const { isAuthenticated, isLoading } = useAuth()
+    const isLoggedIn = isAuthenticated() && !isTokenExpired()
 
-    // Show loading spinner while checking authentication
-    if (isLoading) {
-        return <LoadingSpinner />
+    if (isLoggedIn) {
+        // If user is already logged in, redirect to appropriate dashboard based on role
+        const role = getUserRole()
+
+        if (role === UserRole.SALES_MANAGER) {
+            return <Navigate to="/sales/dashboard" replace />
+        } else if (role === UserRole.AGENCY) {
+            return <Navigate to="/agency/dashboard" replace />
+        } else {
+            // Default dashboard for any other role
+            return <Navigate to="/dashboard" replace />
+        }
     }
 
-    // If already authenticated, redirect to dashboard
-    if (isAuthenticated) {
-        return <Navigate to="/dashboard" replace />
-    }
-
-    // If not authenticated, render the guest route
     return <Outlet />
 }
 

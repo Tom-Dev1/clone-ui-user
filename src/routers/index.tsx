@@ -5,6 +5,18 @@ import LoadingSpinner from "@/components/loading-spinner"
 import { AuthGuard } from "./guards/auth-guard"
 import { GuestGuard } from "./guards/guest-guard"
 import { MainLayout } from "@/layouts/main-layout"
+import { UserRole } from "@/types/auth-type"
+import { RoleGuard } from "./guards/role-guard"
+import AgencyDashboard from "@/pages/agency/dashboard"
+import AgencyOrders from "@/pages/agency/AgencyOrders"
+import AgencyProfile from "@/pages/agency/AgencyProfile"
+import AgencyProducts from "@/pages/agency/AgencyProducts"
+import SalesDashboard from "@/pages/sales/dashboard"
+import SalesOrders from "@/pages/sales/SalesOrders"
+import SalesCustomers from "@/pages/sales/SalesCustomers"
+import SalesReports from "@/pages/sales/SalesReports"
+import SalesDebt from "@/pages/sales/debt"
+import SalesProfile from "@/pages/sales/profile"
 
 // Lazy load pages for better performance
 const Home = lazy(() => import("@/pages/home"))
@@ -19,6 +31,17 @@ const Register = lazy(() => import("@/pages/auth/register"))
 const ForgotPassword = lazy(() => import("@/pages/auth/forgot-password"))
 const Dashboard = lazy(() => import("@/pages/dashboard"))
 const NotFound = lazy(() => import("@/pages/not-found"))
+
+// Role-specific pages
+// const SalesDashboard = lazy(() => import("@/pages/sales/dashboard"))
+// const SalesOrders = lazy(() => import("@/pages/sales/orders"))
+// const SalesCustomers = lazy(() => import("@/pages/sales/customers"))
+// const SalesReports = lazy(() => import("@/pages/sales/reports"))
+
+// const AgencyDashboard = lazy(() => import("@/pages/agency/dashboard"))
+// const AgencyOrders = lazy(() => import("@/pages/agency/orders"))
+// const AgencyProfile = lazy(() => import("@/pages/agency/profile"))
+// const AgencyProducts = lazy(() => import("@/pages/agency/products"))
 
 export const AppRouter = () => {
     return (
@@ -109,7 +132,6 @@ export const AppRouter = () => {
                         }
                     />
 
-
                     <Route
                         path="/pages/lien-he"
                         element={
@@ -128,7 +150,26 @@ export const AppRouter = () => {
 
                     {/* Protected routes - only accessible if logged in */}
                     <Route element={<AuthGuard />}>
-                        <Route path="/dashboard/*" element={<Dashboard />} />
+                        {/* Common dashboard route */}
+                        <Route path="/dashboard" element={<Dashboard />} />
+
+                        {/* SALES_MANAGER specific routes */}
+                        <Route element={<RoleGuard allowedRoles={[UserRole.SALES_MANAGER]} />}>
+                            <Route path="/sales/dashboard" element={<SalesDashboard />} />
+                            <Route path="/sales/orders" element={<SalesOrders />} />
+                            <Route path="/sales/customers" element={<SalesCustomers />} />
+                            <Route path="/sales/reports" element={<SalesReports />} />
+                            <Route path="/sales/debt" element={<SalesDebt />} />
+                            <Route path="/sales/profile" element={<SalesProfile />} />
+                        </Route>
+
+                        {/* AGENCY specific routes */}
+                        <Route element={<RoleGuard allowedRoles={[UserRole.AGENCY]} />}>
+                            <Route path="/agency/dashboard" element={<AgencyDashboard />} />
+                            <Route path="/agency/orders" element={<AgencyOrders />} />
+                            <Route path="/agency/profile" element={<AgencyProfile />} />
+                            <Route path="/agency/products" element={<AgencyProducts />} />
+                        </Route>
                     </Route>
 
                     {/* Catch all route for 404 */}

@@ -1,22 +1,28 @@
-
-
 import { useState, useEffect, useRef } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
-import { Menu, Search, User, ChevronDown } from "lucide-react"
+import { Menu, Search, User, ChevronDown, LogOut, Settings, ShoppingBag } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { useScrollDirection } from "@/hooks/use-scroll-direction"
-import { useAuth } from "@/hooks/use-auth"
+import {
+    isAuthenticated,
+    getUserInfo,
+    getUserRole,
+    getUserDisplayName,
+    logout,
+
+} from "@/utils/auth-utils"
 import HoverButton from "./hover-button"
+import { UserAvatar } from "./user-avatar"
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
+    DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu"
-
 
 interface SiteHeaderProps {
     isHomePage?: boolean
@@ -41,12 +47,10 @@ const menuItems = [
     {
         title: "KIẾN THỨC CÂY TRỒNG",
         href: "/blogs/kien-thuc-cay-trong",
-
     },
     {
         title: "TIN TỨC",
         href: "/blogs/news",
-
     },
     {
         title: "LIÊN HỆ",
@@ -64,11 +68,14 @@ export function SiteHeader({ isHomePage = false }: SiteHeaderProps) {
     const dropdownTimeoutRef = useRef<NodeJS.Timeout | null>(null)
     const location = useLocation()
     const navigate = useNavigate()
-    const { isAuthenticated, user, logout } = useAuth()
+
+    // Get authentication state and user info from auth-utils
+    const authenticated = isAuthenticated()
+    const userInfo = getUserInfo()
+    const userRole = getUserRole()
+    const displayName = getUserDisplayName()
 
     const [scrolledPast500, setScrolledPast500] = useState(false)
-
-
 
     // Add this useEffect to track scroll position
     useEffect(() => {
@@ -85,19 +92,13 @@ export function SiteHeader({ isHomePage = false }: SiteHeaderProps) {
         return () => window.removeEventListener("scroll", handleScroll)
     }, [])
 
-
-
     const handleLogin = () => {
         navigate("/login")
     }
 
-    const handleLogout = async () => {
-        try {
-            await logout()
-            navigate("/")
-        } catch (error) {
-            console.error("Logout failed:", error)
-        }
+    const handleLogout = () => {
+        logout()
+        navigate("/")
     }
 
     const toggleExpandItem = (href: string) => {
@@ -151,6 +152,21 @@ export function SiteHeader({ isHomePage = false }: SiteHeaderProps) {
             }
         }
     }, [])
+
+    // Get appropriate dashboard link based on user role
+    const getDashboardLink = () => {
+        if (!userRole) return "/dashboard"
+
+        // Check user role and return appropriate dashboard link
+        switch (userRole) {
+            case "4": // SALES_MANAGER
+                return "/sales/dashboard"
+            case "5": // AGENCY
+                return "/agency/dashboard"
+            default:
+                return "/dashboard"
+        }
+    }
 
     return (
         <div
@@ -234,7 +250,7 @@ export function SiteHeader({ isHomePage = false }: SiteHeaderProps) {
                             <span className="sr-only">Toggle menu</span>
                         </Button>
                     </SheetTrigger>
-                    <SheetContent side="left" className="w-[300px] sm:w-[350px] p-0" >
+                    <SheetContent side="left" className="w-[300px] sm:w-[350px] p-0">
                         <div className="flex flex-col h-full">
                             <div className="flex justify-between items-center p-4 border-b">
                                 <Link to="/" className="flex items-center" onClick={() => setSheetOpen(false)}>
@@ -246,7 +262,6 @@ export function SiteHeader({ isHomePage = false }: SiteHeaderProps) {
                                         />
                                     </div>
                                 </Link>
-
                             </div>
 
                             <div className="flex-1 overflow-y-auto py-4">
@@ -318,15 +333,18 @@ export function SiteHeader({ isHomePage = false }: SiteHeaderProps) {
                             </div>
 
                             <div className="mt-auto p-4 border-t">
-                                {isAuthenticated && user ? (
+                                {authenticated && userInfo ? (
                                     <div className="space-y-4">
-                                        <div className="flex items-center gap-2 p-2 bg-muted/30 rounded-md">
-                                            <User className="h-5 w-5 text-primary" />
-                                            <span className="font-medium">{user.name}</span>
+                                        <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-md">
+                                            <UserAvatar size="sm" />
+                                            <div className="flex-1 min-w-0">
+                                                <p className="font-medium text-sm truncate">{displayName}</p>
+
+                                            </div>
                                         </div>
                                         <div className="grid grid-cols-2 gap-2">
                                             <Link
-                                                to="/dashboard"
+                                                to={getDashboardLink()}
                                                 className="text-center text-sm bg-muted py-2 px-3 rounded-md hover:bg-muted/80"
                                                 onClick={() => setSheetOpen(false)}
                                             >
@@ -384,33 +402,41 @@ export function SiteHeader({ isHomePage = false }: SiteHeaderProps) {
 
                 <div className="ml-auto flex items-center space-x-4">
                     {/* Auth Button - Desktop */}
-                    {isAuthenticated && user ? (
+                    {authenticated && userInfo ? (
                         <div className="hidden md:flex items-center">
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="relative">
-                                        <User className="h-5 w-5" />
-                                        <span className="sr-only">User menu</span>
+                                    <Button variant="ghost" size="sm" className="relative gap-2 px-3">
+                                        <UserAvatar size="sm" showInitial={false} />
+                                        <span className="font-medium text-sm hidden lg:inline-block">{displayName}</span>
+                                        <ChevronDown className="h-4 w-4 opacity-50" />
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-56">
-                                    <div className="flex items-center gap-2 p-2 border-b">
-                                        <User className="h-4 w-4 text-primary" />
-                                        <span className="font-medium">{user.name}</span>
-                                    </div>
+                                    <DropdownMenuLabel className="font-normal">
+                                        <div className="flex flex-col space-y-1">
+                                            <p className="font-medium text-sm">{displayName}</p>
+                                            {userInfo.email && <p className="text-xs text-muted-foreground">{userInfo.email}</p>}
+
+                                        </div>
+                                    </DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
                                     <DropdownMenuItem asChild>
-                                        <Link to="/dashboard" className="cursor-pointer">
-                                            Dashboard
+                                        <Link to={getDashboardLink()} className="cursor-pointer">
+                                            <User className="mr-2 h-4 w-4" />
+                                            <span>Dashboard</span>
                                         </Link>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem asChild>
-                                        <Link to="/dashboard/profile" className="cursor-pointer">
-                                            Hồ sơ cá nhân
+                                        <Link to={`${getDashboardLink()}/profile`} className="cursor-pointer">
+                                            <Settings className="mr-2 h-4 w-4" />
+                                            <span>Hồ sơ cá nhân</span>
                                         </Link>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem asChild>
-                                        <Link to="/dashboard/orders" className="cursor-pointer">
-                                            Đơn hàng
+                                        <Link to={`${getDashboardLink()}/orders`} className="cursor-pointer">
+                                            <ShoppingBag className="mr-2 h-4 w-4" />
+                                            <span>Đơn hàng</span>
                                         </Link>
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
@@ -418,7 +444,8 @@ export function SiteHeader({ isHomePage = false }: SiteHeaderProps) {
                                         onClick={handleLogout}
                                         className="cursor-pointer text-destructive focus:text-destructive"
                                     >
-                                        Đăng xuất
+                                        <LogOut className="mr-2 h-4 w-4" />
+                                        <span>Đăng xuất</span>
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
@@ -435,10 +462,10 @@ export function SiteHeader({ isHomePage = false }: SiteHeaderProps) {
                     </Button>
 
                     {/* User Icon - Mobile */}
-                    {isAuthenticated && user && (
-                        <Link to="/dashboard" className="md:hidden">
+                    {authenticated && userInfo && (
+                        <Link to={getDashboardLink()} className="md:hidden">
                             <Button variant="ghost" size="icon">
-                                <User className="h-5 w-5" />
+                                <UserAvatar size="sm" showInitial={false} />
                             </Button>
                         </Link>
                     )}
