@@ -9,7 +9,7 @@ import { type TokenResponse, UserRole } from "@/types/auth-type"
 import { decodeToken } from "@/utils/auth-utils"
 
 export function Login() {
-    const baseURL = `https://minhlong.gahonghac.net`
+    const baseURL = `https://minhlong.mlhr.org`
 
     const navigate = useNavigate()
     const [userName, setUserName] = useState("")
