@@ -1,73 +1,51 @@
+"use client"
+
 import { useEffect, useState } from "react"
-import { useParams, Link } from "react-router-dom"
+import { fetchAllProducts, fetchProductCategories } from "@/services/product-service"
+import type { ProductCard, ProductCategory } from "@/services/product-service"
 import { PageHeader } from "@/components/page-header"
 import { ResponsiveContainer } from "@/components/responsive-container"
-import { fetchProductCategories, fetchProductsByCategory } from "@/services/product-service"
-import type { ProductCategory, ProductCard } from "@/services/product-service"
-import { Skeleton } from "@/components/ui/skeleton"
 import { ProductCard as ProductCardComponent } from "@/components/product-card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Link } from "react-router-dom"
+import { Phone } from "lucide-react"
 
-export default function ProductCategory() {
-    // Get categoryId from URL params
-    const { categoryId } = useParams<{ categoryId: string }>()
-
-    // Simple state management
-    const [categories, setCategories] = useState<ProductCategory[]>([])
-    const [currentCategory, setCurrentCategory] = useState<ProductCategory | null>(null)
+export default function CollectionsHome() {
     const [products, setProducts] = useState<ProductCard[]>([])
+    const [categories, setCategories] = useState<ProductCategory[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
-    // Load everything on component mount or when categoryId changes
+    // Fetch products and categories on component mount
     useEffect(() => {
         async function loadData() {
             setLoading(true)
             setError(null)
 
             try {
-                // 1. Fetch all categories
+                // Fetch products with default parameters
+                const productsData = await fetchAllProducts()
+                setProducts(productsData)
+
+                // Fetch categories for the sidebar
                 const categoriesData = await fetchProductCategories()
-                setCategories(categoriesData)
-
-                // 2. Find current category if categoryId exists
-                if (categoryId) {
-                    const category = categoriesData.find((c) => c.categoryId.toString() === categoryId)
-                    setCurrentCategory(category || null)
-
-                    // 3. Fetch products for this category
-                    if (category) {
-                        const productsData = await fetchProductsByCategory(category.categoryId)
-                        setProducts(productsData)
-
-                        if (productsData.length === 0) {
-                            setError("Không có sản phẩm nào trong danh mục này")
-                        }
-                    } else {
-                        setError("Không tìm thấy danh mục sản phẩm")
-                        setProducts([])
-                    }
-                } else {
-                    // No categoryId, could fetch all products here if needed
-                    setProducts([])
-                }
+                setCategories(categoriesData.filter((cat) => cat.isActive).sort((a, b) => a.sortOrder - b.sortOrder))
             } catch (err) {
                 console.error("Error loading data:", err)
-                setError("Không thể tải dữ liệu. Vui lòng thử lại sau.")
+                setError("Failed to load products. Please try again later.")
             } finally {
                 setLoading(false)
             }
         }
 
         loadData()
-    }, [categoryId])
+    }, [])
+    console.log(products);
 
     return (
-        <div className="py-12">
+        <div className="py-12 mx-auto">
             <ResponsiveContainer maxWidth="3xl">
-                <PageHeader
-                    title={currentCategory?.categoryName || "Sản phẩm"}
-                    description={currentCategory?.notes || "Khám phá các sản phẩm chất lượng cao của chúng tôi"}
-                />
+                <PageHeader title="All Products" description="Browse our complete collection of high-quality products" />
 
                 {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">{error}</div>}
 
@@ -75,8 +53,8 @@ export default function ProductCategory() {
                     {/* Categories sidebar */}
                     <div className="lg:w-1/5 xl:w-1/6">
                         <div className="bg-white p-6 rounded-lg border sticky top-24">
-                            <h3 className="font-medium text-lg mb-4">Danh mục</h3>
-                            {categories.length === 0 ? (
+                            <h3 className="font-medium text-lg mb-4">Categories</h3>
+                            {loading && categories.length === 0 ? (
                                 <div className="space-y-2">
                                     {Array.from({ length: 6 }).map((_, i) => (
                                         <Skeleton key={i} className="h-6 w-full" />
@@ -85,21 +63,16 @@ export default function ProductCategory() {
                             ) : (
                                 <ul className="space-y-2">
                                     <li>
-                                        <Link to="/collections" className="text-muted-foreground hover:text-primary">
-                                            Tất cả sản phẩm
+                                        <Link to="/collections" className="text-primary font-medium hover:text-primary">
+                                            All Products
                                         </Link>
                                     </li>
-                                    {categories
-                                        .filter((cat) => cat.isActive)
-                                        .sort((a, b) => a.sortOrder - b.sortOrder)
-                                        .map((category) => (
+                                    {categories &&
+                                        categories.map((category) => (
                                             <li key={category.categoryId}>
                                                 <Link
                                                     to={`/collections/${category.categoryId}`}
-                                                    className={`${categoryId === category.categoryId.toString()
-                                                        ? "text-primary font-medium"
-                                                        : "text-muted-foreground"
-                                                        } hover:text-primary`}
+                                                    className="text-muted-foreground hover:text-primary"
                                                 >
                                                     {category.categoryName}
                                                 </Link>
@@ -114,7 +87,7 @@ export default function ProductCategory() {
                     <div className="lg:w-4/5 xl:w-5/6">
                         {loading ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                                {Array.from({ length: 8 }).map((_, i) => (
+                                {Array.from({ length: 20 }).map((_, i) => (
                                     <div key={i} className="bg-white p-4 rounded-lg border">
                                         <Skeleton className="aspect-square w-full mb-4" />
                                         <Skeleton className="h-6 w-3/4 mb-2" />
@@ -126,15 +99,20 @@ export default function ProductCategory() {
                             </div>
                         ) : (
                             <>
-                                {products.length === 0 ? (
+                                {!products ? (
                                     <div className="bg-muted/20 rounded-lg p-8 text-center">
-                                        <h3 className="text-lg font-medium mb-2">Không có sản phẩm</h3>
-                                        <p className="text-muted-foreground">Hiện tại không có sản phẩm nào trong danh mục này.</p>
+                                        <h3 className="text-lg font-medium mb-2">Error loading products</h3>
+                                        <p className="text-muted-foreground">Unable to load products. Please try again later.</p>
+                                    </div>
+                                ) : products.length === 0 ? (
+                                    <div className="bg-muted/20 rounded-lg p-8 text-center">
+                                        <h3 className="text-lg font-medium mb-2">No products found</h3>
+                                        <p className="text-muted-foreground">We couldn't find any products matching your criteria.</p>
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                                         {products.map((product) => (
-                                            <ProductCardComponent key={product.productId} product={product} categoryId={categoryId || ""} />
+                                            <ProductCardComponent key={product.productId} product={product} categoryId="" />
                                         ))}
                                     </div>
                                 )}
@@ -143,6 +121,18 @@ export default function ProductCategory() {
                     </div>
                 </div>
             </ResponsiveContainer>
+            <div className="fixed bottom-6 right-6 z-30">
+                <div className="relative">
+                    <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping"></div>
+                    <div className="absolute inset-0 bg-primary/20 rounded-full animate-pulse"></div>
+                    <a
+                        href="tel:02812345678"
+                        className="relative flex items-center justify-center w-16 h-16 bg-primary rounded-full shadow-lg hover:bg-primary/90 transition-colors"
+                    >
+                        <Phone className="h-6 w-6 text-primary-foreground" />
+                    </a>
+                </div>
+            </div>
         </div>
     )
 }

@@ -1,3 +1,5 @@
+"use client"
+
 import { useState, useEffect, useRef } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { Menu, Search, User, ChevronDown, LogOut, Settings, ShoppingBag } from "lucide-react"
@@ -23,11 +25,23 @@ import {
     DropdownMenuTrigger,
     DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu"
+import { fetchProductCategories } from "@/services/product-service"
+// import type { ProductCategory } from "@/services/product-service"
+import { CartIndicator } from "./cart-indicator"
 
 interface SiteHeaderProps {
     isHomePage?: boolean
 }
-const menuItems = [
+
+// Define types for menu items
+type MenuItem = {
+    title: string
+    href: string
+    items?: CategoryMenuItem[]
+}
+
+// Define the base menu items
+const baseMenuItems: MenuItem[] = [
     {
         title: "GIỚI THIỆU",
         href: "/pages/about-us",
@@ -35,14 +49,7 @@ const menuItems = [
     {
         title: "SẢN PHẨM",
         href: "/collections",
-        items: [
-            { title: "Thuốc trừ ốc", href: "/collections/thuoc-tru-oc-1" },
-            { title: "Thuốc trừ cỏ", href: "/collections/thuoc-tru-co" },
-            { title: "Thuốc trừ sâu", href: "/collections/thuoc-tru-sau" },
-            { title: "Thuốc trừ bệnh", href: "/collections/thuoc-tru-benh" },
-            { title: "Thuốc dưỡng", href: "/collections/thuoc-duong" },
-            { title: "Phân bón", href: "/collections/phan-bon" },
-        ],
+        items: [], // Will be populated from API
     },
     {
         title: "KIẾN THỨC CÂY TRỒNG",
@@ -58,7 +65,17 @@ const menuItems = [
     },
 ]
 
+
+// Define a new interface for menu items with categoryId
+interface CategoryMenuItem {
+    title: string
+    href: string
+    categoryId?: number
+}
+
 export function SiteHeader({ isHomePage = false }: SiteHeaderProps) {
+    const [menuItems, setMenuItems] = useState(baseMenuItems)
+    //   const [categories, setCategories] = useState<ProductCategory[]>([])
     const [lang, setLang] = useState<"VI" | "EN">("VI")
     const { scrollDirection, isAtTop } = useScrollDirection()
     const [isVisible, setIsVisible] = useState(true)
@@ -73,6 +90,7 @@ export function SiteHeader({ isHomePage = false }: SiteHeaderProps) {
     const authenticated = isAuthenticated()
     const userInfo = getUserInfo()
     const userRole = getUserRole()
+
     const displayName = getUserDisplayName()
 
     const [scrolledPast500, setScrolledPast500] = useState(false)
@@ -153,6 +171,10 @@ export function SiteHeader({ isHomePage = false }: SiteHeaderProps) {
         }
     }, [])
 
+
+    const isSalesManager = () => {
+        return userRole === "4"
+    }
     // Get appropriate dashboard link based on user role
     const getDashboardLink = () => {
         if (!userRole) return "/dashboard"
@@ -160,13 +182,42 @@ export function SiteHeader({ isHomePage = false }: SiteHeaderProps) {
         // Check user role and return appropriate dashboard link
         switch (userRole) {
             case "4": // SALES_MANAGER
-                return "/sales/dashboard"
-            case "5": // AGENCY
-                return "/agency/dashboard"
+                return "/sales"
+            case "2": // AGENCY
+                return "/agency"
             default:
-                return "/dashboard"
+                return "/"
         }
     }
+
+    // Fetch product categories for the menu
+    useEffect(() => {
+        async function fetchCategories() {
+            try {
+                const categoriesData = await fetchProductCategories()
+                // setCategories(categoriesData)
+
+                // Filter active categories and sort them
+                const activeCategories = categoriesData.filter((cat) => cat.isActive).sort((a, b) => a.sortOrder - b.sortOrder)
+
+                // Map categories to menu items with slugs and categoryId
+                const categoryItems = activeCategories.map((category) => ({
+                    title: category.categoryName,
+                    href: `/collections/${category.categoryId}`,
+                    categoryId: category.categoryId,
+                }))
+
+                // Update the SẢN PHẨM menu item with the fetched categories
+                setMenuItems((prevItems) =>
+                    prevItems.map((item) => (item.title === "SẢN PHẨM" ? { ...item, items: categoryItems } : item)),
+                )
+            } catch (error) {
+                console.error("Failed to fetch product categories:", error)
+            }
+        }
+
+        fetchCategories()
+    }, [])
 
     return (
         <div
@@ -218,18 +269,19 @@ export function SiteHeader({ isHomePage = false }: SiteHeaderProps) {
                                         onMouseLeave={handleDropdownLeave}
                                     >
                                         <div className="grid gap-2 grid-cols-2">
-                                            {item.items.map((subItem) => (
-                                                <Link
-                                                    key={subItem.href}
-                                                    to={subItem.href}
-                                                    className={cn(
-                                                        "rounded-md px-4 py-3 w-32 text-sm hover:bg-accent transition-colors",
-                                                        location.pathname === subItem.href && "bg-accent text-gray-600",
-                                                    )}
-                                                >
-                                                    {subItem.title}
-                                                </Link>
-                                            ))}
+                                            {Array.isArray(item.items) &&
+                                                item.items.map((subItem: CategoryMenuItem) => (
+                                                    <Link
+                                                        key={subItem.href}
+                                                        to={subItem.href}
+                                                        className={cn(
+                                                            "rounded-md px-4 py-3 w-32 text-sm hover:bg-accent transition-colors",
+                                                            location.pathname === subItem.href && "bg-accent text-gray-600",
+                                                        )}
+                                                    >
+                                                        {subItem.title}
+                                                    </Link>
+                                                ))}
                                         </div>
                                     </div>
                                 </>
@@ -298,21 +350,22 @@ export function SiteHeader({ isHomePage = false }: SiteHeaderProps) {
                                                     </div>
                                                     {expandedItems[item.href] && (
                                                         <div className="bg-muted/30 py-2">
-                                                            {item.items.map((subItem) => (
-                                                                <Link
-                                                                    key={subItem.href}
-                                                                    to={subItem.href}
-                                                                    className={cn(
-                                                                        "block text-sm px-8 py-3 hover:bg-muted",
-                                                                        location.pathname === subItem.href
-                                                                            ? "text-primary font-medium"
-                                                                            : "text-muted-foreground",
-                                                                    )}
-                                                                    onClick={() => setSheetOpen(false)}
-                                                                >
-                                                                    {subItem.title}
-                                                                </Link>
-                                                            ))}
+                                                            {Array.isArray(item.items) &&
+                                                                item.items.map((subItem: CategoryMenuItem) => (
+                                                                    <Link
+                                                                        key={subItem.href}
+                                                                        to={subItem.href}
+                                                                        className={cn(
+                                                                            "block text-sm px-8 py-3 hover:bg-muted",
+                                                                            location.pathname === subItem.href
+                                                                                ? "text-primary font-medium"
+                                                                                : "text-muted-foreground",
+                                                                        )}
+                                                                        onClick={() => setSheetOpen(false)}
+                                                                    >
+                                                                        {subItem.title}
+                                                                    </Link>
+                                                                ))}
                                                         </div>
                                                     )}
                                                 </div>
@@ -339,7 +392,7 @@ export function SiteHeader({ isHomePage = false }: SiteHeaderProps) {
                                             <UserAvatar size="sm" />
                                             <div className="flex-1 min-w-0">
                                                 <p className="font-medium text-sm truncate">{displayName}</p>
-
+                                                <p className="text-xs text-muted-foreground truncate">{userRole || "Người dùng"}</p>
                                             </div>
                                         </div>
                                         <div className="grid grid-cols-2 gap-2">
@@ -401,6 +454,11 @@ export function SiteHeader({ isHomePage = false }: SiteHeaderProps) {
                 </Sheet>
 
                 <div className="ml-auto flex items-center space-x-4">
+                    {isSalesManager() && (
+                        <div className="mr-2">
+                            <CartIndicator />
+                        </div>
+                    )}
                     {/* Auth Button - Desktop */}
                     {authenticated && userInfo ? (
                         <div className="hidden md:flex items-center">
@@ -417,12 +475,12 @@ export function SiteHeader({ isHomePage = false }: SiteHeaderProps) {
                                         <div className="flex flex-col space-y-1">
                                             <p className="font-medium text-sm">{displayName}</p>
                                             {userInfo.email && <p className="text-xs text-muted-foreground">{userInfo.email}</p>}
-
+                                            {userRole && <p className="text-xs text-primary">{userRole}</p>}
                                         </div>
                                     </DropdownMenuLabel>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem asChild>
-                                        <Link to={getDashboardLink()} className="cursor-pointer">
+                                        <Link to={`${getDashboardLink()}/dashboard`} className="cursor-pointer">
                                             <User className="mr-2 h-4 w-4" />
                                             <span>Dashboard</span>
                                         </Link>

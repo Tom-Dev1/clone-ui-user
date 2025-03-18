@@ -57,7 +57,7 @@ export function SalesLayout({ children }: SalesLayoutProps) {
 
             <div className="flex">
                 {/* Sidebar */}
-                <aside className="w-64 bg-white shadow-sm h-[calc(100vh-4rem)] sticky top-16">
+                <aside className="w-64 bg-white border-t shadow-sm h-[calc(100vh-4rem)] sticky top-16">
                     <nav className="mt-5 px-2">
                         <Link
                             to="/sales/dashboard"
@@ -70,16 +70,6 @@ export function SalesLayout({ children }: SalesLayoutProps) {
                         </Link>
 
                         <Link
-                            to="/sales/profile"
-                            className={`group flex items-center px-2 py-2 text-base font-medium rounded-md ${isActive("/sales/profile")
-                                ? "bg-red-600 text-white"
-                                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                                }`}
-                        >
-                            Hồ sơ cá nhân
-                        </Link>
-
-                        <Link
                             to="/sales/orders"
                             className={`group flex items-center px-2 py-2 text-base font-medium rounded-md ${isActive("/sales/orders")
                                 ? "bg-red-600 text-white"
@@ -88,13 +78,53 @@ export function SalesLayout({ children }: SalesLayoutProps) {
                         >
                             Đơn hàng
                         </Link>
-
+                        <Link
+                            to="/sales/product"
+                            className={`group flex items-center px-2 py-2 text-base font-medium rounded-md ${isActive("/sales/product")
+                                ? "bg-red-600 text-white"
+                                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                                }`}
+                        >
+                            Sản phẩm
+                        </Link>
+                        <Link
+                            to="/sales/cart"
+                            className={`group flex items-center px-2 py-2 text-base font-medium rounded-md ${isActive("/sales/cart") ? "bg-red-600 text-white" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                                }`}
+                        >
+                            Giỏ hàng
+                        </Link>
+                        <Link
+                            to="/sales/tax"
+                            className={`group flex items-center px-2 py-2 text-base font-medium rounded-md ${isActive("/sales/tax") ? "bg-red-600 text-white" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                                }`}
+                        >
+                            Thuế
+                        </Link>
+                        <Link
+                            to="/sales/export"
+                            className={`group flex items-center px-2 py-2 text-base font-medium rounded-md ${isActive("/sales/export")
+                                ? "bg-red-600 text-white"
+                                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                                }`}
+                        >
+                            Yêu cầu xuất kho
+                        </Link>
                         <Link
                             to="/sales/debt"
                             className={`group flex items-center px-2 py-2 text-base font-medium rounded-md ${isActive("/sales/debt") ? "bg-red-600 text-white" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                                 }`}
                         >
                             Quản lý công nợ
+                        </Link>
+                        <Link
+                            to="/sales/profile"
+                            className={`group flex items-center px-2 py-2 text-base font-medium rounded-md ${isActive("/sales/profile")
+                                ? "bg-red-600 text-white"
+                                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                                }`}
+                        >
+                            Hồ sơ cá nhân
                         </Link>
                     </nav>
                 </aside>

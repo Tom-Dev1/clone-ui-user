@@ -19,14 +19,15 @@ export function Breadcrumb({ className }: BreadcrumbProps) {
 
         // About pages
         "about-us": "Giới Thiệu",
+        //
 
         // Collection pages
-        "thuoc-tru-oc-1": "Thuốc Trừ Ốc",
-        "thuoc-tru-co": "Thuốc Trừ Cỏ",
-        "thuoc-tru-sau": "Thuốc Trừ Sâu",
-        "thuoc-tru-benh": "Thuốc Trừ Bệnh",
-        "thuoc-duong": "Thuốc Dưỡng",
-        "phan-bon": "Phân Bón",
+        "1": "Thuốc Trừ Ốc",
+        "2": "Thuốc Trừ Cỏ",
+        "3": "Thuốc Trừ Sâu",
+        "4": "Thuốc Trừ Bệnh",
+        "5": "Thuốc Dưỡng",
+        "6": "Phân Bón",
 
         // Blog pages
         "kien-thuc-cay-trong": "Kiến Thức Cây Trồng",

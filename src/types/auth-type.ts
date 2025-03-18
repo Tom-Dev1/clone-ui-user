@@ -24,7 +24,7 @@ export interface RegisterRequest {
 
 export enum UserRole {
     SALES_MANAGER = "4",
-    AGENCY = "5",
+    AGENCY = "2",
 }
 
 export interface UserInfo {

@@ -11,18 +11,13 @@ import AgencyDashboard from "@/pages/agency/dashboard"
 import AgencyOrders from "@/pages/agency/AgencyOrders"
 import AgencyProfile from "@/pages/agency/AgencyProfile"
 import AgencyProducts from "@/pages/agency/AgencyProducts"
-import SalesDashboard from "@/pages/sales/dashboard"
-import SalesOrders from "@/pages/sales/SalesOrders"
-import SalesCustomers from "@/pages/sales/SalesCustomers"
-import SalesReports from "@/pages/sales/SalesReports"
-import SalesDebt from "@/pages/sales/debt"
-import SalesProfile from "@/pages/sales/profile"
+
 
 // Lazy load pages for better performance
 const Home = lazy(() => import("@/pages/home"))
 const AboutUs = lazy(() => import("@/pages/AboutUs"))
-const CollectionsHome = lazy(() => import("@/pages/collections/CollectionsHome"))
-const ProductCategory = lazy(() => import("@/pages/collections/product-category"))
+const CollectionsHome = lazy(() => import("@/pages/collections/collection-home"))
+const CollectionSlug = lazy(() => import("@/pages/collections/collection-slug"))
 const BlogHome = lazy(() => import("@/pages/blogs/BlogHome"))
 const BlogNews = lazy(() => import("@/pages/blogs/BlogNews"))
 const ContactPage = lazy(() => import("@/pages/ContactPage"))
@@ -31,9 +26,19 @@ const Register = lazy(() => import("@/pages/auth/register"))
 const ForgotPassword = lazy(() => import("@/pages/auth/forgot-password"))
 const Dashboard = lazy(() => import("@/pages/dashboard"))
 const NotFound = lazy(() => import("@/pages/not-found"))
-
+const ProductDetail = lazy(() => import("@/pages/collections/product-detail"))
 // Role-specific pages
-// const SalesDashboard = lazy(() => import("@/pages/sales/dashboard"))
+const SalesDashboard = lazy(() => import("@/pages/sales/sale-dashboard"))
+const SalesOrders = lazy(() => import("@/pages/sales/sale-order"))
+const SalesDebt = lazy(() => import("@/pages/sales/sale-debt"))
+const SalesProfile = lazy(() => import("@/pages/sales/sale-profile"))
+const SalesExports = lazy(() => import("@/pages/sales/sale-export"))
+const SalesProducts = lazy(() => import("@/pages/sales/sale-product"))
+const SalesCart = lazy(() => import("@/pages/sales/sale-cart"))
+const SalesTax = lazy(() => import("@/pages/sales/sale-tax"))
+
+
+
 // const SalesOrders = lazy(() => import("@/pages/sales/orders"))
 // const SalesCustomers = lazy(() => import("@/pages/sales/customers"))
 // const SalesReports = lazy(() => import("@/pages/sales/reports"))
@@ -50,10 +55,11 @@ export const AppRouter = () => {
                 <Routes>
                     {/* Public routes */}
                     <Route
+
                         path="/"
                         element={
                             <>
-                                <MainLayout showBreadcrumb={false}>
+                                <MainLayout >
                                     <Home />
                                 </MainLayout>
                             </>
@@ -88,14 +94,20 @@ export const AppRouter = () => {
                         }
                     />
                     <Route
-                        path="/collections/:category"
+                        path="/collections/:categoryId"
                         element={
                             <MainLayout>
-                                <ProductCategory />
+                                <CollectionSlug />
                             </MainLayout>
                         }
-                    />
 
+                    />
+                    <Route path="/product/:id"
+
+                        element={<MainLayout>
+
+                            <ProductDetail />
+                        </MainLayout>} />
                     {/* KIẾN THỨC CÂY TRỒNG */}
                     <Route
                         path="/blogs/kien-thuc-cay-trong"
@@ -156,11 +168,14 @@ export const AppRouter = () => {
                         {/* SALES_MANAGER specific routes */}
                         <Route element={<RoleGuard allowedRoles={[UserRole.SALES_MANAGER]} />}>
                             <Route path="/sales/dashboard" element={<SalesDashboard />} />
-                            <Route path="/sales/orders" element={<SalesOrders />} />
-                            <Route path="/sales/customers" element={<SalesCustomers />} />
-                            <Route path="/sales/reports" element={<SalesReports />} />
-                            <Route path="/sales/debt" element={<SalesDebt />} />
+                            <Route path="/sales/cart" element={<SalesCart />} />
                             <Route path="/sales/profile" element={<SalesProfile />} />
+                            <Route path="/sales/orders" element={<SalesOrders />} />
+                            <Route path="/sales/debt" element={<SalesDebt />} />
+                            <Route path="/sales/export" element={<SalesExports />} />
+                            <Route path="/sales/tax" element={<SalesTax />} />
+                            <Route path="/sales/product" element={<SalesProducts />} />
+
                         </Route>
 
                         {/* AGENCY specific routes */}
