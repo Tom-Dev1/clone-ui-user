@@ -562,3 +562,11 @@
 //     )
 // }
 
+
+const SaleProfile = () => {
+    return (
+        <div>SaleProfile</div>
+    )
+}
+
+export default SaleProfile
