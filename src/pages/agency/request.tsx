@@ -4,7 +4,6 @@ import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { AgencyLayout } from "@/layouts/agency-layout"
 import { ResponsiveContainer } from "@/components/responsive-container"
-
 import { isAuthenticated, isAgency } from "@/utils/auth-utils"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -55,6 +54,13 @@ interface RequestProduct {
     requestProductDetails: RequestProductDetail[]
 }
 
+// Định nghĩa kiểu dữ liệu cho response từ API
+interface ApiResponse<T> {
+    result: T
+    isSuccess: boolean
+    message: string
+}
+
 export default function AgencyRequests() {
     const navigate = useNavigate()
     const [requests, setRequests] = useState<RequestProduct[]>([])
@@ -86,12 +92,23 @@ export default function AgencyRequests() {
             setError(null)
 
             try {
-                const response = await get<RequestProduct[]>("request-products/my-request-product")
-                setRequests(response.result)
-                setFilteredRequests(response.result)
+                const response = await get<ApiResponse<RequestProduct[]>>("request-products/my-request-product")
+
+                // Kiểm tra xem response.result có tồn tại và là một mảng không
+                if (response.result && Array.isArray(response.result)) {
+                    setRequests(response.result)
+                    setFilteredRequests(response.result)
+                } else {
+                    console.error("Invalid response format:", response)
+                    setError("Định dạng dữ liệu không hợp lệ")
+                    setRequests([])
+                    setFilteredRequests([])
+                }
             } catch (err) {
                 console.error("Error fetching requests:", err)
                 setError("Đã xảy ra lỗi khi tải dữ liệu yêu cầu")
+                setRequests([])
+                setFilteredRequests([])
             } finally {
                 setIsLoading(false)
             }
@@ -102,6 +119,11 @@ export default function AgencyRequests() {
 
     // Lọc yêu cầu theo trạng thái và từ khóa tìm kiếm
     useEffect(() => {
+        if (!Array.isArray(requests)) {
+            setFilteredRequests([])
+            return
+        }
+
         let filtered = [...requests]
 
         // Lọc theo trạng thái
@@ -256,18 +278,7 @@ export default function AgencyRequests() {
                                             >
                                                 Cập nhật
                                             </th>
-                                            <th
-                                                scope="col"
-                                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                            >
-                                                Số sản phẩm
-                                            </th>
-                                            <th
-                                                scope="col"
-                                                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                            >
-                                                Tổng giá trị
-                                            </th>
+
                                             <th
                                                 scope="col"
                                                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -293,12 +304,6 @@ export default function AgencyRequests() {
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                     {formatDateTime(request.updatedAt)}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                    {request.requestProductDetails.length}
-                                                </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                    {formatCurrency(calculateTotalValue(request.requestProductDetails))}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">{renderStatusBadge(request.requestStatus)}</td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">

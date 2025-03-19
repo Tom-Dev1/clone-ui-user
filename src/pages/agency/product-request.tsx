@@ -58,7 +58,6 @@ export default function AgencyProductRequest() {
         setIsSubmitting(true)
 
         try {
-            // Chuẩn bị dữ liệu theo định dạng yêu cầu
             const requestData = {
                 agencyName,
                 note,
@@ -68,18 +67,13 @@ export default function AgencyProductRequest() {
                     quantity: item.quantity,
                 })),
             }
-            console.log("Request Data:", requestData);
 
             // Gọi API để gửi yêu cầu
             await post("/request-products", requestData)
 
             // Hiển thị thông báo thành công
             alert("Yêu cầu đã được gửi thành công!")
-
-            // Xóa giỏ hàng
             clearAllItems()
-
-            // Reset form
             setNote("")
 
             // navigate("/agency/requests")
