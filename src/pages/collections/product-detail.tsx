@@ -222,10 +222,14 @@ export default function ProductDetail() {
                                 <span className="text-sm">Hạn sử dụng:</span>
                                 <span className="text-sm font-medium">{product.defaultExpiration} days</span>
                             </div>
+                            <div className="flex justify-between border-b pb-2">
+                                <span className="text-sm">Số lượng:</span>
+                                <span className="text-sm font-medium">{product.availableStock} {product.unit}</span>
+                            </div>
                         </div>
 
                         {canOrder && (
-                            <div className="mt-6 border-t pt-6 mb-5">
+                            <div className="mt-6  pt-6 mb-5">
                                 <h3 className="font-medium mb-4">Số lượng đặt hàng</h3>
                                 <div className="flex items-center gap-4">
                                     <div className="flex items-center border rounded-md">

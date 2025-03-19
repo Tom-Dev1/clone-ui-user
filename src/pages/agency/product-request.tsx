@@ -82,7 +82,6 @@ export default function AgencyProductRequest() {
             // Reset form
             setNote("")
 
-            // Chuyển hướng đến trang danh sách yêu cầu
             // navigate("/agency/requests")
         } catch (error) {
             if (axios.isAxiosError(error)) {
