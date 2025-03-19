@@ -68,9 +68,9 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
     }
 }
 
-export async function updateUserProfile(userData: UserUpdateRequest): Promise<boolean> {
+export async function updateUserProfile(): Promise<boolean> {
     try {
-        const response = await put<UserUpdateRequest>("user", userData)
+        const response = await put<UserUpdateRequest>("user",)
         return response.success
     } catch (error) {
         console.error("Error updating user profile:", error)
