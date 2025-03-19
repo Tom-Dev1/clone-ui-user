@@ -16,12 +16,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { CalendarIcon, Check, Eye, Filter, Search, ShoppingBag } from "lucide-react"
-import { format } from "date-fns"
-import { vi } from "date-fns/locale"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Label } from "@/components/ui/label"
+import { Check, Eye, Search, ShoppingBag } from "lucide-react"
 import { get, put } from "@/api/axiosUtils"
 
 // Thêm import cho auth-utils và useNavigate
@@ -292,10 +287,7 @@ const SalesOrders = () => {
     }
 
     // Format ngày giờ
-    const formatDateTime = (dateString: string) => {
-        const date = new Date(dateString)
-        return format(date, "dd/MM/yyyy HH:mm", { locale: vi })
-    }
+
 
     return (
         <SalesLayout>
@@ -325,77 +317,7 @@ const SalesOrders = () => {
                                     />
                                 </div>
 
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <Button variant="outline" size="icon">
-                                            <Filter className="h-4 w-4" />
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-4" align="end">
-                                        <div className="space-y-2">
-                                            <h4 className="font-medium text-sm">Lọc theo ngày</h4>
-                                            <div className="flex flex-col gap-2">
-                                                <div className="grid gap-2">
-                                                    <div className="flex items-center gap-2">
-                                                        <Label className="text-xs">Từ ngày</Label>
-                                                        <Popover>
-                                                            <PopoverTrigger asChild>
-                                                                <Button
-                                                                    variant="outline"
-                                                                    size="sm"
-                                                                    className="w-full justify-start text-left font-normal"
-                                                                >
-                                                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                                                    {dateRange.from ? format(dateRange.from, "dd/MM/yyyy") : <span>Chọn ngày</span>}
-                                                                </Button>
-                                                            </PopoverTrigger>
-                                                            <PopoverContent className="w-auto p-0" align="start">
-                                                                <Calendar
-                                                                    mode="single"
-                                                                    selected={dateRange.from}
-                                                                    onSelect={(date) => setDateRange({ ...dateRange, from: date })}
-                                                                    initialFocus
-                                                                    locale={vi}
-                                                                />
-                                                            </PopoverContent>
-                                                        </Popover>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <Label className="text-xs">Đến ngày</Label>
-                                                        <Popover>
-                                                            <PopoverTrigger asChild>
-                                                                <Button
-                                                                    variant="outline"
-                                                                    size="sm"
-                                                                    className="w-full justify-start text-left font-normal"
-                                                                >
-                                                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                                                    {dateRange.to ? format(dateRange.to, "dd/MM/yyyy") : <span>Chọn ngày</span>}
-                                                                </Button>
-                                                            </PopoverTrigger>
-                                                            <PopoverContent className="w-auto p-0" align="start">
-                                                                <Calendar
-                                                                    mode="single"
-                                                                    selected={dateRange.to}
-                                                                    onSelect={(date) => setDateRange({ ...dateRange, to: date })}
-                                                                    initialFocus
-                                                                    locale={vi}
-                                                                />
-                                                            </PopoverContent>
-                                                        </Popover>
-                                                    </div>
-                                                </div>
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() => setDateRange({ from: undefined, to: undefined })}
-                                                >
-                                                    Xóa bộ lọc
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    </PopoverContent>
-                                </Popover>
+
                             </div>
                         </div>
 
@@ -442,7 +364,7 @@ const SalesOrders = () => {
                                                 {filteredOrders.map((order) => (
                                                     <TableRow key={order.requestProductId}>
                                                         <TableCell className="font-medium">{order.requestProductId.substring(0, 8)}</TableCell>
-                                                        <TableCell>{formatDateTime(order.createdAt)}</TableCell>
+                                                        <TableCell>{order.createdAt}</TableCell>
                                                         <TableCell>{order.agencyName}</TableCell>
                                                         <TableCell>{getTotalProductTypes(order)}</TableCell>
                                                         <TableCell>{getTotalQuantity(order)}</TableCell>
@@ -516,7 +438,7 @@ const SalesOrders = () => {
                                                 <dd>{selectedOrder.requestProductId}</dd>
 
                                                 <dt className="text-muted-foreground">Ngày tạo:</dt>
-                                                <dd>{formatDateTime(selectedOrder.createdAt)}</dd>
+                                                {/* <dd>{formatDateTime(selectedOrder.createdAt)}</dd> */}
 
                                                 <dt className="text-muted-foreground">Đại lý:</dt>
                                                 <dd>{selectedOrder.agencyName}</dd>
@@ -538,7 +460,7 @@ const SalesOrders = () => {
                                                     <dd>ID: {selectedOrder.approvedBy}</dd>
 
                                                     <dt className="text-muted-foreground">Ngày phê duyệt:</dt>
-                                                    <dd>{selectedOrder.updatedAt ? formatDateTime(selectedOrder.updatedAt) : "N/A"}</dd>
+                                                    {/* <dd>{selectedOrder.updatedAt ? formatDateTime(selectedOrder.updatedAt) : "N/A"}</dd> */}
                                                 </dl>
                                             </CardContent>
                                         </Card>

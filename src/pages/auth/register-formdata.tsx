@@ -3,7 +3,6 @@
 import type React from "react"
 
 import { useState, useEffect, useCallback } from "react"
-import { format } from "date-fns"
 import { LocationSelector } from "@/components/location-selector"
 import { UserType, DeparmentType } from "@/types/auth-type"
 import axios, { type AxiosError } from "axios"
@@ -335,7 +334,7 @@ export function RegisterForm() {
             // Chuẩn bị dữ liệu đăng ký
             const registerData = {
                 ...formData,
-                createdAt: format(new Date(), "yyyy-MM-dd'T'HH:mm:ss"),
+                createdAt: new Date(),
             }
 
             console.log("Form submitted with data:", registerData)
