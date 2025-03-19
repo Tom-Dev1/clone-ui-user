@@ -1,4 +1,5 @@
 import type React from "react"
+
 import { type ReactNode, useState, useEffect } from "react"
 import { Link, useNavigate, useLocation } from "react-router-dom"
 import { getUserInfo, logout } from "@/utils/auth-utils"
@@ -11,19 +12,18 @@ import {
     Menu,
     Home,
     LayoutDashboard,
-    ShoppingBag,
-    Package,
+    ClipboardList,
     ShoppingCart,
-    Receipt,
-    FileText,
     CreditCard,
+
+    Package,
     User,
     LogOut,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useMediaQuery } from "@/hooks/use-media-query"
 
-interface SalesLayoutProps {
+interface AgencyLayoutProps {
     children: ReactNode
 }
 
@@ -33,13 +33,14 @@ interface NavItem {
     icon: React.ReactNode
 }
 
-export function SalesLayout({ children }: SalesLayoutProps) {
+export function AgencyLayout({ children }: AgencyLayoutProps) {
     const navigate = useNavigate()
     const location = useLocation()
     const userInfo = getUserInfo()
     const [open, setOpen] = useState(false)
     const isDesktop = useMediaQuery("(min-width: 1024px)")
 
+    // Close sheet when screen size changes to desktop
     useEffect(() => {
         if (isDesktop) {
             setOpen(false)
@@ -58,45 +59,37 @@ export function SalesLayout({ children }: SalesLayoutProps) {
     const navItems: NavItem[] = [
         {
             title: "Tổng quan",
-            href: "/sales/dashboard",
+            href: "/agency/dashboard",
             icon: <LayoutDashboard className="h-5 w-5" />,
         },
         {
-            title: "Đơn hàng",
-            href: "/sales/orders",
-            icon: <ShoppingBag className="h-5 w-5" />,
+            title: "Theo dõi yêu cầu",
+            href: "/agency/requests",
+            icon: <ClipboardList className="h-5 w-5" />,
         },
         {
-            title: "Sản phẩm",
-            href: "/sales/product",
+            title: "Yêu cầu sản phẩm",
+            href: "/agency/product-request",
             icon: <Package className="h-5 w-5" />,
         },
         {
-            title: "Giỏ hàng",
-            href: "/sales/cart",
+            title: "Theo dõi đơn hàng",
+            href: "/agency/orders",
             icon: <ShoppingCart className="h-5 w-5" />,
         },
         {
-            title: "Thuế",
-            href: "/sales/tax",
-            icon: <Receipt className="h-5 w-5" />,
-        },
-        {
-            title: "Yêu cầu xuất kho",
-            href: "/sales/export",
-            icon: <FileText className="h-5 w-5" />,
-        },
-        {
-            title: "Quản lý công nợ",
-            href: "/sales/debt",
+            title: "Thanh toán",
+            href: "/agency/payment",
             icon: <CreditCard className="h-5 w-5" />,
         },
+
         {
             title: "Hồ sơ cá nhân",
-            href: "/sales/profile",
+            href: "/agency/profile",
             icon: <User className="h-5 w-5" />,
         },
     ]
+
     return (
         <div className="min-h-screen bg-gray-100">
             {/* Header */}
@@ -115,11 +108,11 @@ export function SalesLayout({ children }: SalesLayoutProps) {
                                     <SheetContent side="left" className="p-0 w-[280px]">
                                         <div className="p-6 border-b">
                                             <Link
-                                                to="/sales/dashboard"
+                                                to="/agency/dashboard"
                                                 className="text-xl font-bold flex items-center"
                                                 onClick={() => setOpen(false)}
                                             >
-                                                Dashboard
+                                                Đại lý Dashboard
                                             </Link>
                                         </div>
                                         <ScrollArea className="h-[calc(100vh-81px)]">
@@ -133,7 +126,7 @@ export function SalesLayout({ children }: SalesLayoutProps) {
                                                             className={cn(
                                                                 "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                                                                 isActive(item.href)
-                                                                    ? "bg-red-600 text-white"
+                                                                    ? "bg-green-600 text-white"
                                                                     : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
                                                             )}
                                                         >
@@ -158,8 +151,8 @@ export function SalesLayout({ children }: SalesLayoutProps) {
                                     </SheetContent>
                                 </Sheet>
                             )}
-                            <Link to="/sales/dashboard" className="text-xl font-bold flex items-center">
-                                Dashboard
+                            <Link to="/agency/dashboard" className="text-xl font-bold flex items-center">
+                                Đại lý Dashboard
                             </Link>
                         </div>
 
@@ -170,7 +163,7 @@ export function SalesLayout({ children }: SalesLayoutProps) {
                             </Link>
                             <div className="flex items-center space-x-2">
                                 <span className="text-sm text-gray-700 hidden md:inline-block">
-                                    Xin chào, <span className="font-medium">{userInfo?.username || "Quản lý"}</span>
+                                    Xin chào, <span className="font-medium">{userInfo?.username || "Đại lý"}</span>
                                 </span>
                                 <UserAvatar size="sm" />
                             </div>
@@ -200,7 +193,7 @@ export function SalesLayout({ children }: SalesLayoutProps) {
                                     className={cn(
                                         "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                                         isActive(item.href)
-                                            ? "bg-red-600 text-white"
+                                            ? "bg-green-600 text-white"
                                             : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
                                     )}
                                 >

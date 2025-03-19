@@ -1,8 +1,8 @@
-import { MainLayout } from "@/layouts/main-layout"
+import { AgencyLayout } from "@/layouts/agency-layout"
 
 export default function AgencyDashboard() {
     return (
-        <MainLayout>
+        <AgencyLayout>
             <div className="container mx-auto px-4 py-8">
                 <h1 className="text-3xl font-bold mb-6">Đại lý - Dashboard</h1>
 
@@ -125,7 +125,7 @@ export default function AgencyDashboard() {
                     </div>
                 </div>
             </div>
-        </MainLayout>
+        </AgencyLayout>
     )
 }
 

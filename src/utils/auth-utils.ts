@@ -1,20 +1,20 @@
 import { UserRole } from "@/types/auth-type"
 
 interface JwtPayload {
-    "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier": string;
-    "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name": string;
-    "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress": string;
-    "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string;
-    exp: number;
+    "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier": string
+    "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name": string
+    "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress": string
+    "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": string
+    exp: number
 }
 
 interface UserInfo {
-    id: string;
-    username: string;
-    email: string;
-    role: string;
-    roleName: string | null;
-    exp: number;
+    id: string
+    username: string
+    email: string
+    role: string
+    roleName: string | null
+    exp: number
 }
 
 /**
@@ -68,9 +68,9 @@ export function getUserRole(): string | null {
 /**
  * Lấy tên vai trò của người dùng
  * @returns Tên vai trò của người dùng hoặc null nếu chưa đăng nhập
-export function getUserInfo(): UserInfo | null {
+ */
 export function getUserRoleName(): string | null {
-  return localStorage.getItem("role_name")
+    return localStorage.getItem("role_name")
 }
 
 /**
@@ -163,3 +163,102 @@ export function getUserDisplayName(): string {
     // Try to get the most appropriate name field
     return userInfo.roleName || userInfo.username || userInfo.role || "Người dùng"
 }
+
+/**
+ * Lấy header xác thực để gửi kèm request API
+ * @returns Header xác thực hoặc object rỗng nếu chưa đăng nhập
+ */
+export function getAuthHeader(): Record<string, string> {
+    const token = getToken()
+    return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
+/**
+ * Kiểm tra xác thực trước khi gọi API
+ * @returns true nếu đã xác thực và token còn hạn, false nếu không
+ */
+export function checkAuthBeforeRequest(): boolean {
+    if (!isAuthenticated()) {
+        console.error("Bạn cần đăng nhập để thực hiện hành động này.")
+        return false
+    }
+
+    if (isTokenExpired()) {
+        console.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.")
+        logout()
+        return false
+    }
+
+    return true
+}
+
+/**
+ * Xử lý lỗi từ API
+ * @param error Lỗi từ API
+ */
+interface ApiError {
+    response?: {
+        status: number;
+        data?: { message?: string };
+        statusText?: string;
+    };
+    request?: unknown;
+    message?: string;
+}
+
+export function handleApiError(error: ApiError): void {
+    if (error.response) {
+        if (error.response.status === 401) {
+            console.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.")
+            logout()
+            // Chuyển hướng đến trang đăng nhập
+            window.location.href = "/login"
+        } else if (error.response.status === 403) {
+            console.error("Bạn không có quyền thực hiện hành động này.")
+        } else {
+            console.error(`Lỗi ${error.response.status}: ${error.response.data?.message || error.response.statusText}`)
+        }
+    } else if (error.request) {
+        console.error("Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng.")
+    } else {
+        console.error("Đã xảy ra lỗi:", error.message)
+    }
+}
+
+/**
+ * Kiểm tra quyền truy cập API
+ * @param requiredRoles Danh sách các vai trò được phép truy cập
+ * @returns true nếu có quyền, false nếu không
+ */
+export function checkApiPermission(requiredRoles: string[]): boolean {
+    if (!checkAuthBeforeRequest()) {
+        return false
+    }
+
+    if (!hasPermission(requiredRoles)) {
+        console.error("Bạn không có quyền thực hiện hành động này.")
+        return false
+    }
+
+    return true
+}
+
+/**
+ * Thực hiện API call với kiểm tra quyền
+ * @param requiredRoles Danh sách các vai trò được phép truy cập
+ * @param apiCall Hàm gọi API
+ * @returns Kết quả từ API hoặc null nếu không có quyền
+ */
+export async function withPermission<T>(requiredRoles: string[], apiCall: () => Promise<T>): Promise<T | null> {
+    if (!checkApiPermission(requiredRoles)) {
+        return null
+    }
+
+    try {
+        return await apiCall()
+    } catch (error) {
+        handleApiError(error as ApiError)
+        throw error
+    }
+}
+

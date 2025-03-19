@@ -175,6 +175,10 @@ export function SiteHeader({ isHomePage = false }: SiteHeaderProps) {
     const isSalesManager = () => {
         return userRole === "4"
     }
+    const isAgency = () => {
+        return userRole === "2"
+    }
+
     // Get appropriate dashboard link based on user role
     const getDashboardLink = () => {
         if (!userRole) return "/dashboard"
@@ -455,6 +459,11 @@ export function SiteHeader({ isHomePage = false }: SiteHeaderProps) {
 
                 <div className="ml-auto flex items-center space-x-4">
                     {isSalesManager() && (
+                        <div className="mr-2">
+                            <CartIndicator />
+                        </div>
+                    )}
+                    {isAgency() && (
                         <div className="mr-2">
                             <CartIndicator />
                         </div>

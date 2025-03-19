@@ -7,13 +7,11 @@ import type { ProductDetail, ProductCategory } from "@/services/product-service"
 import { ResponsiveContainer } from "@/components/responsive-container"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ChevronRight, ChevronLeft, Phone, ShoppingCart, Plus, Minus } from "lucide-react"
-import { isSalesManager } from "@/utils/auth-utils"
 import { useCart } from "@/hooks/use-cart"
 
 export default function ProductDetail() {
     const { id } = useParams<{ id: string }>()
     const navigate = useNavigate()
-
     const [product, setProduct] = useState<ProductDetail | null>(null)
     const [category, setCategory] = useState<ProductCategory | null>(null)
     const [loading, setLoading] = useState(true)
@@ -21,7 +19,8 @@ export default function ProductDetail() {
     const [activeImageIndex, setActiveImageIndex] = useState(0)
     const [quantity, setQuantity] = useState(1)
     const { addItem } = useCart()
-    const isSales = isSalesManager()
+    const userRole = localStorage.getItem("role_name")
+    const canOrder = userRole === "SALE" || userRole === "AGENCY"
 
     useEffect(() => {
         async function loadProduct() {
@@ -29,10 +28,8 @@ export default function ProductDetail() {
                 navigate("/collections")
                 return
             }
-
             setLoading(true)
             setError(null)
-
             try {
                 const productId = Number.parseInt(id, 10)
                 if (isNaN(productId)) {
@@ -40,17 +37,13 @@ export default function ProductDetail() {
                     setLoading(false)
                     return
                 }
-
                 const productData = await fetchProductById(productId)
                 if (!productData) {
                     setError("Product not found")
                     setLoading(false)
                     return
                 }
-
                 setProduct(productData)
-
-                // Load category information if we have a categoryId
                 if (productData.categoryId) {
                     const categories = await fetchProductCategories()
                     const productCategory = categories.find((c) => c.categoryId === productData.categoryId)
@@ -63,32 +56,26 @@ export default function ProductDetail() {
                 setLoading(false)
             }
         }
-
         loadProduct()
     }, [id, navigate])
-
     const handlePrevImage = () => {
         if (!product?.images?.length) return
         setActiveImageIndex((prev) => (prev === 0 ? product.images.length - 1 : prev - 1))
     }
-
     const handleNextImage = () => {
         if (!product?.images?.length) return
         setActiveImageIndex((prev) => (prev === product.images.length - 1 ? 0 : prev + 1))
     }
-
     const incrementQuantity = () => {
         setQuantity((prev) => prev + 1)
     }
-
     const decrementQuantity = () => {
         setQuantity((prev) => (prev > 1 ? prev - 1 : 1))
     }
-
     const handleAddToCart = () => {
         if (product) {
             addItem(product, quantity)
-            // Optional: Show a success message or notification
+
             alert(`Added ${quantity} ${product.unit} of ${product.productName} to cart`)
         }
     }
@@ -192,8 +179,8 @@ export default function ProductDetail() {
                                         key={index}
                                         onClick={() => setActiveImageIndex(index)}
                                         className={`w-20 h-20 rounded-md border overflow-hidden flex-shrink-0 transition-all duration-200 ${activeImageIndex === index
-                                                ? "ring-2 ring-primary scale-105"
-                                                : "hover:ring-1 hover:ring-primary/50 hover:scale-[1.02]"
+                                            ? "ring-2 ring-primary scale-105"
+                                            : "hover:ring-1 hover:ring-primary/50 hover:scale-[1.02]"
                                             }`}
                                         aria-label={`View image ${index + 1}`}
                                         aria-current={activeImageIndex === index ? "true" : "false"}
@@ -237,7 +224,7 @@ export default function ProductDetail() {
                             </div>
                         </div>
 
-                        {isSales && (
+                        {canOrder && (
                             <div className="mt-6 border-t pt-6 mb-5">
                                 <h3 className="font-medium mb-4">Số lượng đặt hàng</h3>
                                 <div className="flex items-center gap-4">
@@ -266,7 +253,7 @@ export default function ProductDetail() {
                         )}
 
                         <div className="flex gap-4">
-                            {isSales ? (
+                            {canOrder ? (
                                 <button
                                     onClick={handleAddToCart}
                                     className="px-6 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 flex items-center gap-2"

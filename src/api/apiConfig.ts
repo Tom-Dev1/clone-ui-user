@@ -16,14 +16,17 @@ const api: AxiosInstance = axios.create({
         "Content-Type": "application/json",
     },
 })
-
-// Request interceptor
 api.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
-        // Get token from localStorage
-        const token = localStorage.getItem('auth_token')
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`
+        // Get token from localStorage (if in browser environment)
+        if (typeof window !== "undefined") {
+            const token = localStorage.getItem("auth_token")
+            if (token) {
+                // Đảm bảo headers tồn tại
+                config.headers = config.headers || {}
+                // Thêm token vào header Authorization
+                config.headers.Authorization = `Bearer ${token}`
+            }
         }
 
         return config
@@ -49,10 +52,13 @@ api.interceptors.response.use(
             // Handle specific status codes
             if (error.response.status === 401) {
                 // Handle unauthorized (e.g., redirect to login)
-                localStorage.removeItem('auth_token')
+                if (typeof window !== "undefined") {
+                    // Clear auth token
+                    localStorage.removeItem("auth_token")
 
-                // Optionally redirect to login
-                // window.location.href = '/login'
+                    // Optionally redirect to login
+                    window.location.href = "/login"
+                }
             }
         } else if (error.request) {
             // The request was made but no response was received
@@ -66,3 +72,31 @@ api.interceptors.response.use(
 )
 
 export default api
+export { api as axiosClient }
+
+// Helper functions
+export const get = async <T>(url: string)
+    : Promise<T> => {
+
+    const response = await api.get<T>(url)
+    return response.data
+}
+
+export const post = async <T>(url: string, data: object)
+    : Promise<T> => {
+    const response = await api.post<T>(url, data)
+    return response.data
+}
+
+export const put = async <T>(url: string)
+    : Promise<T> => {
+    const response = await api.put<T>(url)
+    return response.data
+}
+
+export const del = async <T>(url: string)
+    : Promise<T> => {
+    const response = await api.delete<T>(url)
+    return response.data
+}
+

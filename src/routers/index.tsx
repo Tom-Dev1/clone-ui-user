@@ -8,9 +8,11 @@ import { MainLayout } from "@/layouts/main-layout"
 import { UserRole } from "@/types/auth-type"
 import { RoleGuard } from "./guards/role-guard"
 import AgencyDashboard from "@/pages/agency/dashboard"
-import AgencyOrders from "@/pages/agency/AgencyOrders"
 import AgencyProfile from "@/pages/agency/AgencyProfile"
-import AgencyProducts from "@/pages/agency/AgencyProducts"
+import AgencyRequests from "@/pages/agency/request"
+import AgencyProductRequest from "@/pages/agency/product-request"
+import AgencyPayment from "@/pages/agency/payment"
+import AgencyOrders from "@/pages/agency/orders"
 
 
 // Lazy load pages for better performance
@@ -37,11 +39,6 @@ const SalesProducts = lazy(() => import("@/pages/sales/sale-product"))
 const SalesCart = lazy(() => import("@/pages/sales/sale-cart"))
 const SalesTax = lazy(() => import("@/pages/sales/sale-tax"))
 
-
-
-// const SalesOrders = lazy(() => import("@/pages/sales/orders"))
-// const SalesCustomers = lazy(() => import("@/pages/sales/customers"))
-// const SalesReports = lazy(() => import("@/pages/sales/reports"))
 
 // const AgencyDashboard = lazy(() => import("@/pages/agency/dashboard"))
 // const AgencyOrders = lazy(() => import("@/pages/agency/orders"))
@@ -181,9 +178,12 @@ export const AppRouter = () => {
                         {/* AGENCY specific routes */}
                         <Route element={<RoleGuard allowedRoles={[UserRole.AGENCY]} />}>
                             <Route path="/agency/dashboard" element={<AgencyDashboard />} />
+                            <Route path="/agency/requests" element={<AgencyRequests />} />
+                            <Route path="/agency/product-request" element={<AgencyProductRequest />} />
                             <Route path="/agency/orders" element={<AgencyOrders />} />
                             <Route path="/agency/profile" element={<AgencyProfile />} />
-                            <Route path="/agency/products" element={<AgencyProducts />} />
+                            <Route path="/agency/payment" element={<AgencyPayment />} />
+
                         </Route>
                     </Route>
 
