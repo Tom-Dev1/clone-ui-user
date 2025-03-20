@@ -501,8 +501,8 @@ export function RegisterForm() {
     }
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="w-full max-w-2xl space-y-8 bg-white p-8 rounded-lg shadow-md">
+        <div className="flex min-h-screen items-center justify-center bg-gray-100">
+            <div className="w-full max-w-6xl space-y-8 bg-white p-8 rounded-lg shadow-md">
                 <div>
                     <h2 className="mt-6 text-center text-3xl font-bold tracking-tight">Đăng ký tài khoản</h2>
                     <p className="mt-2 text-center text-sm text-gray-600">
@@ -513,355 +513,357 @@ export function RegisterForm() {
                     </p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+                <form onSubmit={handleSubmit} className="flex ">
                     {/* Basic Information - Always visible at the top */}
-                    <div className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label htmlFor="username" className="block text-sm font-medium mb-1">
-                                    Tên đăng nhập
-                                </label>
-                                <input
-                                    type="text"
-                                    id="username"
-                                    name="username"
-                                    value={formData.username}
-                                    onChange={handleInputChange}
-                                    onBlur={handleBlur}
-                                    placeholder="Tối thiểu 8 ký tự"
-                                    className={`mt-1 block w-full rounded-md border ${touched.username && errors.username ? "border-red-300" : "border-gray-300"
-                                        } px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500`}
-                                />
-                                {touched.username && errors.username && <p className="text-red-500 text-xs mt-1">{errors.username}</p>}
-                            </div>
-
-                            <div>
-                                <label htmlFor="email" className="block text-sm font-medium mb-1">
-                                    Email
-                                </label>
-                                <input
-                                    type="email"
-                                    id="email"
-                                    name="email"
-                                    value={formData.email}
-                                    onChange={handleInputChange}
-                                    onBlur={handleBlur}
-                                    placeholder="john.doe@example.com"
-                                    className={`mt-1 block w-full rounded-md border ${touched.email && errors.email ? "border-red-300" : "border-gray-300"
-                                        } px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500`}
-                                />
-                                {touched.email && errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
-                            </div>
-
-                            <div>
-                                <label htmlFor="phone" className="block text-sm font-medium mb-1">
-                                    Số điện thoại
-                                </label>
-                                <input
-                                    type="text"
-                                    id="phone"
-                                    name="phone"
-                                    value={formData.phone}
-                                    onChange={handleInputChange}
-                                    onBlur={handleBlur}
-                                    placeholder="10 số (VD: 0912345678)"
-                                    className={`mt-1 block w-full rounded-md border ${touched.phone && errors.phone ? "border-red-300" : "border-gray-300"
-                                        } px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500`}
-                                />
-                                {touched.phone && errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
-                            </div>
-
-                            <div>
-                                <label htmlFor="fullName" className="block text-sm font-medium mb-1">
-                                    Họ và tên
-                                </label>
-                                <input
-                                    type="text"
-                                    id="fullName"
-                                    name="fullName"
-                                    value={formData.fullName}
-                                    onChange={handleInputChange}
-                                    onBlur={handleBlur}
-                                    placeholder="Nguyễn Văn A"
-                                    className={`mt-1 block w-full rounded-md border ${touched.fullName && errors.fullName ? "border-red-300" : "border-gray-300"
-                                        } px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500`}
-                                />
-                                {touched.fullName && errors.fullName && <p className="text-red-500 text-xs mt-1">{errors.fullName}</p>}
-                            </div>
-
-                            {/* Cập nhật phần password với hiển thị độ mạnh */}
-                            <div>
-                                <label htmlFor="password" className="block text-sm font-medium mb-1">
-                                    Mật khẩu
-                                </label>
-                                <input
-                                    type="password"
-                                    id="password"
-                                    name="password"
-                                    value={formData.password}
-                                    onChange={handleInputChange}
-                                    onBlur={handleBlur}
-                                    placeholder="Tối thiểu 8 ký tự, bao gồm số"
-                                    className={`mt-1 block w-full rounded-md border ${touched.password && errors.password ? "border-red-300" : "border-gray-300"
-                                        } px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500`}
-                                />
-                                {touched.password && errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
-
-                                {touched.password && formData.password && (
-                                    <div className="mt-2">
-                                        <p className="text-xs text-gray-500 mb-1">Độ mạnh mật khẩu:</p>
-                                        <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
-                                            <div
-                                                className={`h-full ${getPasswordStrength(formData.password) === "strong"
-                                                    ? "bg-green-500 w-full"
-                                                    : getPasswordStrength(formData.password) === "medium"
-                                                        ? "bg-yellow-500 w-2/3"
-                                                        : "bg-red-500 w-1/3"
-                                                    }`}
-                                            ></div>
-                                        </div>
-                                        <div className="flex justify-between text-xs mt-1">
-                                            <span
-                                                className={
-                                                    getPasswordStrength(formData.password) === "weak"
-                                                        ? "text-red-500 font-medium"
-                                                        : "text-gray-400"
-                                                }
-                                            >
-                                                Yếu
-                                            </span>
-                                            <span
-                                                className={
-                                                    getPasswordStrength(formData.password) === "medium"
-                                                        ? "text-yellow-500 font-medium"
-                                                        : "text-gray-400"
-                                                }
-                                            >
-                                                Trung bình
-                                            </span>
-                                            <span
-                                                className={
-                                                    getPasswordStrength(formData.password) === "strong"
-                                                        ? "text-green-500 font-medium"
-                                                        : "text-gray-400"
-                                                }
-                                            >
-                                                Mạnh
-                                            </span>
-                                        </div>
-                                        <ul className="text-xs text-gray-500 mt-2 space-y-1">
-                                            <li className={formData.password.length >= 8 ? "text-green-500" : ""}>• Tối thiểu 8 ký tự</li>
-                                            <li className={/\d/.test(formData.password) ? "text-green-500" : ""}>• Chứa ít nhất 1 số</li>
-                                            <li className={/[^A-Za-z0-9]/.test(formData.password) ? "text-green-500" : ""}>
-                                                • Chứa ký tự đặc biệt (khuyến nghị)
-                                            </li>
-                                            <li
-                                                className={
-                                                    /[A-Z]/.test(formData.password) && /[a-z]/.test(formData.password) ? "text-green-500" : ""
-                                                }
-                                            >
-                                                • Chứa chữ hoa và chữ thường (khuyến nghị)
-                                            </li>
-                                        </ul>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div>
-                                <label htmlFor="confirmPassword" className="block text-sm font-medium mb-1">
-                                    Xác nhận mật khẩu
-                                </label>
-                                <input
-                                    type="password"
-                                    id="confirmPassword"
-                                    name="confirmPassword"
-                                    value={formData.confirmPassword}
-                                    onChange={handleInputChange}
-                                    onBlur={handleBlur}
-                                    placeholder="••••••"
-                                    className={`mt-1 block w-full rounded-md border ${touched.confirmPassword && errors.confirmPassword ? "border-red-300" : "border-gray-300"
-                                        } px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500`}
-                                />
-                                {touched.confirmPassword && errors.confirmPassword && (
-                                    <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* User Type Selection */}
-                    <div className="space-y-4 pt-4 border-t border-gray-200">
-                        <h3 className="text-lg font-medium">Loại tài khoản</h3>
-                        <div className="flex flex-col space-y-2">
-                            <label className="inline-flex items-center">
-                                <input
-                                    type="radio"
-                                    name="userType"
-                                    value={UserType.EMPLOYEE}
-                                    checked={formData.userType === UserType.EMPLOYEE}
-                                    onChange={handleUserTypeChange}
-                                    className="form-radio h-4 w-4 text-blue-600"
-                                />
-                                <span className="ml-2">Nhân viên</span>
-                            </label>
-                            <label className="inline-flex items-center">
-                                <input
-                                    type="radio"
-                                    name="userType"
-                                    value={UserType.AGENCY}
-                                    checked={formData.userType === UserType.AGENCY}
-                                    onChange={handleUserTypeChange}
-                                    className="form-radio h-4 w-4 text-blue-600"
-                                />
-                                <span className="ml-2">Đại lý</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    {/* Employee-specific fields */}
-                    {formData.userType === UserType.EMPLOYEE && (
-                        <div className="space-y-4 pt-4 border-t border-gray-200">
-                            <h3 className="text-lg font-medium">Thông tin nhân viên</h3>
+                    <div>
+                        <div className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label htmlFor="position" className="block text-sm font-medium mb-1">
-                                        Chức vụ
+                                    <label htmlFor="username" className="block text-sm font-medium mb-1">
+                                        Tên đăng nhập
                                     </label>
                                     <input
                                         type="text"
-                                        id="position"
-                                        name="position"
-                                        value="STAFF"
-                                        disabled
-                                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 bg-gray-100"
+                                        id="username"
+                                        name="username"
+                                        value={formData.username}
+                                        onChange={handleInputChange}
+                                        onBlur={handleBlur}
+                                        placeholder="Tối thiểu 8 ký tự"
+                                        className={`mt-1 block w-full rounded-md border ${touched.username && errors.username ? "border-red-300" : "border-gray-300"
+                                            } px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500`}
                                     />
-                                    <p className="text-xs text-gray-500 mt-1">Chức vụ được đặt mặc định là STAFF</p>
+                                    {touched.username && errors.username && <p className="text-red-500 text-xs mt-1">{errors.username}</p>}
                                 </div>
 
                                 <div>
-                                    <label htmlFor="department" className="block text-sm font-medium mb-1">
-                                        Phòng ban
+                                    <label htmlFor="email" className="block text-sm font-medium mb-1">
+                                        Email
                                     </label>
-                                    <select
-                                        id="department"
-                                        name="department"
-                                        value={formData.department}
+                                    <input
+                                        type="email"
+                                        id="email"
+                                        name="email"
+                                        value={formData.email}
                                         onChange={handleInputChange}
                                         onBlur={handleBlur}
-                                        className={`mt-1 block w-full rounded-md border ${touched.department && errors.department ? "border-red-300" : "border-gray-300"
+                                        placeholder="john.doe@example.com"
+                                        className={`mt-1 block w-full rounded-md border ${touched.email && errors.email ? "border-red-300" : "border-gray-300"
                                             } px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500`}
-                                    >
-                                        <option value="">Chọn phòng ban</option>
-                                        <option value={DeparmentType.WAREHOUSE}>{DeparmentType.WAREHOUSE}</option>
-                                        <option value={DeparmentType.SALES}>{DeparmentType.SALES}</option>
-                                    </select>
-                                    {touched.department && errors.department && (
-                                        <p className="text-red-500 text-xs mt-1">{errors.department}</p>
-                                    )}
+                                    />
+                                    {touched.email && errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
                                 </div>
-                            </div>
-                            <div className="space-y-4 pt-4 border-t border-gray-200">
-                                {/* Location Selector Component */}
-                                <div className="mt-4">
-                                    <h4 className="text-sm font-medium mb-2">Chọn địa điểm</h4>
-                                    <LocationSelector onLocationChange={handleLocationChange} initialValues={locationData} />
-                                    {(errors.provinceName || errors.districtName || errors.wardName) && (
-                                        <p className="text-red-500 text-xs mt-1">Vui lòng chọn đầy đủ thông tin địa điểm</p>
-                                    )}
-                                </div>
-                                <h3 className="text-lg font-medium">Thông tin địa chỉ</h3>
-                                <div className="mb-4">
-                                    <label htmlFor="street" className="block text-sm font-medium mb-1">
-                                        Địa chỉ
+
+                                <div>
+                                    <label htmlFor="phone" className="block text-sm font-medium mb-1">
+                                        Số điện thoại
                                     </label>
                                     <input
                                         type="text"
-                                        id="street"
-                                        name="street"
-                                        value={formData.street}
+                                        id="phone"
+                                        name="phone"
+                                        value={formData.phone}
                                         onChange={handleInputChange}
                                         onBlur={handleBlur}
-                                        placeholder="123 Đường ABC"
-                                        className={`mt-1 block w-full rounded-md border ${touched.street && errors.street ? "border-red-300" : "border-gray-300"
+                                        placeholder="10 số (VD: 0912345678)"
+                                        className={`mt-1 block w-full rounded-md border ${touched.phone && errors.phone ? "border-red-300" : "border-gray-300"
                                             } px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500`}
                                     />
-                                    {touched.street && errors.street && <p className="text-red-500 text-xs mt-1">{errors.street}</p>}
+                                    {touched.phone && errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
+                                </div>
+
+                                <div>
+                                    <label htmlFor="fullName" className="block text-sm font-medium mb-1">
+                                        Họ và tên
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="fullName"
+                                        name="fullName"
+                                        value={formData.fullName}
+                                        onChange={handleInputChange}
+                                        onBlur={handleBlur}
+                                        placeholder="Nguyễn Văn A"
+                                        className={`mt-1 block w-full rounded-md border ${touched.fullName && errors.fullName ? "border-red-300" : "border-gray-300"
+                                            } px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500`}
+                                    />
+                                    {touched.fullName && errors.fullName && <p className="text-red-500 text-xs mt-1">{errors.fullName}</p>}
+                                </div>
+
+                                {/* Cập nhật phần password với hiển thị độ mạnh */}
+                                <div>
+                                    <label htmlFor="password" className="block text-sm font-medium mb-1">
+                                        Mật khẩu
+                                    </label>
+                                    <input
+                                        type="password"
+                                        id="password"
+                                        name="password"
+                                        value={formData.password}
+                                        onChange={handleInputChange}
+                                        onBlur={handleBlur}
+                                        placeholder="Tối thiểu 8 ký tự, bao gồm số"
+                                        className={`mt-1 block w-full rounded-md border ${touched.password && errors.password ? "border-red-300" : "border-gray-300"
+                                            } px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500`}
+                                    />
+                                    {touched.password && errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
+
+                                    {touched.password && formData.password && (
+                                        <div className="mt-2">
+                                            <p className="text-xs text-gray-500 mb-1">Độ mạnh mật khẩu:</p>
+                                            <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+                                                <div
+                                                    className={`h-full ${getPasswordStrength(formData.password) === "strong"
+                                                        ? "bg-green-500 w-full"
+                                                        : getPasswordStrength(formData.password) === "medium"
+                                                            ? "bg-yellow-500 w-2/3"
+                                                            : "bg-red-500 w-1/3"
+                                                        }`}
+                                                ></div>
+                                            </div>
+                                            <div className="flex justify-between text-xs mt-1">
+                                                <span
+                                                    className={
+                                                        getPasswordStrength(formData.password) === "weak"
+                                                            ? "text-red-500 font-medium"
+                                                            : "text-gray-400"
+                                                    }
+                                                >
+                                                    Yếu
+                                                </span>
+                                                <span
+                                                    className={
+                                                        getPasswordStrength(formData.password) === "medium"
+                                                            ? "text-yellow-500 font-medium"
+                                                            : "text-gray-400"
+                                                    }
+                                                >
+                                                    Trung bình
+                                                </span>
+                                                <span
+                                                    className={
+                                                        getPasswordStrength(formData.password) === "strong"
+                                                            ? "text-green-500 font-medium"
+                                                            : "text-gray-400"
+                                                    }
+                                                >
+                                                    Mạnh
+                                                </span>
+                                            </div>
+                                            <ul className="text-xs text-gray-500 mt-2 space-y-1">
+                                                <li className={formData.password.length >= 8 ? "text-green-500" : ""}>• Tối thiểu 8 ký tự</li>
+                                                <li className={/\d/.test(formData.password) ? "text-green-500" : ""}>• Chứa ít nhất 1 số</li>
+                                                <li className={/[^A-Za-z0-9]/.test(formData.password) ? "text-green-500" : ""}>
+                                                    • Chứa ký tự đặc biệt (khuyến nghị)
+                                                </li>
+                                                <li
+                                                    className={
+                                                        /[A-Z]/.test(formData.password) && /[a-z]/.test(formData.password) ? "text-green-500" : ""
+                                                    }
+                                                >
+                                                    • Chứa chữ hoa và chữ thường (khuyến nghị)
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <label htmlFor="confirmPassword" className="block text-sm font-medium mb-1">
+                                        Xác nhận mật khẩu
+                                    </label>
+                                    <input
+                                        type="password"
+                                        id="confirmPassword"
+                                        name="confirmPassword"
+                                        value={formData.confirmPassword}
+                                        onChange={handleInputChange}
+                                        onBlur={handleBlur}
+                                        placeholder="••••••"
+                                        className={`mt-1 block w-full rounded-md border ${touched.confirmPassword && errors.confirmPassword ? "border-red-300" : "border-gray-300"
+                                            } px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500`}
+                                    />
+                                    {touched.confirmPassword && errors.confirmPassword && (
+                                        <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>
+                                    )}
                                 </div>
                             </div>
                         </div>
-                    )}
-
-                    {/* Agency-specific fields */}
-                    {formData.userType === UserType.AGENCY && (
-                        <>
-                            <div className="space-y-4 pt-4 border-t border-gray-200">
-                                <h3 className="text-lg font-medium">Thông tin đại lý</h3>
-                                <div>
-                                    <label htmlFor="agencyName" className="block text-sm font-medium mb-1">
-                                        Tên đại lý
-                                    </label>
+                        {/* User Type Selection */}
+                        <div className="space-y-4  border-gray-200">
+                            <h3 className="text-lg font-medium">Loại tài khoản</h3>
+                            <div className="flex flex-col space-y-2">
+                                <label className="inline-flex items-center">
                                     <input
-                                        type="text"
-                                        id="agencyName"
-                                        name="agencyName"
-                                        value={formData.agencyName}
-                                        onChange={handleInputChange}
-                                        onBlur={handleBlur}
-                                        placeholder="Đại lý ABC"
-                                        className={`mt-1 block w-full rounded-md border ${touched.agencyName && errors.agencyName ? "border-red-300" : "border-gray-300"
-                                            } px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500`}
+                                        type="radio"
+                                        name="userType"
+                                        value={UserType.EMPLOYEE}
+                                        checked={formData.userType === UserType.EMPLOYEE}
+                                        onChange={handleUserTypeChange}
+                                        className="form-radio h-4 w-4 text-blue-600"
                                     />
-                                    {touched.agencyName && errors.agencyName && (
-                                        <p className="text-red-500 text-xs mt-1">{errors.agencyName}</p>
-                                    )}
+                                    <span className="ml-2">Nhân viên</span>
+                                </label>
+                                <label className="inline-flex items-center">
+                                    <input
+                                        type="radio"
+                                        name="userType"
+                                        value={UserType.AGENCY}
+                                        checked={formData.userType === UserType.AGENCY}
+                                        onChange={handleUserTypeChange}
+                                        className="form-radio h-4 w-4 text-blue-600"
+                                    />
+                                    <span className="ml-2">Đại lý</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="ml-8">
+                        {/* Employee-specific fields */}
+                        {formData.userType === UserType.EMPLOYEE && (
+                            <div className="space-y-4 border-gray-200">
+                                <h3 className="text-lg font-medium">Thông tin nhân viên</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label htmlFor="position" className="block text-sm font-medium mb-1">
+                                            Chức vụ
+                                        </label>
+                                        <input
+                                            type="text"
+                                            id="position"
+                                            name="position"
+                                            value="STAFF"
+                                            disabled
+                                            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 bg-gray-100"
+                                        />
+                                        <p className="text-xs text-gray-500 mt-1">Chức vụ được đặt mặc định là STAFF</p>
+                                    </div>
+
+                                    <div>
+                                        <label htmlFor="department" className="block text-sm font-medium mb-1">
+                                            Phòng ban
+                                        </label>
+                                        <select
+                                            id="department"
+                                            name="department"
+                                            value={formData.department}
+                                            onChange={handleInputChange}
+                                            onBlur={handleBlur}
+                                            className={`mt-1 block w-full rounded-md border ${touched.department && errors.department ? "border-red-300" : "border-gray-300"
+                                                } px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500`}
+                                        >
+                                            <option value="">Chọn phòng ban</option>
+                                            <option value={DeparmentType.WAREHOUSE}>{DeparmentType.WAREHOUSE}</option>
+                                            <option value={DeparmentType.SALES}>{DeparmentType.SALES}</option>
+                                        </select>
+                                        {touched.department && errors.department && (
+                                            <p className="text-red-500 text-xs mt-1">{errors.department}</p>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="space-y-4 pt-4 border-t border-gray-200">
+                                    {/* Location Selector Component */}
+                                    <div className="mt-4">
+                                        <h4 className="text-sm font-medium mb-2">Chọn địa điểm</h4>
+                                        <LocationSelector onLocationChange={handleLocationChange} initialValues={locationData} />
+                                        {(errors.provinceName || errors.districtName || errors.wardName) && (
+                                            <p className="text-red-500 text-xs mt-1">Vui lòng chọn đầy đủ thông tin địa điểm</p>
+                                        )}
+                                    </div>
+                                    <h3 className="text-lg font-medium">Thông tin địa chỉ</h3>
+                                    <div className="mb-4">
+                                        <label htmlFor="street" className="block text-sm font-medium mb-1">
+                                            Địa chỉ
+                                        </label>
+                                        <input
+                                            type="text"
+                                            id="street"
+                                            name="street"
+                                            value={formData.street}
+                                            onChange={handleInputChange}
+                                            onBlur={handleBlur}
+                                            placeholder="123 Đường ABC"
+                                            className={`mt-1 block w-full rounded-md border ${touched.street && errors.street ? "border-red-300" : "border-gray-300"
+                                                } px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500`}
+                                        />
+                                        {touched.street && errors.street && <p className="text-red-500 text-xs mt-1">{errors.street}</p>}
+                                    </div>
                                 </div>
                             </div>
+                        )}
 
-                            {/* Address Information - Only for AGENCY */}
-                            <div className="space-y-4 pt-4 border-t border-gray-200">
-                                {/* Location Selector Component */}
-                                <div className="mt-4">
-                                    <h4 className="text-sm font-medium mb-2">Chọn địa điểm</h4>
-                                    <LocationSelector onLocationChange={handleLocationChange} initialValues={locationData} />
-                                    {(errors.provinceName || errors.districtName || errors.wardName) && (
-                                        <p className="text-red-500 text-xs mt-1">Vui lòng chọn đầy đủ thông tin địa điểm</p>
-                                    )}
+                        {/* Agency-specific fields */}
+                        {formData.userType === UserType.AGENCY && (
+                            <>
+                                <div className="space-y-4 pt-4 border-t border-gray-200">
+                                    <h3 className="text-lg font-medium">Thông tin đại lý</h3>
+                                    <div>
+                                        <label htmlFor="agencyName" className="block text-sm font-medium mb-1">
+                                            Tên đại lý
+                                        </label>
+                                        <input
+                                            type="text"
+                                            id="agencyName"
+                                            name="agencyName"
+                                            value={formData.agencyName}
+                                            onChange={handleInputChange}
+                                            onBlur={handleBlur}
+                                            placeholder="Đại lý ABC"
+                                            className={`mt-1 block w-full rounded-md border ${touched.agencyName && errors.agencyName ? "border-red-300" : "border-gray-300"
+                                                } px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500`}
+                                        />
+                                        {touched.agencyName && errors.agencyName && (
+                                            <p className="text-red-500 text-xs mt-1">{errors.agencyName}</p>
+                                        )}
+                                    </div>
                                 </div>
-                                <h3 className="text-lg font-medium">Thông tin địa chỉ</h3>
-                                <div className="mb-4">
-                                    <label htmlFor="street" className="block text-sm font-medium mb-1">
-                                        Địa chỉ
-                                    </label>
-                                    <input
-                                        type="text"
-                                        id="street"
-                                        name="street"
-                                        value={formData.street}
-                                        onChange={handleInputChange}
-                                        onBlur={handleBlur}
-                                        placeholder="123 Đường ABC"
-                                        className={`mt-1 block w-full rounded-md border ${touched.street && errors.street ? "border-red-300" : "border-gray-300"
-                                            } px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500`}
-                                    />
-                                    {touched.street && errors.street && <p className="text-red-500 text-xs mt-1">{errors.street}</p>}
-                                </div>
-                            </div>
-                        </>
-                    )}
 
-                    <div className="pt-6">
-                        <button
-                            type="submit"
-                            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-500 focus:outline-none disabled:opacity-70"
-                            disabled={isSubmitting}
-                            onClick={(e) => {
-                                if (isSubmitting) {
-                                    e.preventDefault()
-                                }
-                            }}
-                        >
-                            {isSubmitting ? "Đang xử lý..." : "Đăng ký"}
-                        </button>
+                                {/* Address Information - Only for AGENCY */}
+                                <div className="space-y-4 pt-4 border-t border-gray-200">
+                                    {/* Location Selector Component */}
+                                    <div className="mt-4">
+                                        <h4 className="text-sm font-medium mb-2">Chọn địa điểm</h4>
+                                        <LocationSelector onLocationChange={handleLocationChange} initialValues={locationData} />
+                                        {(errors.provinceName || errors.districtName || errors.wardName) && (
+                                            <p className="text-red-500 text-xs mt-1">Vui lòng chọn đầy đủ thông tin địa điểm</p>
+                                        )}
+                                    </div>
+                                    <h3 className="text-lg font-medium">Thông tin địa chỉ</h3>
+                                    <div className="mb-4">
+                                        <label htmlFor="street" className="block text-sm font-medium mb-1">
+                                            Địa chỉ
+                                        </label>
+                                        <input
+                                            type="text"
+                                            id="street"
+                                            name="street"
+                                            value={formData.street}
+                                            onChange={handleInputChange}
+                                            onBlur={handleBlur}
+                                            placeholder="123 Đường ABC"
+                                            className={`mt-1 block w-full rounded-md border ${touched.street && errors.street ? "border-red-300" : "border-gray-300"
+                                                } px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500`}
+                                        />
+                                        {touched.street && errors.street && <p className="text-red-500 text-xs mt-1">{errors.street}</p>}
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
+                        <div className="pt-6">
+                            <button
+                                type="submit"
+                                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-500 focus:outline-none disabled:opacity-70"
+                                disabled={isSubmitting}
+                                onClick={(e) => {
+                                    if (isSubmitting) {
+                                        e.preventDefault()
+                                    }
+                                }}
+                            >
+                                {isSubmitting ? "Đang xử lý..." : "Đăng ký"}
+                            </button>
+                        </div>
                     </div>
                 </form>
             </div>

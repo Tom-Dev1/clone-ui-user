@@ -52,7 +52,6 @@ export const AppRouter = () => {
                 <Routes>
                     {/* Public routes */}
                     <Route
-
                         path="/"
                         element={
                             <>

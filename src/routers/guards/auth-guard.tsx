@@ -1,5 +1,6 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom"
 import { isAuthenticated, isTokenExpired } from "@/utils/auth-utils"
+import { SiteHeader } from "@/components/site-header"
 
 export const AuthGuard = () => {
     const location = useLocation()
@@ -10,6 +11,11 @@ export const AuthGuard = () => {
         return <Navigate to="/login" state={{ from: location }} replace />
     }
 
-    return <Outlet />
+    return (
+        <>
+            <SiteHeader />
+            <Outlet />
+        </>
+    )
 }
 

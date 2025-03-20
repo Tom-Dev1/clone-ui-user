@@ -1,8 +1,12 @@
+import { SiteHeader } from "@/components/site-header"
 import { Login } from "./login-formdata"
 
 const login = () => {
     return (
-        <><Login /></>
+        <>
+            <SiteHeader />
+            <Login />
+        </>
     )
 }
 
