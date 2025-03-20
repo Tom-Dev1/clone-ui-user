@@ -117,6 +117,7 @@ const AgencyOrders: React.FC = () => {
         if (token) {
             fetchOrders()
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [token])
 
     // Lọc đơn hàng khi searchTerm hoặc statusFilter thay đổi
@@ -363,7 +364,7 @@ const AgencyOrders: React.FC = () => {
                                                 <TableCell>{renderStatusBadge(order.status)}</TableCell>
                                                 <TableCell className="text-right">{order.finalPrice.toLocaleString("vi-VN")} đ</TableCell>
                                                 <TableCell className="w-60">
-                                                    <div className="flex ml-2  gap-3">
+                                                    <div className="flex ml-2 gap-3">
                                                         <div>
                                                             <Button variant="outline" size="sm" onClick={() => viewOrderDetails(order)}>
                                                                 Xem chi tiết
