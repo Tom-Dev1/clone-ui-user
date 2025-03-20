@@ -16,7 +16,7 @@ export function MainLayout({ children, maxWidth = "2xl", isHomePage = false }: M
     const isHomePathname = location.pathname === "/"
 
     return (
-        <div className="flex min-h-screen flex-col">
+        <div className="flex flex-col">
             <SiteHeader isHomePage={isHomePage} />
 
             <main className={`flex-1${isHomePage ? "mt-0" : ""}`}>

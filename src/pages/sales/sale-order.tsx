@@ -4,7 +4,6 @@ import { get, put } from "@/api/axiosUtils"
 import { isAuthenticated, isSalesManager, getToken } from "@/utils/auth-utils"
 import { SalesLayout } from "@/layouts/sale-layout"
 
-// Định nghĩa các kiểu dữ liệu
 interface Product {
     productId: number
     productCode: string
@@ -30,6 +29,7 @@ interface RequestProductDetail {
 
 interface RequestProduct {
     requestProductId: string
+    requestCode: number
     agencyId: number
     approvedBy: number | null
     createdAt: string
@@ -47,7 +47,7 @@ export default function SalesOrders() {
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [selectedOrder, setSelectedOrder] = useState<RequestProduct | null>(null)
-    const [showOrderDetail, setShowOrderDetail] = useState(false)
+    // const [showOrderDetail, setShowOrderDetail] = useState(false)
     const [statusFilter, setStatusFilter] = useState<string>("all")
     const [searchQuery, setSearchQuery] = useState("")
     const [dateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
@@ -57,20 +57,15 @@ export default function SalesOrders() {
 
     // Kiểm tra xác thực và quyền truy cập
     useEffect(() => {
-        // Kiểm tra xem người dùng đã đăng nhập chưa
         if (!isAuthenticated()) {
             navigate("/login")
             return
         }
-
-        // Kiểm tra xem người dùng có quyền SALES_MANAGER không
         if (!isSalesManager()) {
             navigate("/unauthorized")
             return
         }
     }, [navigate])
-
-    // Fetch đơn hàng từ API với token
     useEffect(() => {
         const fetchOrders = async () => {
             setIsLoading(true)
@@ -88,7 +83,6 @@ export default function SalesOrders() {
                 const response = await get<RequestProduct[]>("/request-products")
 
                 if (response.success && Array.isArray(response.result)) {
-                    // Thêm tên đại lý mẫu (trong thực tế sẽ lấy từ API)
                     const ordersWithAgencyNames = response.result.map((order) => ({
                         ...order,
                         agencyName: `Đại lý ${order.agencyId}`,
@@ -161,11 +155,24 @@ export default function SalesOrders() {
         setFilteredOrders(filtered)
     }, [orders, statusFilter, searchQuery, dateRange])
 
+    // Sắp xếp đơn hàng theo trạng thái
+    const sortedOrders = [...filteredOrders].sort((a, b) => {
+        // Thứ tự ưu tiên: PENDING -> APPROVED -> COMPLETED -> CANCELLED
+        const statusOrder = {
+            Pending: 0,
+            Approved: 1,
+            Completed: 2,
+            Canceled: 3,
+        }
+
+        return statusOrder[a.requestStatus] - statusOrder[b.requestStatus]
+    })
+
     // Hiển thị chi tiết đơn hàng
-    const handleViewOrderDetail = (order: RequestProduct) => {
-        setSelectedOrder(order)
-        setShowOrderDetail(true)
-    }
+    // const handleViewOrderDetail = (order: RequestProduct) => {
+    //     // setSelectedOrder(order)
+    //     // setShowOrderDetail(true)
+    // }
 
     // Phê duyệt đơn hàng
     const handleApproveOrder = async (requestProductId: string) => {
@@ -223,60 +230,6 @@ export default function SalesOrders() {
         }
     }
 
-    // Xác nhận hoàn thành đơn hàng
-    // const handleCompleteOrder = async (requestProductId: string) => {
-    //     try {
-    //         // Kiểm tra quyền SALES_MANAGER
-    //         if (!isSalesManager()) {
-    //             alert("Bạn không có quyền xác nhận hoàn thành đơn hàng")
-    //             return
-    //         }
-
-    //         // Lấy token từ auth-service
-    //         const token = getToken()
-
-    //         if (!token) {
-    //             navigate("/login")
-    //             return
-    //         }
-
-    //         const response = await put(`/request-product/${requestProductId}/complete`, {})
-
-    //         if (response.success) {
-    //             // Cập nhật trạng thái đơn hàng trong state
-    //             const updatedOrders = orders.map((order) =>
-    //                 order.requestProductId === requestProductId
-    //                     ? { ...order, requestStatus: "Completed" as const, updatedAt: new Date().toISOString() }
-    //                     : order,
-    //             )
-    //             setOrders(updatedOrders)
-
-    //             // Nếu đang xem chi tiết đơn hàng này, cập nhật thông tin
-    //             if (selectedOrder && selectedOrder.requestProductId === requestProductId) {
-    //                 setSelectedOrder({
-    //                     ...selectedOrder,
-    //                     requestStatus: "Completed",
-    //                     updatedAt: new Date().toISOString(),
-    //                 })
-    //             }
-
-    //             alert("Đơn hàng đã được xác nhận hoàn thành!")
-    //         } else {
-    //             alert("Không thể xác nhận hoàn thành đơn hàng. Vui lòng thử lại sau.")
-    //         }
-    //     } catch (err) {
-    //         console.error("Error completing order:", err)
-
-    //         // Kiểm tra lỗi xác thực
-    //         if (err instanceof Error && err.message.includes("401")) {
-    //             navigate("/login")
-    //             return
-    //         }
-
-    //         alert("Đã xảy ra lỗi khi xác nhận hoàn thành đơn hàng")
-    //     }
-    // }
-
     // Hủy đơn hàng
     const handleCancelOrder = async (requestProductId: string) => {
         try {
@@ -332,14 +285,9 @@ export default function SalesOrders() {
     }
 
     // Tính tổng số lượng sản phẩm trong đơn hàng
-    const getTotalQuantity = (order: RequestProduct) => {
-        return order.requestProductDetails.reduce((total, detail) => total + detail.quantity, 0)
-    }
 
     // Tính tổng số loại sản phẩm trong đơn hàng
-    const getTotalProductTypes = (order: RequestProduct) => {
-        return order.requestProductDetails.length
-    }
+
 
     // Hiển thị trạng thái đơn hàng
     const renderStatusBadge = (status: string) => {
@@ -384,7 +332,6 @@ export default function SalesOrders() {
             year: "numeric",
             month: "2-digit",
             day: "2-digit",
-
         })
     }
 
@@ -456,18 +403,8 @@ export default function SalesOrders() {
                                         >
                                             Đại lý
                                         </th>
-                                        <th
-                                            scope="col"
-                                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                        >
-                                            Số SP
-                                        </th>
-                                        <th
-                                            scope="col"
-                                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                        >
-                                            Tổng SL
-                                        </th>
+
+
                                         <th
                                             scope="col"
                                             className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -483,28 +420,25 @@ export default function SalesOrders() {
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                    {filteredOrders.map((order) => (
+                                    {sortedOrders.map((order) => (
                                         <tr key={order.requestProductId} className="hover:bg-gray-50">
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                {order.requestProductId.substring(0, 8)}
+                                                {order.requestCode}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {formatDateTime(order.createdAt)}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.agencyName}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {getTotalProductTypes(order)}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{getTotalQuantity(order)}</td>
+
                                             <td className="px-6 py-4 whitespace-nowrap">{renderStatusBadge(order.requestStatus)}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                 <div className="flex justify-around ml-2">
-                                                    <button
+                                                    {/* <button
                                                         onClick={() => handleViewOrderDetail(order)}
                                                         className="text-blue-600 hover:text-blue-900"
                                                     >
                                                         Chi tiết
-                                                    </button>
+                                                    </button> */}
                                                     {order.requestStatus === "Pending" && (
                                                         <button
                                                             onClick={() => handleApproveOrder(order.requestProductId)}
@@ -514,7 +448,7 @@ export default function SalesOrders() {
                                                         </button>
                                                     )}
 
-                                                    {(order.requestStatus === "Pending") && (
+                                                    {order.requestStatus === "Pending" && (
                                                         <button
                                                             onClick={() => handleCancelOrder(order.requestProductId)}
                                                             className="text-red-600 hover:text-red-900"
@@ -532,7 +466,7 @@ export default function SalesOrders() {
                     </div>
                 )}
 
-                {/* Order Detail Modal */}
+                {/* Order Detail Modal
                 {selectedOrder && showOrderDetail && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                         <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -637,7 +571,7 @@ export default function SalesOrders() {
                             </div>
                         </div>
                     </div>
-                )}
+                )} */}
             </div>
         </SalesLayout>
     )

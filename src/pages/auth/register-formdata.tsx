@@ -515,7 +515,7 @@ export function RegisterForm() {
 
                 <form onSubmit={handleSubmit} className="flex ">
                     {/* Basic Information - Always visible at the top */}
-                    <div>
+                    <div className="w-[665px]">
                         <div className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
@@ -718,7 +718,7 @@ export function RegisterForm() {
                             </div>
                         </div>
                     </div>
-                    <div className="ml-8">
+                    <div className="ml-8 w-[665px]">
                         {/* Employee-specific fields */}
                         {formData.userType === UserType.EMPLOYEE && (
                             <div className="space-y-4 border-gray-200">
@@ -736,7 +736,6 @@ export function RegisterForm() {
                                             disabled
                                             className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 bg-gray-100"
                                         />
-                                        <p className="text-xs text-gray-500 mt-1">Chức vụ được đặt mặc định là STAFF</p>
                                     </div>
 
                                     <div>
@@ -761,9 +760,9 @@ export function RegisterForm() {
                                         )}
                                     </div>
                                 </div>
-                                <div className="space-y-4 pt-4 border-t border-gray-200">
+                                <div className="space-y-4 border-gray-200">
                                     {/* Location Selector Component */}
-                                    <div className="mt-4">
+                                    <div className="">
                                         <h4 className="text-sm font-medium mb-2">Chọn địa điểm</h4>
                                         <LocationSelector onLocationChange={handleLocationChange} initialValues={locationData} />
                                         {(errors.provinceName || errors.districtName || errors.wardName) && (
@@ -795,7 +794,7 @@ export function RegisterForm() {
                         {/* Agency-specific fields */}
                         {formData.userType === UserType.AGENCY && (
                             <>
-                                <div className="space-y-4 pt-4 border-t border-gray-200">
+                                <div className="space-y-4 border-gray-200">
                                     <h3 className="text-lg font-medium">Thông tin đại lý</h3>
                                     <div>
                                         <label htmlFor="agencyName" className="block text-sm font-medium mb-1">
@@ -819,7 +818,7 @@ export function RegisterForm() {
                                 </div>
 
                                 {/* Address Information - Only for AGENCY */}
-                                <div className="space-y-4 pt-4 border-t border-gray-200">
+                                <div className="space-y-4 border-gray-200">
                                     {/* Location Selector Component */}
                                     <div className="mt-4">
                                         <h4 className="text-sm font-medium mb-2">Chọn địa điểm</h4>

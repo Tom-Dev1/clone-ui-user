@@ -227,7 +227,7 @@ export function SiteHeader({ isHomePage = false }: SiteHeaderProps) {
             className={cn(
                 "w-full transition-all duration-300",
                 "fixed left-0 top-0 z-50",
-                scrolledPast500 ? "bg-white" : isHomePage ? "bg-transparent" : "bg-white",
+                scrolledPast500 ? "bg-white" : isHomePage ? "bg-transparent" : "bg-transparent",
                 !isHomePage && !isVisible && "-translate-y-full",
             )}
         >
