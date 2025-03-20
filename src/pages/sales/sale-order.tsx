@@ -34,7 +34,7 @@ interface RequestProduct {
     approvedBy: number | null
     createdAt: string
     updatedAt: string | null
-    requestStatus: "Pending" | "Approved" | "Completed" | "Cancelled"
+    requestStatus: "Pending" | "Approved" | "Completed" | "Canceled"
     requestProductDetails: RequestProductDetail[]
     agencyName?: string // Thêm tên đại lý nếu có
 }
@@ -127,7 +127,7 @@ export default function SalesOrders() {
                 if (statusFilter === "Pending") return order.requestStatus === "Pending"
                 if (statusFilter === "Approved") return order.requestStatus === "Approved"
                 if (statusFilter === "Completed") return order.requestStatus === "Completed"
-                if (statusFilter === "Cancelled") return order.requestStatus === "Cancelled"
+                if (statusFilter === "Canceled") return order.requestStatus === "Canceled"
 
                 return true
             })
@@ -300,7 +300,7 @@ export default function SalesOrders() {
                 // Cập nhật trạng thái đơn hàng trong state
                 const updatedOrders = orders.map((order) =>
                     order.requestProductId === requestProductId
-                        ? { ...order, requestStatus: "Cancelled" as const, updatedAt: new Date().toISOString() }
+                        ? { ...order, requestStatus: "Canceled" as const, updatedAt: new Date().toISOString() }
                         : order,
                 )
                 setOrders(updatedOrders)
@@ -309,7 +309,7 @@ export default function SalesOrders() {
                 if (selectedOrder && selectedOrder.requestProductId === requestProductId) {
                     setSelectedOrder({
                         ...selectedOrder,
-                        requestStatus: "Cancelled",
+                        requestStatus: "Canceled",
                         updatedAt: new Date().toISOString(),
                     })
                 }
@@ -362,7 +362,7 @@ export default function SalesOrders() {
                         Hoàn thành
                     </span>
                 )
-            case "Cancelled":
+            case "Canceled":
                 return (
                     <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
                         Đã hủy
@@ -384,8 +384,7 @@ export default function SalesOrders() {
             year: "numeric",
             month: "2-digit",
             day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit",
+
         })
     }
 
@@ -408,8 +407,7 @@ export default function SalesOrders() {
                             <option value="all">Tất cả</option>
                             <option value="Pending">Chờ duyệt</option>
                             <option value="Approved">Đã duyệt</option>
-                            <option value="Completed">Hoàn thành</option>
-                            <option value="Cancelled">Đã hủy</option>
+                            <option value="Canceled">Đã hủy</option>
                         </select>
                     </div>
                 </div>
