@@ -12,7 +12,7 @@ import { SalesLayout } from "@/layouts/sale-layout"
 
 const SalesCart = () => {
     const navigate = useNavigate()
-    const { items, removeItem, updateItemQuantity, clearAllItems } = useCart()
+    const { cartItems, itemCount, totalPrice, removeItem, updateItemQuantity, clearCart } = useCart()
     const isSales = isSalesManager()
 
     // Redirect if not a sales manager
@@ -35,7 +35,7 @@ const SalesCart = () => {
 
     const handleClearCart = () => {
         if (window.confirm("Bạn có chắc chắn muốn xóa tất cả sản phẩm?")) {
-            clearAllItems()
+            clearCart()
         }
     }
 
@@ -50,12 +50,16 @@ const SalesCart = () => {
 
     return (
         <SalesLayout>
-
             <div className="py-8 mx-10">
                 <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-2xl font-bold">Giỏ hàng của bạn</h1>
+                    <h1 className="text-2xl font-bold">
+                        Giỏ hàng của bạn
+                        <span className="ml-2 text-sm font-normal bg-primary/10 text-primary px-3 py-1 rounded-full">
+                            {itemCount} sản phẩm
+                        </span>
+                    </h1>
                     <div className="flex gap-2">
-                        {items.length > 0 && (
+                        {cartItems.length > 0 && (
                             <Button variant="outline" onClick={handleClearCart}>
                                 Xóa tất cả
                             </Button>
@@ -64,7 +68,7 @@ const SalesCart = () => {
                     </div>
                 </div>
 
-                {items.length === 0 ? (
+                {cartItems.length === 0 ? (
                     <div className="bg-muted/20 rounded-lg p-8 text-center">
                         <ShoppingCart className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
                         <h3 className="text-lg font-medium mb-2">Giỏ hàng trống</h3>
@@ -74,12 +78,12 @@ const SalesCart = () => {
                 ) : (
                     <div className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {items.map((item) => (
+                            {cartItems.map((item) => (
                                 <Card key={item.productId} className="overflow-hidden">
                                     <div className="aspect-[1/1] relative">
-                                        {item.image ? (
+                                        {item.images ? (
                                             <img
-                                                src={item.image || "/placeholder.svg"}
+                                                src={item.images?.[0] || "/placeholder.svg"}
                                                 alt={item.productName}
                                                 className="w-full h-full object-cover"
                                                 onError={(e) => {
@@ -129,11 +133,17 @@ const SalesCart = () => {
                                                     onClick={() => handleQuantityChange(item.productId, item.quantity + 1)}
                                                     className="px-2 py-1 border-l hover:bg-muted/20"
                                                     title="Tăng số lượng"
+                                                    disabled={item.quantity >= item.availableStock}
                                                 >
                                                     <Plus className="h-3 w-3" />
                                                 </button>
                                             </div>
                                         </div>
+                                        {item.quantity >= item.availableStock && (
+                                            <p className="text-xs text-amber-600 mt-1">
+                                                Đã đạt số lượng tối đa ({item.availableStock} {item.unit})
+                                            </p>
+                                        )}
                                     </CardContent>
                                 </Card>
                             ))}
@@ -144,11 +154,16 @@ const SalesCart = () => {
                             <div className="space-y-2 mb-4">
                                 <div className="flex justify-between">
                                     <span>Tổng số sản phẩm:</span>
-                                    <span>{items.length} loại</span>
+                                    <span>{cartItems.length} loại</span>
                                 </div>
                                 <div className="flex justify-between">
                                     <span>Tổng số lượng:</span>
-                                    <span>{items.reduce((total, item) => total + item.quantity, 0)} đơn vị</span>
+                                    <span>{itemCount} đơn vị</span>
+                                </div>
+                                <Separator className="my-2" />
+                                <div className="flex justify-between font-medium text-lg">
+                                    <span>Tổng cộng:</span>
+                                    <span>{totalPrice.toLocaleString("vi-VN")} đ</span>
                                 </div>
                             </div>
                             <Button onClick={handleCheckout} className="w-full" size="lg">
@@ -158,7 +173,6 @@ const SalesCart = () => {
                     </div>
                 )}
             </div>
-
         </SalesLayout>
     )
 }
