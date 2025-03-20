@@ -1,3 +1,5 @@
+"use client"
+
 import type React from "react"
 import { useEffect, useState } from "react"
 import { useParams, useNavigate, Link } from "react-router-dom"
@@ -223,8 +225,8 @@ export default function ProductDetail() {
                                         key={index}
                                         onClick={() => setActiveImageIndex(index)}
                                         className={`w-20 h-20 rounded-md border overflow-hidden flex-shrink-0 transition-all duration-200 ${activeImageIndex === index
-                                            ? "ring-2 ring-primary scale-105"
-                                            : "hover:ring-1 hover:ring-primary/50 hover:scale-[1.02]"
+                                                ? "ring-2 ring-primary scale-105"
+                                                : "hover:ring-1 hover:ring-primary/50 hover:scale-[1.02]"
                                             }`}
                                         aria-label={`View image ${index + 1}`}
                                         aria-current={activeImageIndex === index ? "true" : "false"}

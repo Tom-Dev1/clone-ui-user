@@ -1,45 +1,66 @@
 import { useDispatch, useSelector } from "react-redux"
-import type { TypedUseSelectorHook } from "react-redux"
-import type { RootState, AppDispatch } from "@/store"
-import { addToCart, removeFromCart, updateQuantity, clearCart } from "@/store/cartSlice"
+import {
+    addItem,
+    removeItem,
+    updateItemQuantity,
+    clearAllItems,
+    selectCartItems,
+    selectCartItemCount,
+    selectCartTotalPrice,
+} from "@/store/cartSlice"
 import type { ProductDetail } from "@/services/product-service"
 
-// Use throughout your app instead of plain `useDispatch` and `useSelector`
-export const useAppDispatch: () => AppDispatch = useDispatch
-export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector
-
 export function useCart() {
-    const dispatch = useAppDispatch()
-    const cartItems = useAppSelector((state) => state.cart.items)
+    const dispatch = useDispatch()
+    const cartItems = useSelector(selectCartItems)
+    const itemCount = useSelector(selectCartItemCount)
+    const totalPrice = useSelector(selectCartTotalPrice)
 
-    const addItem = (product: ProductDetail, quantity = 1) => {
-        dispatch(addToCart({ product, quantity }))
+    const addItemToCart = (product: ProductDetail, quantity: number) => {
+        if (quantity <= 0) {
+            console.error("Quantity must be greater than 0")
+            return
+        }
+
+        if (quantity > product.availableStock) {
+            console.warn(`Quantity adjusted to available stock: ${product.availableStock}`)
+            quantity = product.availableStock
+        }
+
+        dispatch(addItem({ product, quantity }))
     }
 
-    const removeItem = (productId: number) => {
-        dispatch(removeFromCart(productId))
+    const removeItemFromCart = (productId: number) => {
+        dispatch(removeItem(productId))
     }
 
-    const updateItemQuantity = (productId: number, quantity: number) => {
-        dispatch(updateQuantity({ productId, quantity }))
+    const updateCartItemQuantity = (productId: number, quantity: number) => {
+        if (quantity <= 0) {
+            console.error("Quantity must be greater than 0")
+            return
+        }
+
+        const item = cartItems.find((item) => item.productId === productId)
+        if (item && quantity > item.availableStock) {
+            console.warn(`Quantity adjusted to available stock: ${item.availableStock}`)
+            quantity = item.availableStock
+        }
+
+        dispatch(updateItemQuantity({ productId, quantity }))
     }
 
-    const clearAllItems = () => {
-        dispatch(clearCart())
-    }
-
-    const getCartTotal = () => {
-        // Calculate the total quantity of all items in the cart
-        return cartItems.reduce((total, item) => total + item.quantity, 0)
+    const clearCart = () => {
+        dispatch(clearAllItems())
     }
 
     return {
-        items: cartItems,
-        addItem,
-        removeItem,
-        updateItemQuantity,
-        clearAllItems,
-        getCartTotal,
+        cartItems,
+        itemCount,
+        totalPrice,
+        addItem: addItemToCart,
+        removeItem: removeItemFromCart,
+        updateItemQuantity: updateCartItemQuantity,
+        clearCart,
     }
 }
 
