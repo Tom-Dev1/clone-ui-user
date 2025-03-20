@@ -1,27 +1,7 @@
-
 import { useState, useEffect } from "react"
-import { ResponsiveContainer } from "@/components/responsive-container"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Check, Eye, Search, ShoppingBag } from "lucide-react"
-import { get, put } from "@/api/axiosUtils"
-
-// Thêm import cho auth-utils và useNavigate
 import { useNavigate } from "react-router-dom"
-import { getUserRole, isAuthenticated, getToken } from "@/utils/auth-utils"
+import { get, put } from "@/api/axiosUtils"
+import { isAuthenticated, isSalesManager, getToken } from "@/utils/auth-utils"
 import { SalesLayout } from "@/layouts/sale-layout"
 
 // Định nghĩa các kiểu dữ liệu
@@ -54,13 +34,12 @@ interface RequestProduct {
     approvedBy: number | null
     createdAt: string
     updatedAt: string | null
-    requestStatus: "Pending" | "Approved"
+    requestStatus: "Pending" | "Approved" | "Completed" | "Cancelled"
     requestProductDetails: RequestProductDetail[]
     agencyName?: string // Thêm tên đại lý nếu có
 }
 
-// Thay đổi phần đầu của component SalesOrders
-const SalesOrders = () => {
+export default function SalesOrders() {
     const navigate = useNavigate()
     // State cho danh sách đơn hàng
     const [orders, setOrders] = useState<RequestProduct[]>([])
@@ -71,7 +50,7 @@ const SalesOrders = () => {
     const [showOrderDetail, setShowOrderDetail] = useState(false)
     const [statusFilter, setStatusFilter] = useState<string>("all")
     const [searchQuery, setSearchQuery] = useState("")
-    const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
+    const [dateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
         from: undefined,
         to: undefined,
     })
@@ -85,9 +64,7 @@ const SalesOrders = () => {
         }
 
         // Kiểm tra xem người dùng có quyền SALES_MANAGER không
-        const userRole = getUserRole()
-        if (userRole !== "4") {
-            // "4" là mã cho SALES_MANAGER
+        if (!isSalesManager()) {
             navigate("/unauthorized")
             return
         }
@@ -100,7 +77,7 @@ const SalesOrders = () => {
             setError(null)
 
             try {
-                // Lấy token từ auth-utils
+                // Lấy token từ auth-service
                 const token = getToken()
 
                 if (!token) {
@@ -149,6 +126,8 @@ const SalesOrders = () => {
             filtered = filtered.filter((order) => {
                 if (statusFilter === "Pending") return order.requestStatus === "Pending"
                 if (statusFilter === "Approved") return order.requestStatus === "Approved"
+                if (statusFilter === "Completed") return order.requestStatus === "Completed"
+                if (statusFilter === "Cancelled") return order.requestStatus === "Cancelled"
 
                 return true
             })
@@ -188,19 +167,25 @@ const SalesOrders = () => {
         setShowOrderDetail(true)
     }
 
-    // Cập nhật hàm handleApproveOrder để sử dụng token
+    // Phê duyệt đơn hàng
     const handleApproveOrder = async (requestProductId: string) => {
         try {
-            // Lấy token từ auth-utils
-            const token = localStorage.getItem("auth_token");
-            console.log("tokenn", token);
+            // Kiểm tra quyền SALES_MANAGER
+            if (!isSalesManager()) {
+                alert("Bạn không có quyền phê duyệt đơn hàng")
+                return
+            }
+
+            // Lấy token từ auth-service
+            const token = getToken()
 
             if (!token) {
                 navigate("/login")
                 return
             }
 
-            const response = await put(`request-products/${requestProductId}/approve`)
+            // Gọi API với token trong header
+            const response = await put(`/api/request-products/${requestProductId}/approve`, {})
 
             if (response.success) {
                 // Cập nhật trạng thái đơn hàng trong state
@@ -238,6 +223,114 @@ const SalesOrders = () => {
         }
     }
 
+    // Xác nhận hoàn thành đơn hàng
+    // const handleCompleteOrder = async (requestProductId: string) => {
+    //     try {
+    //         // Kiểm tra quyền SALES_MANAGER
+    //         if (!isSalesManager()) {
+    //             alert("Bạn không có quyền xác nhận hoàn thành đơn hàng")
+    //             return
+    //         }
+
+    //         // Lấy token từ auth-service
+    //         const token = getToken()
+
+    //         if (!token) {
+    //             navigate("/login")
+    //             return
+    //         }
+
+    //         const response = await put(`/request-product/${requestProductId}/complete`, {})
+
+    //         if (response.success) {
+    //             // Cập nhật trạng thái đơn hàng trong state
+    //             const updatedOrders = orders.map((order) =>
+    //                 order.requestProductId === requestProductId
+    //                     ? { ...order, requestStatus: "Completed" as const, updatedAt: new Date().toISOString() }
+    //                     : order,
+    //             )
+    //             setOrders(updatedOrders)
+
+    //             // Nếu đang xem chi tiết đơn hàng này, cập nhật thông tin
+    //             if (selectedOrder && selectedOrder.requestProductId === requestProductId) {
+    //                 setSelectedOrder({
+    //                     ...selectedOrder,
+    //                     requestStatus: "Completed",
+    //                     updatedAt: new Date().toISOString(),
+    //                 })
+    //             }
+
+    //             alert("Đơn hàng đã được xác nhận hoàn thành!")
+    //         } else {
+    //             alert("Không thể xác nhận hoàn thành đơn hàng. Vui lòng thử lại sau.")
+    //         }
+    //     } catch (err) {
+    //         console.error("Error completing order:", err)
+
+    //         // Kiểm tra lỗi xác thực
+    //         if (err instanceof Error && err.message.includes("401")) {
+    //             navigate("/login")
+    //             return
+    //         }
+
+    //         alert("Đã xảy ra lỗi khi xác nhận hoàn thành đơn hàng")
+    //     }
+    // }
+
+    // Hủy đơn hàng
+    const handleCancelOrder = async (requestProductId: string) => {
+        try {
+            // Kiểm tra quyền SALES_MANAGER
+            if (!isSalesManager()) {
+                alert("Bạn không có quyền hủy đơn hàng")
+                return
+            }
+
+            // Lấy token từ auth-service
+            const token = getToken()
+
+            if (!token) {
+                navigate("/login")
+                return
+            }
+
+            const response = await put(`/request-product/${requestProductId}/cancel`, {})
+
+            if (response.success) {
+                // Cập nhật trạng thái đơn hàng trong state
+                const updatedOrders = orders.map((order) =>
+                    order.requestProductId === requestProductId
+                        ? { ...order, requestStatus: "Cancelled" as const, updatedAt: new Date().toISOString() }
+                        : order,
+                )
+                setOrders(updatedOrders)
+
+                // Nếu đang xem chi tiết đơn hàng này, cập nhật thông tin
+                if (selectedOrder && selectedOrder.requestProductId === requestProductId) {
+                    setSelectedOrder({
+                        ...selectedOrder,
+                        requestStatus: "Cancelled",
+                        updatedAt: new Date().toISOString(),
+                    })
+                }
+
+                alert("Đơn hàng đã được hủy thành công!")
+            } else {
+                alert("Không thể hủy đơn hàng. Vui lòng thử lại sau.")
+            }
+        } catch (err) {
+            console.error("Error cancelling order:", err)
+
+            // Kiểm tra lỗi xác thực
+            if (err instanceof Error && err.message.includes("401")) {
+                navigate("/login")
+                return
+            }
+
+            alert("Đã xảy ra lỗi khi hủy đơn hàng")
+        }
+    }
+
     // Tính tổng số lượng sản phẩm trong đơn hàng
     const getTotalQuantity = (order: RequestProduct) => {
         return order.requestProductDetails.reduce((total, detail) => total + detail.quantity, 0)
@@ -253,267 +346,302 @@ const SalesOrders = () => {
         switch (status) {
             case "Pending":
                 return (
-                    <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                    <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
                         Chờ duyệt
-                    </Badge>
+                    </span>
                 )
             case "Approved":
                 return (
-                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                    <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
                         Đã duyệt
-                    </Badge>
-                )
-            case "Rejected":
-                return (
-                    <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-                        Từ chối
-                    </Badge>
+                    </span>
                 )
             case "Completed":
                 return (
-                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                    <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                         Hoàn thành
-                    </Badge>
+                    </span>
                 )
             case "Cancelled":
                 return (
-                    <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
+                    <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
                         Đã hủy
-                    </Badge>
+                    </span>
                 )
             default:
-                return <Badge variant="outline">{status}</Badge>
+                return (
+                    <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                        {status}
+                    </span>
+                )
         }
     }
 
     // Format ngày giờ
-
+    const formatDateTime = (dateString: string) => {
+        const date = new Date(dateString)
+        return date.toLocaleString("vi-VN", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+        })
+    }
 
     return (
         <SalesLayout>
-            <div className="py-8">
-                <ResponsiveContainer>
-                    <div className="flex justify-between items-center mb-6">
-                        <h1 className="text-2xl font-bold">Quản Lý Đơn Hàng</h1>
+            <div className="p-6">
+                <div className="flex justify-between items-center mb-6">
+                    <h1 className="text-2xl font-bold">Quản lý đơn hàng</h1>
+
+                    <div className="flex items-center space-x-2">
+                        <label htmlFor="status-filter" className="text-sm font-medium text-gray-700">
+                            Lọc theo trạng thái:
+                        </label>
+                        <select
+                            id="status-filter"
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                        >
+                            <option value="all">Tất cả</option>
+                            <option value="Pending">Chờ duyệt</option>
+                            <option value="Approved">Đã duyệt</option>
+                            <option value="Completed">Hoàn thành</option>
+                            <option value="Cancelled">Đã hủy</option>
+                        </select>
                     </div>
+                </div>
 
-                    <Tabs defaultValue="all" className="space-y-6">
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                            <TabsList>
-                                <TabsTrigger value="all" onClick={() => setStatusFilter("all")}>
-                                    Tất cả
-                                </TabsTrigger>
+                <div className="mb-4">
+                    <input
+                        type="text"
+                        placeholder="Tìm kiếm đơn hàng..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    />
+                </div>
 
-                            </TabsList>
+                {isLoading ? (
+                    <div className="text-center py-8">
+                        <p>Đang tải dữ liệu...</p>
+                    </div>
+                ) : error ? (
+                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">{error}</div>
+                ) : filteredOrders.length === 0 ? (
+                    <div className="text-center py-8">
+                        <p>Không tìm thấy đơn hàng nào.</p>
+                    </div>
+                ) : (
+                    <div className="bg-white shadow-sm rounded-lg overflow-hidden">
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th
+                                            scope="col"
+                                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                        >
+                                            Mã đơn hàng
+                                        </th>
+                                        <th
+                                            scope="col"
+                                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                        >
+                                            Ngày tạo
+                                        </th>
+                                        <th
+                                            scope="col"
+                                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                        >
+                                            Đại lý
+                                        </th>
+                                        <th
+                                            scope="col"
+                                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                        >
+                                            Số SP
+                                        </th>
+                                        <th
+                                            scope="col"
+                                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                        >
+                                            Tổng SL
+                                        </th>
+                                        <th
+                                            scope="col"
+                                            className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                        >
+                                            Trạng thái
+                                        </th>
+                                        <th
+                                            scope="col"
+                                            className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                        >
+                                            Thao tác
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                    {filteredOrders.map((order) => (
+                                        <tr key={order.requestProductId} className="hover:bg-gray-50">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                {order.requestProductId.substring(0, 8)}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {formatDateTime(order.createdAt)}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.agencyName}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                {getTotalProductTypes(order)}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{getTotalQuantity(order)}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap">{renderStatusBadge(order.requestStatus)}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                <div className="flex justify-around ml-2">
+                                                    <button
+                                                        onClick={() => handleViewOrderDetail(order)}
+                                                        className="text-blue-600 hover:text-blue-900"
+                                                    >
+                                                        Chi tiết
+                                                    </button>
+                                                    {order.requestStatus === "Pending" && (
+                                                        <button
+                                                            onClick={() => handleApproveOrder(order.requestProductId)}
+                                                            className="text-green-600 hover:text-green-900"
+                                                        >
+                                                            Duyệt
+                                                        </button>
+                                                    )}
 
-                            <div className="flex items-center gap-2 w-full sm:w-auto">
-                                <div className="relative flex-1 sm:flex-none">
-                                    <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                    <Input
-                                        placeholder="Tìm kiếm đơn hàng..."
-                                        className="pl-8"
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                    />
-                                </div>
-
-
-                            </div>
-                        </div>
-
-                        <TabsContent value="all" className="space-y-4">
-                            {isLoading ? (
-                                <div className="space-y-4">
-                                    {Array.from({ length: 5 }).map((_, index) => (
-                                        <div key={index} className="bg-muted/20 h-16 rounded-lg animate-pulse"></div>
+                                                    {(order.requestStatus === "Pending") && (
+                                                        <button
+                                                            onClick={() => handleCancelOrder(order.requestProductId)}
+                                                            className="text-red-600 hover:text-red-900"
+                                                        >
+                                                            Hủy
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
                                     ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
+
+                {/* Order Detail Modal */}
+                {selectedOrder && showOrderDetail && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                        <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                            <div className="p-6">
+                                <div className="flex justify-between items-center mb-4">
+                                    <h2 className="text-xl font-bold">Chi tiết đơn hàng #{selectedOrder.requestProductId}</h2>
+                                    <button onClick={() => setShowOrderDetail(false)} className="text-gray-500 hover:text-gray-700">
+                                        ✕
+                                    </button>
                                 </div>
-                            ) : error ? (
-                                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">{error}</div>
-                            ) : filteredOrders.length === 0 ? (
-                                <div className="bg-muted/20 rounded-lg p-8 text-center">
-                                    <ShoppingBag className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                                    <h3 className="text-lg font-medium mb-2">Không tìm thấy đơn hàng</h3>
-                                    <p className="text-muted-foreground mb-4">Không có đơn hàng nào phù hợp với điều kiện tìm kiếm.</p>
-                                    <Button
-                                        onClick={() => {
-                                            setStatusFilter("all")
-                                            setSearchQuery("")
-                                            setDateRange({ from: undefined, to: undefined })
-                                        }}
-                                    >
-                                        Xóa bộ lọc
-                                    </Button>
-                                </div>
-                            ) : (
-                                <div className="bg-white rounded-lg border overflow-hidden">
-                                    <div className="overflow-x-auto">
-                                        <Table>
-                                            <TableHeader>
-                                                <TableRow>
-                                                    <TableHead className="w-[180px]">Mã đơn hàng</TableHead>
-                                                    <TableHead className="w-[180px]">Ngày tạo</TableHead>
-                                                    <TableHead>Đại lý</TableHead>
-                                                    <TableHead className="w-[100px]">Số SP</TableHead>
-                                                    <TableHead className="w-[100px]">Tổng SL</TableHead>
-                                                    <TableHead className="w-[120px]">Trạng thái</TableHead>
-                                                    <TableHead className="w-[80px] text-right">Thao tác</TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {filteredOrders.map((order) => (
-                                                    <TableRow key={order.requestProductId}>
-                                                        <TableCell className="font-medium">{order.requestProductId.substring(0, 8)}</TableCell>
-                                                        <TableCell>{order.createdAt}</TableCell>
-                                                        <TableCell>{order.agencyName}</TableCell>
-                                                        <TableCell>{getTotalProductTypes(order)}</TableCell>
-                                                        <TableCell>{getTotalQuantity(order)}</TableCell>
-                                                        <TableCell>{renderStatusBadge(order.requestStatus)}</TableCell>
-                                                        <TableCell className="text-right">
-                                                            <div className="flex justify-end gap-1">
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="icon"
-                                                                    onClick={() => handleViewOrderDetail(order)}
-                                                                    title="Xem chi tiết"
-                                                                >
-                                                                    <Eye className="h-4 w-4" />
-                                                                </Button>
-                                                                {order.requestStatus === "Pending" && (
-                                                                    <Button
-                                                                        variant="ghost"
-                                                                        size="icon"
-                                                                        onClick={() => handleApproveOrder(order.requestProductId)}
-                                                                        title="Phê duyệt"
-                                                                        className="text-green-600 hover:text-green-800 hover:bg-green-50"
-                                                                    >
-                                                                        <Check className="h-4 w-4" />
-                                                                    </Button>
-                                                                )}
-                                                            </div>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
+
+                                <div className="grid grid-cols-2 gap-4 mb-6">
+                                    <div>
+                                        <p className="text-sm text-gray-500">Đại lý</p>
+                                        <p className="font-medium">{selectedOrder.agencyName}</p>
                                     </div>
-                                </div>
-                            )}
-                        </TabsContent>
-
-                        <TabsContent value="Pending" className="space-y-4">
-                            {/* Nội dung giống với tab "all" nhưng đã được lọc theo trạng thái */}
-                        </TabsContent>
-
-                        <TabsContent value="Approved" className="space-y-4">
-                            {/* Nội dung giống với tab "all" nhưng đã được lọc theo trạng thái */}
-                        </TabsContent>
-
-                        <TabsContent value="Completed" className="space-y-4">
-                            {/* Nội dung giống với tab "all" nhưng đã được lọc theo trạng thái */}
-                        </TabsContent>
-                    </Tabs>
-                </ResponsiveContainer>
-            </div>
-
-            {/* Dialog xem chi tiết đơn hàng */}
-            <Dialog open={showOrderDetail} onOpenChange={setShowOrderDetail}>
-                <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
-                    <DialogHeader>
-                        <DialogTitle>Chi tiết đơn hàng</DialogTitle>
-                        <DialogDescription>Mã đơn hàng: {selectedOrder?.requestProductId}</DialogDescription>
-                    </DialogHeader>
-
-                    {selectedOrder && (
-                        <ScrollArea className="flex-1 pr-4">
-                            <div className="space-y-6 py-2">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <Card>
-                                        <CardHeader className="pb-2">
-                                            <CardTitle className="text-base">Thông tin đơn hàng</CardTitle>
-                                        </CardHeader>
-                                        <CardContent>
-                                            <dl className="grid grid-cols-2 gap-1 text-sm">
-                                                <dt className="text-muted-foreground">Mã đơn hàng:</dt>
-                                                <dd>{selectedOrder.requestProductId}</dd>
-
-                                                <dt className="text-muted-foreground">Ngày tạo:</dt>
-                                                {/* <dd>{formatDateTime(selectedOrder.createdAt)}</dd> */}
-
-                                                <dt className="text-muted-foreground">Đại lý:</dt>
-                                                <dd>{selectedOrder.agencyName}</dd>
-
-                                                <dt className="text-muted-foreground">Trạng thái:</dt>
-                                                <dd>{renderStatusBadge(selectedOrder.requestStatus)}</dd>
-                                            </dl>
-                                        </CardContent>
-                                    </Card>
-
-                                    {(selectedOrder.requestStatus === "Approved") && (
-                                        <Card>
-                                            <CardHeader className="pb-2">
-                                                <CardTitle className="text-base">Thông tin phê duyệt</CardTitle>
-                                            </CardHeader>
-                                            <CardContent>
-                                                <dl className="grid grid-cols-2 gap-1 text-sm">
-                                                    <dt className="text-muted-foreground">Người phê duyệt:</dt>
-                                                    <dd>ID: {selectedOrder.approvedBy}</dd>
-
-                                                    <dt className="text-muted-foreground">Ngày phê duyệt:</dt>
-                                                    {/* <dd>{selectedOrder.updatedAt ? formatDateTime(selectedOrder.updatedAt) : "N/A"}</dd> */}
-                                                </dl>
-                                            </CardContent>
-                                        </Card>
+                                    <div>
+                                        <p className="text-sm text-gray-500">Ngày tạo</p>
+                                        <p className="font-medium">{formatDateTime(selectedOrder.createdAt)}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-gray-500">Trạng thái</p>
+                                        <p className="font-medium">{renderStatusBadge(selectedOrder.requestStatus)}</p>
+                                    </div>
+                                    {selectedOrder.updatedAt && (
+                                        <div>
+                                            <p className="text-sm text-gray-500">Ngày cập nhật</p>
+                                            <p className="font-medium">{formatDateTime(selectedOrder.updatedAt)}</p>
+                                        </div>
                                     )}
                                 </div>
 
-                                <Card>
-                                    <CardHeader className="pb-2">
-                                        <CardTitle className="text-base">Danh sách sản phẩm</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <Table>
-                                            <TableHeader>
-                                                <TableRow>
-                                                    <TableHead className="w-[80px]">Mã SP</TableHead>
-                                                    <TableHead>Tên sản phẩm</TableHead>
-                                                    <TableHead className="w-[80px]">Đơn vị</TableHead>
-                                                    <TableHead className="w-[100px]">Số lượng</TableHead>
-                                                    <TableHead className="w-[100px]">Đơn giá</TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {selectedOrder.requestProductDetails.map((detail) => (
-                                                    <TableRow key={detail.requestDetailId}>
-                                                        <TableCell>{detail.product.productCode}</TableCell>
-                                                        <TableCell>{detail.product.productName}</TableCell>
-                                                        <TableCell>{detail.product.unit}</TableCell>
-                                                        <TableCell>{detail.quantity}</TableCell>
-                                                        <TableCell>{detail.price > 0 ? `${detail.price.toLocaleString()} đ` : "N/A"}</TableCell>
-                                                    </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
-                                    </CardContent>
-                                </Card>
+                                <h3 className="font-medium mb-2">Sản phẩm</h3>
+                                <table className="min-w-full divide-y divide-gray-200 mb-4">
+                                    <thead className="bg-gray-50">
+                                        <tr>
+                                            <th
+                                                scope="col"
+                                                className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                            >
+                                                Mã SP
+                                            </th>
+                                            <th
+                                                scope="col"
+                                                className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                            >
+                                                Tên sản phẩm
+                                            </th>
+                                            <th
+                                                scope="col"
+                                                className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                            >
+                                                Đơn vị
+                                            </th>
+                                            <th
+                                                scope="col"
+                                                className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                            >
+                                                Số lượng
+                                            </th>
+                                            <th
+                                                scope="col"
+                                                className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                                            >
+                                                Đơn giá
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                        {selectedOrder.requestProductDetails.map((detail) => (
+                                            <tr key={detail.requestDetailId}>
+                                                <td className="px-4 py-3 text-sm text-gray-900">{detail.product.productCode}</td>
+                                                <td className="px-4 py-3 text-sm text-gray-900">{detail.product.productName}</td>
+                                                <td className="px-4 py-3 text-sm text-gray-500">{detail.unit}</td>
+                                                <td className="px-4 py-3 text-sm text-gray-500">{detail.quantity}</td>
+                                                <td className="px-4 py-3 text-sm text-gray-500">{detail.price.toLocaleString("vi-VN")} đ</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+
+                                <div className="flex justify-end space-x-2 mt-6">
+                                    <button
+                                        onClick={() => setShowOrderDetail(false)}
+                                        className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
+                                    >
+                                        Đóng
+                                    </button>
+
+                                    {selectedOrder.requestStatus === "Pending" && (
+                                        <button
+                                            onClick={() => {
+                                                handleApproveOrder(selectedOrder.requestProductId)
+                                                setShowOrderDetail(false)
+                                            }}
+                                            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                                        >
+                                            Phê duyệt
+                                        </button>
+                                    )}
+                                </div>
                             </div>
-                        </ScrollArea>
-                    )}
-
-                    <DialogFooter className="pt-4">
-                        <Button variant="outline" onClick={() => setShowOrderDetail(false)}>
-                            Đóng
-                        </Button>
-                        {selectedOrder?.requestStatus === "Pending" && (
-                            <Button onClick={() => handleApproveOrder(selectedOrder.requestProductId)}>Phê duyệt đơn hàng</Button>
-                        )}
-
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                        </div>
+                    </div>
+                )}
+            </div>
         </SalesLayout>
     )
 }
-
-export default SalesOrders
 

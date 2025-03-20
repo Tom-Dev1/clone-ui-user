@@ -1,5 +1,4 @@
-"use client"
-
+import type React from "react"
 import { useEffect, useState } from "react"
 import { useParams, useNavigate, Link } from "react-router-dom"
 import { fetchProductById, fetchProductCategories } from "@/services/product-service"
@@ -18,9 +17,10 @@ export default function ProductDetail() {
     const [error, setError] = useState<string | null>(null)
     const [activeImageIndex, setActiveImageIndex] = useState(0)
     const [quantity, setQuantity] = useState(1)
+    const [quantityError, setQuantityError] = useState<string | null>(null)
     const { addItem } = useCart()
     const userRole = localStorage.getItem("role_name")
-    const canOrder = userRole === "SALE" || userRole === "AGENCY"
+    const canOrder = userRole === "SALES MANAGER" || userRole === "AGENCY"
 
     useEffect(() => {
         async function loadProduct() {
@@ -58,24 +58,68 @@ export default function ProductDetail() {
         }
         loadProduct()
     }, [id, navigate])
+
     const handlePrevImage = () => {
         if (!product?.images?.length) return
         setActiveImageIndex((prev) => (prev === 0 ? product.images.length - 1 : prev - 1))
     }
+
     const handleNextImage = () => {
         if (!product?.images?.length) return
         setActiveImageIndex((prev) => (prev === product.images.length - 1 ? 0 : prev + 1))
     }
+
+    const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newValue = Number.parseInt(e.target.value, 10)
+
+        if (isNaN(newValue)) {
+            setQuantity(1)
+            setQuantityError(null)
+            return
+        }
+
+        if (product && newValue > product.availableStock) {
+            setQuantity(product.availableStock)
+            setQuantityError(`Số lượng tối đa là ${product.availableStock} ${product.unit}`)
+            return
+        }
+
+        if (newValue < 1) {
+            setQuantity(1)
+            setQuantityError("Số lượng tối thiểu là 1")
+            return
+        }
+
+        setQuantity(newValue)
+        setQuantityError(null)
+    }
+
     const incrementQuantity = () => {
-        setQuantity((prev) => prev + 1)
+        if (product && quantity < product.availableStock) {
+            setQuantity((prev) => prev + 1)
+            setQuantityError(null)
+        } else if (product) {
+            setQuantityError(`Số lượng tối đa là ${product.availableStock} ${product.unit}`)
+        }
     }
+
     const decrementQuantity = () => {
-        setQuantity((prev) => (prev > 1 ? prev - 1 : 1))
+        if (quantity > 1) {
+            setQuantity((prev) => prev - 1)
+            setQuantityError(null)
+        } else {
+            setQuantityError("Số lượng tối thiểu là 1")
+        }
     }
+
     const handleAddToCart = () => {
         if (product) {
-            addItem(product, quantity)
+            if (quantity > product.availableStock) {
+                setQuantityError(`Số lượng tối đa là ${product.availableStock} ${product.unit}`)
+                return
+            }
 
+            addItem(product, quantity)
             alert(`Added ${quantity} ${product.unit} of ${product.productName} to cart`)
         }
     }
@@ -224,34 +268,50 @@ export default function ProductDetail() {
                             </div>
                             <div className="flex justify-between border-b pb-2">
                                 <span className="text-sm">Số lượng:</span>
-                                <span className="text-sm font-medium">{product.availableStock} {product.unit}</span>
+                                <span className="text-sm font-medium">
+                                    {product.availableStock} {product.unit}
+                                </span>
                             </div>
                         </div>
 
                         {canOrder && (
-                            <div className="mt-6  pt-6 mb-5">
+                            <div className="mt-6 pt-6 mb-5">
                                 <h3 className="font-medium mb-4">Số lượng đặt hàng</h3>
-                                <div className="flex items-center gap-4">
-                                    <div className="flex items-center border rounded-md">
-                                        <button
-                                            onClick={decrementQuantity}
-                                            className="px-3 py-2 border-r hover:bg-muted/20"
-                                            aria-label="Decrease quantity"
-                                        >
-                                            <Minus className="h-4 w-4" />
-                                        </button>
-                                        <span className="px-4 py-2">{quantity}</span>
-                                        <button
-                                            onClick={incrementQuantity}
-                                            className="px-3 py-2 border-l hover:bg-muted/20"
-                                            aria-label="Increase quantity"
-                                        >
-                                            <Plus className="h-4 w-4" />
-                                        </button>
+                                <div className="flex flex-col gap-2">
+                                    <div className="flex items-center gap-2">
+                                        <div className="flex items-center border rounded-md">
+                                            <button
+                                                onClick={decrementQuantity}
+                                                className="px-3 py-2 border-r hover:bg-muted/20"
+                                                aria-label="Decrease quantity"
+                                            >
+                                                <Minus className="h-4 w-4" />
+                                            </button>
+                                            <input
+                                                type="number"
+                                                value={quantity}
+                                                onChange={handleQuantityChange}
+                                                min={1}
+                                                max={product.availableStock}
+                                                className="w-16 text-center py-2 focus:outline-none"
+                                                aria-label="Quantity"
+                                            />
+                                            <button
+                                                onClick={incrementQuantity}
+                                                className="px-3 py-2 border-l hover:bg-muted/20"
+                                                aria-label="Increase quantity"
+                                            >
+                                                <Plus className="h-4 w-4" />
+                                            </button>
+                                        </div>
+                                        <span className="text-sm text-muted-foreground">
+                                            Số lượng có sẵn: {product.availableStock} {product.unit}
+                                        </span>
                                     </div>
-                                    <span className="text-sm text-muted-foreground">
-                                        Chọn số lượng và nhấn "Thêm vào giỏ hàng" để thêm vào đơn hàng
-                                    </span>
+                                    {quantityError && <p className="text-sm text-red-500">{quantityError}</p>}
+                                    <p className="text-sm text-muted-foreground">
+                                        Nhập số lượng và nhấn "Thêm vào giỏ hàng" để thêm vào đơn hàng
+                                    </p>
                                 </div>
                             </div>
                         )}
