@@ -185,7 +185,7 @@ export default function SalesOrders() {
             }
 
             // Gọi API với token trong header
-            const response = await put(`/api/request-products/${requestProductId}/approve`, {})
+            const response = await put(`/request-products/${requestProductId}/approve`, {})
 
             if (response.success) {
                 // Cập nhật trạng thái đơn hàng trong state
@@ -294,7 +294,7 @@ export default function SalesOrders() {
                 return
             }
 
-            const response = await put(`/request-product/${requestProductId}/cancel`, {})
+            const response = await put(`/request-products/${requestProductId}/cancel`, {})
 
             if (response.success) {
                 // Cập nhật trạng thái đơn hàng trong state
