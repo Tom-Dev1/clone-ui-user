@@ -612,7 +612,7 @@ export default function SalesOrders() {
                                     <h2 className="text-xl font-bold">
                                         {isLoadingDetails
                                             ? "Đang tải chi tiết đơn hàng..."
-                                            : `Chi tiết đơn hàng #${(orderDetail || selectedOrder)?.requestProductId}`}
+                                            : `Chi tiết đơn hàng #${(orderDetail || selectedOrder)?.requestCode}`}
                                     </h2>
                                     <button onClick={() => setShowOrderDetail(false)} className="text-gray-500 hover:text-gray-700">
                                         ✕

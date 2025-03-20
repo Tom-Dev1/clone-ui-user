@@ -46,6 +46,7 @@ interface RequestProductDetail {
 // Định nghĩa kiểu dữ liệu cho yêu cầu sản phẩm
 interface RequestProduct {
     requestProductId: string
+    requestCode: number
     agencyId: number
     approvedBy: number | null
     createdAt: string
@@ -297,7 +298,7 @@ export default function AgencyRequests() {
                                         {filteredRequests.map((request) => (
                                             <tr key={request.requestProductId} className="hover:bg-gray-50">
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                    {request.requestProductId.substring(0, 8)}...
+                                                    {request.requestCode}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                     {formatDateTime(request.createdAt)}
@@ -342,7 +343,7 @@ export default function AgencyRequests() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                                 <div>
                                     <p className="text-sm text-gray-500">Mã yêu cầu:</p>
-                                    <p className="font-medium">{selectedRequest.requestProductId}</p>
+                                    <p className="font-medium">{selectedRequest.requestCode}</p>
                                 </div>
                                 <div>
                                     <p className="text-sm text-gray-500">Trạng thái:</p>

@@ -55,13 +55,15 @@ interface OrderDetail {
 }
 
 interface Order {
+
     orderId: string
+    orderCode: number
     orderDate: string
     salesAgentId: number
     discount: number
     finalPrice: number
     status: string
-    requestId: string
+    requestCode: number
     requestProduct: RequestProduct
     orderDetails: OrderDetail[]
 }
@@ -131,8 +133,8 @@ const AgencyOrders: React.FC = () => {
             if (searchTerm.trim() !== "") {
                 filtered = filtered.filter(
                     (order) =>
-                        order.orderId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        order.requestId.toLowerCase().includes(searchTerm.toLowerCase()),
+                        order.orderId.toLowerCase().includes(searchTerm.toLowerCase())
+
                 )
             }
 
@@ -348,46 +350,51 @@ const AgencyOrders: React.FC = () => {
                                         <TableRow>
                                             <TableHead>Mã đơn hàng</TableHead>
                                             <TableHead>Ngày đặt</TableHead>
-                                            <TableHead>Mã yêu cầu</TableHead>
                                             <TableHead>Trạng thái</TableHead>
                                             <TableHead className="text-right">Tổng tiền</TableHead>
-                                            <TableHead>Thao tác</TableHead>
+                                            <TableHead className="text-center">Thao tác</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {filteredOrders.map((order) => (
                                             <TableRow key={order.orderId}>
-                                                <TableCell className="font-medium">{order.orderId.substring(0, 8)}...</TableCell>
+                                                <TableCell className="font-medium">{order.orderCode}</TableCell>
                                                 <TableCell>{formatDate(order.orderDate)}</TableCell>
-                                                <TableCell>{order.requestId.substring(0, 8)}...</TableCell>
                                                 <TableCell>{renderStatusBadge(order.status)}</TableCell>
                                                 <TableCell className="text-right">{order.finalPrice.toLocaleString("vi-VN")} đ</TableCell>
-                                                <TableCell>
-                                                    <div className="flex space-x-2">
-                                                        <Button variant="outline" size="sm" onClick={() => viewOrderDetails(order)}>
-                                                            Xem chi tiết
-                                                        </Button>
-
-                                                        {order.status === "WaitPaid" && (
-                                                            <>
-                                                                <Button
-                                                                    variant="default"
-                                                                    size="sm"
-                                                                    onClick={() => handlePayment(order.orderId)}
-                                                                    disabled={actionLoading}
-                                                                >
-                                                                    Thanh toán
-                                                                </Button>
-                                                                <Button
-                                                                    variant="destructive"
-                                                                    size="sm"
-                                                                    onClick={() => confirmCancelOrder(order.orderId)}
-                                                                    disabled={actionLoading}
-                                                                >
-                                                                    Hủy
-                                                                </Button>
-                                                            </>
-                                                        )}
+                                                <TableCell className="w-60">
+                                                    <div className="flex ml-2  gap-3">
+                                                        <div>
+                                                            <Button variant="outline" size="sm" onClick={() => viewOrderDetails(order)}>
+                                                                Xem chi tiết
+                                                            </Button>
+                                                        </div>
+                                                        <div className="gap-3 flex">
+                                                            {order.status === "WaitPaid" && (
+                                                                <>
+                                                                    <div>
+                                                                        <Button
+                                                                            variant="default"
+                                                                            size="sm"
+                                                                            onClick={() => handlePayment(order.orderId)}
+                                                                            disabled={actionLoading}
+                                                                        >
+                                                                            Thanh toán
+                                                                        </Button>
+                                                                    </div>
+                                                                    <div>
+                                                                        <Button
+                                                                            variant="destructive"
+                                                                            size="sm"
+                                                                            onClick={() => confirmCancelOrder(order.orderId)}
+                                                                            disabled={actionLoading}
+                                                                        >
+                                                                            Hủy
+                                                                        </Button>
+                                                                    </div>
+                                                                </>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </TableCell>
                                             </TableRow>
@@ -420,7 +427,7 @@ const AgencyOrders: React.FC = () => {
                                     </div>
                                     <div>
                                         <p className="text-sm font-medium text-gray-500">Mã yêu cầu</p>
-                                        <p>{selectedOrder.requestId}</p>
+                                        <p>{selectedOrder.orderCode}</p>
                                     </div>
                                     <div>
                                         <p className="text-sm font-medium text-gray-500">Trạng thái yêu cầu</p>
