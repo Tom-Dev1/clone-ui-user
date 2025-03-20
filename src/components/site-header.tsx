@@ -76,7 +76,6 @@ interface CategoryMenuItem {
 export function SiteHeader({ isHomePage = false }: SiteHeaderProps) {
     const [menuItems, setMenuItems] = useState(baseMenuItems)
     //   const [categories, setCategories] = useState<ProductCategory[]>([])
-    const [lang, setLang] = useState<"VI" | "EN">("VI")
     const { scrollDirection, isAtTop } = useScrollDirection()
     const [isVisible, setIsVisible] = useState(true)
     const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({})
@@ -431,27 +430,7 @@ export function SiteHeader({ isHomePage = false }: SiteHeaderProps) {
                                     </Button>
                                 )}
 
-                                <div className="flex items-center justify-center space-x-1 text-sm font-medium mt-4 p-2 bg-muted/30 rounded-md">
-                                    <button
-                                        onClick={() => setLang("VI")}
-                                        className={cn(
-                                            "px-3 py-1 rounded",
-                                            lang === "VI" ? "bg-primary text-primary-foreground" : "text-muted-foreground",
-                                        )}
-                                    >
-                                        VI
-                                    </button>
-                                    <span className="text-muted-foreground">/</span>
-                                    <button
-                                        onClick={() => setLang("EN")}
-                                        className={cn(
-                                            "px-3 py-1 rounded",
-                                            lang === "EN" ? "bg-primary text-primary-foreground" : "text-muted-foreground",
-                                        )}
-                                    >
-                                        EN
-                                    </button>
-                                </div>
+
                             </div>
                         </div>
                     </SheetContent>
@@ -537,22 +516,7 @@ export function SiteHeader({ isHomePage = false }: SiteHeaderProps) {
                         </Link>
                     )}
 
-                    {/* Language Switcher */}
-                    <div className="hidden md:flex items-center space-x-1 text-sm font-medium">
-                        <button
-                            onClick={() => setLang("VI")}
-                            className={cn("px-1", lang === "VI" ? "text-primary" : "text-muted-foreground")}
-                        >
-                            VI
-                        </button>
-                        <span className="text-muted-foreground">/</span>
-                        <button
-                            onClick={() => setLang("EN")}
-                            className={cn("px-1", lang === "EN" ? "text-primary" : "text-muted-foreground")}
-                        >
-                            EN
-                        </button>
-                    </div>
+
                 </div>
             </div>
         </div>
