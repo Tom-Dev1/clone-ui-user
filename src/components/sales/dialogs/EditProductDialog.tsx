@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -26,7 +27,6 @@ interface ProductData {
     categoryId: number
     description: string
     taxId: number
-    images?: string[]
 }
 
 interface EditProductDialogProps {
@@ -38,13 +38,12 @@ interface EditProductDialogProps {
     categories: Category[]
     isSubmitting: boolean
     imageUrls: string[]
-    imageFile: File | null
-    uploadingImage: boolean
+    selectedFiles: File[]
     handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void
     handleSelectChange: (name: string, value: string) => void
     handleImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void
-    handleUploadImage: () => Promise<void>
     handleRemoveImage: (imageUrl: string) => void
+    handleRemoveFile: (index: number) => void
 }
 
 const EditProductDialog: React.FC<EditProductDialogProps> = ({
@@ -54,14 +53,27 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
     categories,
     isSubmitting,
     imageUrls,
-    imageFile,
-    uploadingImage,
+    selectedFiles,
     handleInputChange,
     handleSelectChange,
     handleImageChange,
-    handleUploadImage,
     handleRemoveImage,
+    handleRemoveFile,
 }) => {
+    // Tạo preview URLs cho các file đã chọn
+    const [previewUrls, setPreviewUrls] = useState<string[]>([])
+
+    // Cập nhật preview URLs khi selectedFiles thay đổi
+    useEffect(() => {
+        const newPreviewUrls = selectedFiles.map((file) => URL.createObjectURL(file))
+        setPreviewUrls(newPreviewUrls)
+
+        // Cleanup function để giải phóng URLs khi component unmount
+        return () => {
+            newPreviewUrls.forEach((url) => URL.revokeObjectURL(url))
+        }
+    }, [selectedFiles])
+
     return (
         <DialogContent className="max-w-3xl">
             <DialogHeader>
@@ -151,23 +163,11 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
                         </div>
 
                         <div className="space-y-2">
-                            <Label>Hình ảnh</Label>
-                            <div className="flex items-center gap-2">
-                                <Input type="file" accept="image/*" onChange={handleImageChange} />
-                                <Button
-                                    type="button"
-                                    onClick={handleUploadImage}
-                                    disabled={!imageFile || uploadingImage}
-                                    variant="outline"
-                                >
-                                    {uploadingImage ? "Đang tải..." : "Tải lên"}
-                                </Button>
-                            </div>
-
-                            {imageUrls.length > 0 && (
+                            <Label>Hình ảnh hiện tại</Label>
+                            {imageUrls.length > 0 ? (
                                 <div className="mt-4 grid grid-cols-3 gap-2">
                                     {imageUrls.map((url, index) => (
-                                        <div key={index} className="relative">
+                                        <div key={`existing-${index}`} className="relative">
                                             <img
                                                 src={url || "/placeholder.svg"}
                                                 alt={`Product image ${index + 1}`}
@@ -179,6 +179,36 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
                                                 size="icon"
                                                 className="absolute top-1 right-1 h-6 w-6"
                                                 onClick={() => handleRemoveImage(url)}
+                                            >
+                                                &times;
+                                            </Button>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-sm text-gray-500">Không có hình ảnh</p>
+                            )}
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label>Thêm hình ảnh mới</Label>
+                            <Input type="file" accept="image/*" onChange={handleImageChange} multiple />
+
+                            {previewUrls.length > 0 && (
+                                <div className="mt-4 grid grid-cols-3 gap-2">
+                                    {previewUrls.map((url, index) => (
+                                        <div key={`new-${index}`} className="relative">
+                                            <img
+                                                src={url || "/placeholder.svg"}
+                                                alt={`New product image ${index + 1}`}
+                                                className="w-full h-24 object-cover rounded-md"
+                                            />
+                                            <Button
+                                                type="button"
+                                                variant="destructive"
+                                                size="icon"
+                                                className="absolute top-1 right-1 h-6 w-6"
+                                                onClick={() => handleRemoveFile(index)}
                                             >
                                                 &times;
                                             </Button>

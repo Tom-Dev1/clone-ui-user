@@ -52,7 +52,6 @@ interface ProductData {
     categoryId: number
     description: string
     taxId: number
-    images?: string[]
 }
 
 const ProductList = () => {
@@ -87,10 +86,9 @@ const ProductList = () => {
         taxId: 1,
     })
 
-    // const [imageUrls, setImageUrls] = useState<string[]>([])
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([])
     const [editImageUrls, setEditImageUrls] = useState<string[]>([])
-    const [imageFile, setImageFile] = useState<File | null>(null)
-    const [uploadingImage, setUploadingImage] = useState(false)
+    const [editSelectedFiles, setEditSelectedFiles] = useState<File[]>([])
 
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
     const [isDeleting, setIsDeleting] = useState(false)
@@ -123,7 +121,7 @@ const ProductList = () => {
         }
 
         try {
-            const response = await fetch("https://minhlong.mlhr.org/api/product?page=1&pageSize=1000", {
+            const response = await fetch("https://minhlong.mlhr.org/api/product?page=1&pageSize=20", {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -199,6 +197,7 @@ const ProductList = () => {
             taxId: product.taxId,
         })
         setEditImageUrls(product.images || [])
+        setEditSelectedFiles([])
         setIsEditDialogOpen(true)
     }
 
@@ -268,9 +267,8 @@ const ProductList = () => {
             formData.append("taxId", productData.taxId.toString())
 
             // Thêm các file ảnh vào FormData
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            imageFiles.forEach((file, index) => {
-                formData.append(`images`, file)
+            imageFiles.forEach((file) => {
+                formData.append("images", file)
             })
 
             console.log("Sending product data with images")
@@ -300,6 +298,7 @@ const ProductList = () => {
                 description: "",
                 taxId: 1,
             })
+            setSelectedFiles([])
             setIsAddDialogOpen(false)
 
             fetchProducts()
@@ -325,13 +324,37 @@ const ProductList = () => {
         }
 
         try {
-            const response = await fetch(`https://minhlong.mlhr.org/api/product/${selectedProduct.productId}`, {
+            // Tạo FormData để gửi cả dữ liệu sản phẩm và file ảnh
+            const formData = new FormData()
+
+            // Thêm thông tin sản phẩm vào FormData
+            formData.append("productCode", editProduct.productCode)
+            formData.append("productName", editProduct.productName)
+            formData.append("unit", editProduct.unit)
+            formData.append("defaultExpiration", editProduct.defaultExpiration.toString())
+            formData.append("categoryId", editProduct.categoryId.toString())
+            formData.append("description", editProduct.description || "")
+            formData.append("taxId", editProduct.taxId.toString())
+
+            // Thêm các URL ảnh hiện tại vào FormData
+            editImageUrls.forEach((url) => {
+                formData.append("existingImages", url)
+            })
+
+            // Thêm các file ảnh mới vào FormData
+            editSelectedFiles.forEach((file) => {
+                formData.append("newImages", file)
+            })
+
+            console.log("Updating product with ID:", selectedProduct.productId)
+
+            const response = await fetch(`https://minhlong.mlhr.org/api/update/${selectedProduct.productId}`, {
                 method: "PUT",
                 headers: {
-                    "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
+                    // Không cần set Content-Type khi sử dụng FormData, browser sẽ tự động set
                 },
-                body: JSON.stringify(editProduct),
+                body: formData,
             })
 
             if (!response.ok) {
@@ -392,70 +415,22 @@ const ProductList = () => {
         }
     }
 
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0]
-        if (file) {
-            setImageFile(file)
-        }
-    }
-
-    const handleUploadEditImage = async () => {
-        if (!imageFile) {
-            alert("Vui lòng chọn ảnh trước khi tải lên.")
-            return
-        }
-
-        setUploadingImage(true)
-        const token = localStorage.getItem("auth_token")
-
-        if (!token) {
-            alert("Lỗi: Bạn chưa đăng nhập")
-            setUploadingImage(false)
-            return
-        }
-
-        try {
-            const formData = new FormData()
-            formData.append("image", imageFile)
-
-            const response = await fetch("https://minhlong.mlhr.org/api/upload-image", {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-                body: formData,
-            })
-
-            if (!response.ok) {
-                throw new Error("Failed to upload image")
-            }
-
-            const data = await response.json()
-            const newImageUrl = data.imageUrl
-
-            setEditImageUrls([...editImageUrls, newImageUrl])
-            setEditProduct({
-                ...editProduct,
-                images: [...(editProduct.images || []), newImageUrl],
-            })
-
-            setImageFile(null)
-            alert("Thành công: Đã tải ảnh lên.")
-        } catch (error) {
-            console.error("Error uploading image:", error)
-            alert("Lỗi: Không thể tải ảnh lên. Vui lòng thử lại sau.")
-        } finally {
-            setUploadingImage(false)
+    const handleEditImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files.length > 0) {
+            const newFiles = Array.from(e.target.files)
+            setEditSelectedFiles((prev) => [...prev, ...newFiles])
         }
     }
 
     const handleRemoveEditImage = (imageUrlToRemove: string) => {
         const updatedImageUrls = editImageUrls.filter((url) => url !== imageUrlToRemove)
         setEditImageUrls(updatedImageUrls)
-        setEditProduct({
-            ...editProduct,
-            images: (editProduct.images || []).filter((url) => url !== imageUrlToRemove),
-        })
+    }
+
+    const handleRemoveEditNewFile = (index: number) => {
+        const updatedFiles = [...editSelectedFiles]
+        updatedFiles.splice(index, 1)
+        setEditSelectedFiles(updatedFiles)
     }
 
     return (
@@ -485,6 +460,8 @@ const ProductList = () => {
                                 isSubmitting={isSubmitting}
                                 handleInputChange={handleNewProductInputChange}
                                 handleSelectChange={handleNewProductSelectChange}
+                                selectedFiles={selectedFiles}
+                                setSelectedFiles={setSelectedFiles}
                             />
                         )}
                     </Dialog>
@@ -581,13 +558,12 @@ const ProductList = () => {
                         categories={categories}
                         isSubmitting={isSubmitting}
                         imageUrls={editImageUrls}
-                        imageFile={imageFile}
-                        uploadingImage={uploadingImage}
+                        selectedFiles={editSelectedFiles}
                         handleInputChange={handleEditProductInputChange}
                         handleSelectChange={handleEditProductSelectChange}
-                        handleImageChange={handleImageChange}
-                        handleUploadImage={handleUploadEditImage}
+                        handleImageChange={handleEditImageChange}
                         handleRemoveImage={handleRemoveEditImage}
+                        handleRemoveFile={handleRemoveEditNewFile}
                     />
                 )}
             </Dialog>
