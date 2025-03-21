@@ -52,7 +52,7 @@ interface ProductData {
     categoryId: number
     description: string
     taxId: number
-    images: string[]
+    images?: string[]
 }
 
 const ProductList = () => {
@@ -70,12 +70,11 @@ const ProductList = () => {
     const [newProduct, setNewProduct] = useState<ProductData>({
         productCode: "",
         productName: "",
-        unit: "",
+        unit: "Bao", // Default to "Bao"
         defaultExpiration: 30,
         categoryId: 0,
         description: "",
         taxId: 1,
-        images: [],
     })
 
     const [editProduct, setEditProduct] = useState<ProductData>({
@@ -86,10 +85,9 @@ const ProductList = () => {
         categoryId: 0,
         description: "",
         taxId: 1,
-        images: [],
     })
 
-    const [imageUrls, setImageUrls] = useState<string[]>([])
+    // const [imageUrls, setImageUrls] = useState<string[]>([])
     const [editImageUrls, setEditImageUrls] = useState<string[]>([])
     const [imageFile, setImageFile] = useState<File | null>(null)
     const [uploadingImage, setUploadingImage] = useState(false)
@@ -125,7 +123,7 @@ const ProductList = () => {
         }
 
         try {
-            const response = await fetch("https://minhlong.mlhr.org/api/product?page=1&pageSize=20", {
+            const response = await fetch("https://minhlong.mlhr.org/api/product?page=1&pageSize=1000", {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -199,7 +197,6 @@ const ProductList = () => {
             categoryId: product.categoryId,
             description: product.description || "",
             taxId: product.taxId,
-            images: product.images || [],
         })
         setEditImageUrls(product.images || [])
         setIsEditDialogOpen(true)
@@ -247,103 +244,7 @@ const ProductList = () => {
         })
     }
 
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            setImageFile(e.target.files[0])
-        }
-    }
-
-    const handleUploadNewImage = async () => {
-        await handleUploadImage(false)
-    }
-
-    const handleUploadEditImage = async () => {
-        await handleUploadImage(true)
-    }
-
-    const handleUploadImage = async (isEdit: boolean) => {
-        if (!imageFile) return
-
-        setUploadingImage(true)
-        const token = localStorage.getItem("auth_token")
-
-        if (!token) {
-            alert("Lỗi: Bạn chưa đăng nhập")
-            setUploadingImage(false)
-            return
-        }
-
-        try {
-            const formData = new FormData()
-            formData.append("file", imageFile)
-
-            const response = await fetch("https://minhlong.mlhr.org/api/upload", {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-                body: formData,
-            })
-
-            if (!response.ok) {
-                throw new Error("Failed to upload image")
-            }
-
-            const data = await response.json()
-            const imageUrl = data.url || data.imageUrl || data.path
-
-            if (!imageUrl) {
-                throw new Error("Image URL not found in response")
-            }
-
-            if (isEdit) {
-                const newUrls = [...editImageUrls, imageUrl]
-                setEditImageUrls(newUrls)
-                setEditProduct({
-                    ...editProduct,
-                    images: newUrls,
-                })
-            } else {
-                const newUrls = [...imageUrls, imageUrl]
-                setImageUrls(newUrls)
-                setNewProduct({
-                    ...newProduct,
-                    images: newUrls,
-                })
-            }
-
-            setImageFile(null)
-            alert("Thành công: Đã tải lên hình ảnh")
-        } catch (error) {
-            console.error("Error uploading image:", error)
-            alert("Lỗi: Không thể tải lên hình ảnh. Vui lòng thử lại sau.")
-        } finally {
-            setUploadingImage(false)
-        }
-    }
-
-    const handleRemoveNewImage = (index: number) => {
-        const newUrls = [...imageUrls]
-        newUrls.splice(index, 1)
-        setImageUrls(newUrls)
-        setNewProduct({
-            ...newProduct,
-            images: newUrls,
-        })
-    }
-
-    const handleRemoveEditImage = (index: number) => {
-        const newUrls = [...editImageUrls]
-        newUrls.splice(index, 1)
-        setEditImageUrls(newUrls)
-        setEditProduct({
-            ...editProduct,
-            images: newUrls,
-        })
-    }
-
-    const handleAddProduct = async (e: React.FormEvent) => {
-        e.preventDefault()
+    const handleAddProduct = async (productData: ProductData, imageFiles: File[]) => {
         setIsSubmitting(true)
 
         const token = localStorage.getItem("auth_token")
@@ -354,13 +255,33 @@ const ProductList = () => {
         }
 
         try {
+            // Tạo FormData để gửi cả dữ liệu sản phẩm và file ảnh
+            const formData = new FormData()
+
+            // Thêm thông tin sản phẩm vào FormData
+            formData.append("productCode", productData.productCode)
+            formData.append("productName", productData.productName)
+            formData.append("unit", productData.unit)
+            formData.append("defaultExpiration", productData.defaultExpiration.toString())
+            formData.append("categoryId", productData.categoryId.toString())
+            formData.append("description", productData.description || "")
+            formData.append("taxId", productData.taxId.toString())
+
+            // Thêm các file ảnh vào FormData
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            imageFiles.forEach((file, index) => {
+                formData.append(`images`, file)
+            })
+
+            console.log("Sending product data with images")
+
             const response = await fetch("https://minhlong.mlhr.org/api/product", {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
+                    // Không cần set Content-Type khi sử dụng FormData, browser sẽ tự động set
                 },
-                body: JSON.stringify(newProduct),
+                body: formData,
             })
 
             if (!response.ok) {
@@ -373,14 +294,12 @@ const ProductList = () => {
             setNewProduct({
                 productCode: "",
                 productName: "",
-                unit: "",
+                unit: "Bao",
                 defaultExpiration: 30,
                 categoryId: 0,
                 description: "",
                 taxId: 1,
-                images: [],
             })
-            setImageUrls([])
             setIsAddDialogOpen(false)
 
             fetchProducts()
@@ -473,6 +392,72 @@ const ProductList = () => {
         }
     }
 
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (file) {
+            setImageFile(file)
+        }
+    }
+
+    const handleUploadEditImage = async () => {
+        if (!imageFile) {
+            alert("Vui lòng chọn ảnh trước khi tải lên.")
+            return
+        }
+
+        setUploadingImage(true)
+        const token = localStorage.getItem("auth_token")
+
+        if (!token) {
+            alert("Lỗi: Bạn chưa đăng nhập")
+            setUploadingImage(false)
+            return
+        }
+
+        try {
+            const formData = new FormData()
+            formData.append("image", imageFile)
+
+            const response = await fetch("https://minhlong.mlhr.org/api/upload-image", {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+                body: formData,
+            })
+
+            if (!response.ok) {
+                throw new Error("Failed to upload image")
+            }
+
+            const data = await response.json()
+            const newImageUrl = data.imageUrl
+
+            setEditImageUrls([...editImageUrls, newImageUrl])
+            setEditProduct({
+                ...editProduct,
+                images: [...(editProduct.images || []), newImageUrl],
+            })
+
+            setImageFile(null)
+            alert("Thành công: Đã tải ảnh lên.")
+        } catch (error) {
+            console.error("Error uploading image:", error)
+            alert("Lỗi: Không thể tải ảnh lên. Vui lòng thử lại sau.")
+        } finally {
+            setUploadingImage(false)
+        }
+    }
+
+    const handleRemoveEditImage = (imageUrlToRemove: string) => {
+        const updatedImageUrls = editImageUrls.filter((url) => url !== imageUrlToRemove)
+        setEditImageUrls(updatedImageUrls)
+        setEditProduct({
+            ...editProduct,
+            images: (editProduct.images || []).filter((url) => url !== imageUrlToRemove),
+        })
+    }
+
     return (
         <div>
             <div className="flex justify-between items-center mb-6">
@@ -498,14 +483,8 @@ const ProductList = () => {
                                 setProduct={setNewProduct}
                                 categories={categories}
                                 isSubmitting={isSubmitting}
-                                imageUrls={imageUrls}
-                                imageFile={imageFile}
-                                uploadingImage={uploadingImage}
                                 handleInputChange={handleNewProductInputChange}
                                 handleSelectChange={handleNewProductSelectChange}
-                                handleImageChange={handleImageChange}
-                                handleUploadImage={handleUploadNewImage}
-                                handleRemoveImage={handleRemoveNewImage}
                             />
                         )}
                     </Dialog>

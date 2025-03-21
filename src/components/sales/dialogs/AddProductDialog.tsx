@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -26,49 +27,76 @@ interface ProductData {
     categoryId: number
     description: string
     taxId: number
-    images: string[]
 }
 
 interface AddProductDialogProps {
     isOpen: boolean
     onClose: () => void
-    onSubmit: (e: React.FormEvent) => Promise<void>
+    onSubmit: (productData: ProductData, imageFiles: File[]) => Promise<void>
     product: ProductData
     setProduct: React.Dispatch<React.SetStateAction<ProductData>>
     categories: Category[]
     isSubmitting: boolean
-    imageUrls: string[]
-    imageFile: File | null
-    uploadingImage: boolean
     handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void
     handleSelectChange: (name: string, value: string) => void
-    handleImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void
-    handleUploadImage: () => Promise<void>
-    handleRemoveImage: (index: number) => void
 }
 
 const AddProductDialog: React.FC<AddProductDialogProps> = ({
-
     onClose,
     onSubmit,
     product,
     categories,
     isSubmitting,
-    imageUrls,
-    imageFile,
-    uploadingImage,
     handleInputChange,
     handleSelectChange,
-    handleImageChange,
-    handleUploadImage,
-    handleRemoveImage,
 }) => {
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+    const [previewUrls, setPreviewUrls] = useState<string[]>([])
+
+    // Xử lý khi người dùng chọn file ảnh
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files.length > 0) {
+            const newFiles = Array.from(e.target.files)
+            setSelectedFiles((prev) => [...prev, ...newFiles])
+
+            // Tạo preview URLs cho các file đã chọn
+            const newPreviewUrls = newFiles.map((file) => URL.createObjectURL(file))
+            setPreviewUrls((prev) => [...prev, ...newPreviewUrls])
+        }
+    }
+
+    // Xử lý khi người dùng xóa ảnh
+    const handleRemoveFile = (index: number) => {
+        const updatedFiles = [...selectedFiles]
+        updatedFiles.splice(index, 1)
+        setSelectedFiles(updatedFiles)
+
+        // Xóa preview URL
+        const updatedPreviewUrls = [...previewUrls]
+        URL.revokeObjectURL(updatedPreviewUrls[index]) // Giải phóng URL
+        updatedPreviewUrls.splice(index, 1)
+        setPreviewUrls(updatedPreviewUrls)
+    }
+
+    // Xử lý khi submit form
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        await onSubmit(product, selectedFiles)
+    }
+
+    // Cleanup khi component unmount
+    useEffect(() => {
+        return () => {
+            previewUrls.forEach((url) => URL.revokeObjectURL(url))
+        }
+    }, [previewUrls])
+
     return (
         <DialogContent className="max-w-3xl">
             <DialogHeader>
                 <DialogTitle>Thêm sản phẩm mới</DialogTitle>
             </DialogHeader>
-            <form onSubmit={onSubmit}>
+            <form onSubmit={handleSubmit}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
                     <div className="space-y-4">
                         <div className="space-y-2">
@@ -95,7 +123,15 @@ const AddProductDialog: React.FC<AddProductDialogProps> = ({
 
                         <div className="space-y-2">
                             <Label htmlFor="unit">Đơn vị</Label>
-                            <Input id="unit" name="unit" value={product.unit} onChange={handleInputChange} required />
+                            <Select onValueChange={(value) => handleSelectChange("unit", value)} value={product.unit}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Chọn đơn vị" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Bao">Bao</SelectItem>
+                                    <SelectItem value="Chai">Chai</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
 
                         <div className="space-y-2">
@@ -145,26 +181,16 @@ const AddProductDialog: React.FC<AddProductDialogProps> = ({
                         <div className="space-y-2">
                             <Label>Hình ảnh</Label>
                             <div className="flex items-center gap-2">
-                                <Input type="file" accept="image/*" onChange={handleImageChange} disabled={uploadingImage} />
-                                <Button type="button" onClick={handleUploadImage} disabled={!imageFile || uploadingImage} size="sm">
-                                    {uploadingImage ? (
-                                        <>
-                                            <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-b-transparent"></div>
-                                            Đang tải
-                                        </>
-                                    ) : (
-                                        "Tải lên"
-                                    )}
-                                </Button>
+                                <Input type="file" accept="image/*" onChange={handleFileChange} multiple />
                             </div>
 
-                            {imageUrls.length > 0 && (
+                            {previewUrls.length > 0 && (
                                 <div className="mt-4 grid grid-cols-3 gap-2">
-                                    {imageUrls.map((url, index) => (
+                                    {previewUrls.map((url, index) => (
                                         <div key={index} className="relative">
                                             <img
                                                 src={url || "/placeholder.svg"}
-                                                alt={`Uploaded ${index + 1}`}
+                                                alt={`Preview ${index + 1}`}
                                                 className="w-full h-24 object-cover rounded-md"
                                             />
                                             <Button
@@ -172,7 +198,7 @@ const AddProductDialog: React.FC<AddProductDialogProps> = ({
                                                 variant="destructive"
                                                 size="icon"
                                                 className="absolute top-1 right-1 h-6 w-6"
-                                                onClick={() => handleRemoveImage(index)}
+                                                onClick={() => handleRemoveFile(index)}
                                             >
                                                 &times;
                                             </Button>

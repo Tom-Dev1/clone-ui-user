@@ -1,3 +1,5 @@
+"use client"
+
 import type React from "react"
 import { Button } from "@/components/ui/button"
 import { DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
@@ -24,7 +26,7 @@ interface ProductData {
     categoryId: number
     description: string
     taxId: number
-    images: string[]
+    images?: string[]
 }
 
 interface EditProductDialogProps {
@@ -42,11 +44,10 @@ interface EditProductDialogProps {
     handleSelectChange: (name: string, value: string) => void
     handleImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void
     handleUploadImage: () => Promise<void>
-    handleRemoveImage: (index: number) => void
+    handleRemoveImage: (imageUrl: string) => void
 }
 
 const EditProductDialog: React.FC<EditProductDialogProps> = ({
-
     onClose,
     onSubmit,
     product,
@@ -64,26 +65,27 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
     return (
         <DialogContent className="max-w-3xl">
             <DialogHeader>
-                <DialogTitle>Cập nhật sản phẩm</DialogTitle>
+                <DialogTitle>Chỉnh sửa sản phẩm</DialogTitle>
             </DialogHeader>
             <form onSubmit={onSubmit}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
                     <div className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="edit-productCode">Mã sản phẩm</Label>
+                            <Label htmlFor="productCode">Mã sản phẩm</Label>
                             <Input
-                                id="edit-productCode"
+                                id="productCode"
                                 name="productCode"
                                 value={product.productCode}
                                 onChange={handleInputChange}
                                 required
+                                disabled
                             />
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="edit-productName">Tên sản phẩm</Label>
+                            <Label htmlFor="productName">Tên sản phẩm</Label>
                             <Input
-                                id="edit-productName"
+                                id="productName"
                                 name="productName"
                                 value={product.productName}
                                 onChange={handleInputChange}
@@ -92,14 +94,22 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="edit-unit">Đơn vị</Label>
-                            <Input id="edit-unit" name="unit" value={product.unit} onChange={handleInputChange} required />
+                            <Label htmlFor="unit">Đơn vị</Label>
+                            <Select onValueChange={(value) => handleSelectChange("unit", value)} value={product.unit}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Chọn đơn vị" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Bao">Bao</SelectItem>
+                                    <SelectItem value="Chai">Chai</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="edit-defaultExpiration">Hạn sử dụng mặc định (ngày)</Label>
+                            <Label htmlFor="defaultExpiration">Hạn sử dụng mặc định (ngày)</Label>
                             <Input
-                                id="edit-defaultExpiration"
+                                id="defaultExpiration"
                                 name="defaultExpiration"
                                 type="number"
                                 value={product.defaultExpiration}
@@ -109,7 +119,7 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="edit-categoryId">Danh mục</Label>
+                            <Label htmlFor="categoryId">Danh mục</Label>
                             <Select
                                 onValueChange={(value) => handleSelectChange("categoryId", value)}
                                 value={product.categoryId.toString()}
@@ -130,9 +140,9 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
 
                     <div className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="edit-description">Mô tả</Label>
+                            <Label htmlFor="description">Mô tả</Label>
                             <Textarea
-                                id="edit-description"
+                                id="description"
                                 name="description"
                                 value={product.description}
                                 onChange={handleInputChange}
@@ -143,16 +153,14 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
                         <div className="space-y-2">
                             <Label>Hình ảnh</Label>
                             <div className="flex items-center gap-2">
-                                <Input type="file" accept="image/*" onChange={handleImageChange} disabled={uploadingImage} />
-                                <Button type="button" onClick={handleUploadImage} disabled={!imageFile || uploadingImage} size="sm">
-                                    {uploadingImage ? (
-                                        <>
-                                            <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-b-transparent"></div>
-                                            Đang tải
-                                        </>
-                                    ) : (
-                                        "Tải lên"
-                                    )}
+                                <Input type="file" accept="image/*" onChange={handleImageChange} />
+                                <Button
+                                    type="button"
+                                    onClick={handleUploadImage}
+                                    disabled={!imageFile || uploadingImage}
+                                    variant="outline"
+                                >
+                                    {uploadingImage ? "Đang tải..." : "Tải lên"}
                                 </Button>
                             </div>
 
@@ -162,7 +170,7 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
                                         <div key={index} className="relative">
                                             <img
                                                 src={url || "/placeholder.svg"}
-                                                alt={`Uploaded ${index + 1}`}
+                                                alt={`Product image ${index + 1}`}
                                                 className="w-full h-24 object-cover rounded-md"
                                             />
                                             <Button
@@ -170,7 +178,7 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
                                                 variant="destructive"
                                                 size="icon"
                                                 className="absolute top-1 right-1 h-6 w-6"
-                                                onClick={() => handleRemoveImage(index)}
+                                                onClick={() => handleRemoveImage(url)}
                                             >
                                                 &times;
                                             </Button>
@@ -186,14 +194,14 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
                     <Button type="button" variant="outline" onClick={onClose}>
                         Hủy
                     </Button>
-                    <Button type="submit" disabled={isSubmitting}>
+                    <Button type="submit" disabled={isSubmitting || product.categoryId === 0}>
                         {isSubmitting ? (
                             <>
                                 <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-b-transparent"></div>
-                                Đang lưu
+                                Đang xử lý
                             </>
                         ) : (
-                            "Cập nhật"
+                            "Lưu"
                         )}
                     </Button>
                 </DialogFooter>
