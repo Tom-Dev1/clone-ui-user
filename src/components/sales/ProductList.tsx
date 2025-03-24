@@ -121,7 +121,7 @@ const ProductList = () => {
         }
 
         try {
-            const response = await fetch("https://minhlong.mlhr.org/api/product?page=1&pageSize=20", {
+            const response = await fetch("https://minhlong.mlhr.org/api/product?page=1&pageSize=1000", {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },

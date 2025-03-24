@@ -66,7 +66,7 @@ export function ProductCard({ product }: ProductCardProps) {
                 </div>
                 <h3 className="font-medium line-clamp-2 h-12">{product.productName}</h3>
                 <div className="flex justify-end mt-2">
-                    <button className="text-xs bg-primary text-primary-foreground px-3 py-1 rounded">Details</button>
+                    <button className="text-sm bg-primary text-primary-foreground px-3 py-2 rounded">Xem chi tiết</button>
                 </div>
             </Link>
         </div>

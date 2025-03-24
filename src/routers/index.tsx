@@ -154,6 +154,7 @@ export const AppRouter = () => {
                         <Route path="/login" element={<Login />} />
                         <Route path="/register" element={<Register />} />
                         <Route path="/forgot-password" element={<ForgotPassword />} />
+                        <Route path="/verify-email" element={<></>} />
                     </Route>
 
                     {/* Protected routes - only accessible if logged in */}

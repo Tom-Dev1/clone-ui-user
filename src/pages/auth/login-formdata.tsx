@@ -105,10 +105,10 @@ export function Login() {
                     setError(errorMessage)
 
                     // Handle specific error cases
-                    if (axiosError.response.status === 401) {
+                    if (axiosError.response.status === 403) {
                         setError("Tên đăng nhập hoặc mật khẩu không chính xác")
-                    } else if (axiosError.response.status === 403) {
-                        setError("Tài khoản của bạn đã bị khóa hoặc chưa được kích hoạt")
+                    } else if (axiosError.response.status === 401) {
+                        setError("Tài khoản của bạn chưa được kích hoạt")
                     }
                 } else if (axiosError.request) {
                     setError("Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng và thử lại.")
