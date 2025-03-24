@@ -52,12 +52,11 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
     product,
     categories,
     isSubmitting,
-    imageUrls,
+
     selectedFiles,
     handleInputChange,
     handleSelectChange,
     handleImageChange,
-    handleRemoveImage,
     handleRemoveFile,
 }) => {
     // Tạo preview URLs cho các file đã chọn
@@ -163,37 +162,8 @@ const EditProductDialog: React.FC<EditProductDialogProps> = ({
                         </div>
 
                         <div className="space-y-2">
-                            <Label>Hình ảnh hiện tại</Label>
-                            {imageUrls.length > 0 ? (
-                                <div className="mt-4 grid grid-cols-3 gap-2">
-                                    {imageUrls.map((url, index) => (
-                                        <div key={`existing-${index}`} className="relative">
-                                            <img
-                                                src={url || "/placeholder.svg"}
-                                                alt={`Product image ${index + 1}`}
-                                                className="w-full h-24 object-cover rounded-md"
-                                            />
-                                            <Button
-                                                type="button"
-                                                variant="destructive"
-                                                size="icon"
-                                                className="absolute top-1 right-1 h-6 w-6"
-                                                onClick={() => handleRemoveImage(url)}
-                                            >
-                                                &times;
-                                            </Button>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <p className="text-sm text-gray-500">Không có hình ảnh</p>
-                            )}
-                        </div>
-
-                        <div className="space-y-2">
                             <Label>Thêm hình ảnh mới</Label>
                             <Input type="file" accept="image/*" onChange={handleImageChange} multiple />
-
                             {previewUrls.length > 0 && (
                                 <div className="mt-4 grid grid-cols-3 gap-2">
                                     {previewUrls.map((url, index) => (

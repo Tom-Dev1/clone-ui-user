@@ -1,4 +1,3 @@
-"use client"
 
 import type React from "react"
 
@@ -194,7 +193,7 @@ const ProductList = () => {
             defaultExpiration: product.defaultExpiration,
             categoryId: product.categoryId,
             description: product.description || "",
-            taxId: product.taxId,
+            taxId: product.taxId || 1,
         })
         setEditImageUrls(product.images || [])
         setEditSelectedFiles([])
@@ -343,12 +342,12 @@ const ProductList = () => {
 
             // Thêm các file ảnh mới vào FormData
             editSelectedFiles.forEach((file) => {
-                formData.append("newImages", file)
+                formData.append("images", file)
             })
 
             console.log("Updating product with ID:", selectedProduct.productId)
 
-            const response = await fetch(`https://minhlong.mlhr.org/api/update/${selectedProduct.productId}`, {
+            const response = await fetch(`https://minhlong.mlhr.org/api/product/${selectedProduct.productId}`, {
                 method: "PUT",
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -358,7 +357,7 @@ const ProductList = () => {
             })
 
             if (!response.ok) {
-                throw new Error("Failed to update product")
+                throw new Error(`Failed to update product: ${response.status} ${response.statusText}`)
             }
 
             await response.json()
