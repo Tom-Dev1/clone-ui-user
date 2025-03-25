@@ -2,7 +2,7 @@ import type React from "react"
 
 import { type ReactNode, useState, useEffect } from "react"
 import { Link, useNavigate, useLocation } from "react-router-dom"
-import { getUserInfo, logout } from "@/utils/auth-utils"
+import { getUserInfo } from "@/utils/auth-utils"
 import { UserAvatar } from "@/components/user-avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
@@ -22,6 +22,7 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useMediaQuery } from "@/hooks/use-media-query"
+import { useAuth } from "@/contexts/AuthContext"
 
 interface AgencyLayoutProps {
     children: ReactNode
@@ -39,7 +40,7 @@ export function AgencyLayout({ children }: AgencyLayoutProps) {
     const userInfo = getUserInfo()
     const [open, setOpen] = useState(false)
     const isDesktop = useMediaQuery("(min-width: 1024px)")
-
+    const { logout } = useAuth()
     // Close sheet when screen size changes to desktop
     useEffect(() => {
         if (isDesktop) {

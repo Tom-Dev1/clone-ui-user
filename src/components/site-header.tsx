@@ -107,7 +107,7 @@ export function SiteHeader({ isHomePage = false }: SiteHeaderProps) {
 
     const handleLogout = () => {
         logout()
-        navigate("/")
+        navigate("/login")
     }
 
     const toggleExpandItem = (href: string) => {

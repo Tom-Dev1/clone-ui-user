@@ -351,8 +351,8 @@ const AgencyOrders: React.FC = () => {
                                         <TableRow>
                                             <TableHead>Mã đơn hàng</TableHead>
                                             <TableHead>Ngày đặt</TableHead>
-                                            <TableHead>Trạng thái</TableHead>
-                                            <TableHead className="text-right">Tổng tiền</TableHead>
+                                            <TableHead >Trạng thái</TableHead>
+                                            <TableHead className="text-center">Tổng tiền</TableHead>
                                             <TableHead className="text-center">Thao tác</TableHead>
                                         </TableRow>
                                     </TableHeader>
@@ -362,7 +362,7 @@ const AgencyOrders: React.FC = () => {
                                                 <TableCell className="font-medium">{order.orderCode}</TableCell>
                                                 <TableCell>{formatDate(order.orderDate)}</TableCell>
                                                 <TableCell>{renderStatusBadge(order.status)}</TableCell>
-                                                <TableCell className="text-right">{order.finalPrice.toLocaleString("vi-VN")} đ</TableCell>
+                                                <TableCell className="text-center">{order.finalPrice.toLocaleString("vi-VN")} đ</TableCell>
                                                 <TableCell className="w-60">
                                                     <div className="flex ml-2 gap-3">
                                                         <div>

@@ -124,8 +124,7 @@ export function isTokenExpired(): boolean {
 export function logout(): void {
     localStorage.removeItem("auth_token")
     localStorage.removeItem("role_name")
-    localStorage.removeItem("user_info")
-    localStorage.removeItem("user_id")
+
     // Không xóa remembered_username để giữ tính năng ghi nhớ đăng nhập
 }
 

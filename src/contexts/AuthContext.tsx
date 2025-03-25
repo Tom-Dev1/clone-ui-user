@@ -135,6 +135,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         localStorage.removeItem("auth_token")
         localStorage.removeItem("role_name")
         localStorage.removeItem("remembered_username")
+
     }
 
     // Check for existing token on mount
