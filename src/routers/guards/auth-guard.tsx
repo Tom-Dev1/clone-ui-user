@@ -1,19 +1,36 @@
-import { Navigate, Outlet, useLocation } from "react-router-dom"
-import { isAuthenticated, isTokenExpired } from "@/utils/auth-utils"
+import { useAuth } from "@/contexts/AuthContext"
+import type React from "react"
+import { Navigate } from "react-router-dom"
 
-export const AuthGuard = () => {
-    const location = useLocation()
-    const isLoggedIn = isAuthenticated() && !isTokenExpired()
+interface AuthGuardProps {
+    children: React.ReactNode
+}
 
-    if (!isLoggedIn) {
-        // Redirect to login page but save the location they were trying to access
-        return <Navigate to="/login" state={{ from: location }} replace />
+// AuthGuard prevents authenticated users from accessing login/register pages
+// and redirects unverified users to verification page
+export function AuthGuard({ children }: AuthGuardProps) {
+    const { isAuthenticated, userDetails, isLoading } = useAuth()
+
+    // Show loading state
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+            </div>
+        )
     }
 
-    return (
-        <>
-            <Outlet />
-        </>
-    )
+    // If user is authenticated but email is not verified, redirect to verification page
+    if (isAuthenticated && userDetails && userDetails.verifyEmail === false) {
+        return <Navigate to="/verify-email" replace />
+    }
+
+    // If user is authenticated and email is verified, redirect to dashboard
+    if (isAuthenticated && (!userDetails || userDetails.verifyEmail === true)) {
+        return <Navigate to="/dashboard" replace />
+    }
+
+    // Otherwise, render the login/register page
+    return <>{children}</>
 }
 

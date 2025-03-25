@@ -3,11 +3,11 @@ import { RegisterForm } from "./register-formdata";
 
 export default function Register() {
     return (
-        <div >
+        <>
             <SiteHeader />
-            <div >
+            <div className="mt-20" >
                 <RegisterForm />
             </div>
-        </div>
+        </>
     )
 }

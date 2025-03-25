@@ -501,7 +501,7 @@ export function RegisterForm() {
     }
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-gray-100">
+        <div className="flex  items-center justify-center bg-white">
             <div className="w-full max-w-6xl space-y-8 bg-white p-8 rounded-lg shadow-md">
                 <div>
                     <h2 className="mt-6 text-center text-3xl font-bold tracking-tight">Đăng ký tài khoản</h2>

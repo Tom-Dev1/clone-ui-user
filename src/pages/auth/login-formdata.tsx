@@ -1,22 +1,21 @@
 "use client"
 
+import { useAuth } from "@/contexts/AuthContext"
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import axios, { type AxiosError } from "axios"
-import { type TokenResponse, UserRole } from "@/types/auth-type"
-import { decodeToken } from "@/utils/auth-utils"
 
-export function Login() {
+
+export function LoginForm() {
     const baseURL = `https://minhlong.mlhr.org`
-
     const navigate = useNavigate()
+    const { login } = useAuth()
     const [userName, setUserName] = useState("")
     const [password, setPassword] = useState("")
     const [error, setError] = useState<string | null>(null)
     const [isLoading, setIsLoading] = useState(false)
     const [rememberMe, setRememberMe] = useState(false)
+    const [showPassword, setShowPassword] = useState(false)
 
     // Check for remembered username on component mount
     useEffect(() => {
@@ -27,8 +26,8 @@ export function Login() {
         }
     }, [])
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
+    async function onSubmit(event: React.FormEvent) {
+        event.preventDefault()
         setError(null)
         setIsLoading(true)
 
@@ -55,17 +54,31 @@ export function Login() {
             console.log("Attempting login with:", { userName })
 
             // Call login API
-            const response = await axios.post<TokenResponse>(`${baseURL}/api/auth/login`, loginData)
+            const response = await fetch(`${baseURL}/api/auth/login`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(loginData),
+            })
 
-            console.log("Login successful:", response.data)
+            if (!response.ok) {
+                const errorData = await response.json()
+                throw new Error(errorData.error || errorData.message || "Đăng nhập thất bại")
+            }
 
-            // Handle the new response format
-            if (response.data.token) {
-                // Store the JWT token
-                localStorage.setItem("auth_token", response.data.token.token)
+            const data = await response.json()
+            console.log(data);
 
+            console.log("Login successful:", data)
+
+            // Handle the response format
+            if (data.token) {
+                // Store the JWT token and use the AuthContext login
+                await login(data.token.token)
+                localStorage.setItem("auth_token", data.token.token)
                 // Store the role name
-                localStorage.setItem("role_name", response.data.token.roleName)
+                localStorage.setItem("role_name", data.token.roleName)
 
                 // If remember me is checked, store the username
                 if (rememberMe) {
@@ -73,48 +86,14 @@ export function Login() {
                 } else {
                     localStorage.removeItem("remembered_username")
                 }
-
-                // Decode token to get role
-                const payload = decodeToken(response.data.token.token)
-                const role = payload ? payload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] : null
-
-                // Redirect based on role
-                if (role === UserRole.SALES_MANAGER) {
-                    navigate("/sales/dashboard")
-                } else if (role === UserRole.AGENCY) {
-                    navigate("/agency/dashboard")
-                } else {
-                    // Nếu không phải vai trò cụ thể, chuyển hướng đến trang chung
-                    navigate("/dashboard")
-                }
             } else {
                 setError("Đăng nhập thất bại: Không nhận được token")
             }
         } catch (error) {
             console.error("Login error:", error)
 
-            if (axios.isAxiosError(error)) {
-                const axiosError = error as AxiosError
-
-                if (axiosError.response) {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const responseData = axiosError.response.data as any
-
-                    // Check for error message in different formats
-                    const errorMessage = responseData.error || responseData.message || "Đăng nhập thất bại"
-                    setError(errorMessage)
-
-                    // Handle specific error cases
-                    if (axiosError.response.status === 403) {
-                        setError("Tên đăng nhập hoặc mật khẩu không chính xác")
-                    } else if (axiosError.response.status === 401) {
-                        setError("Tài khoản của bạn chưa được kích hoạt")
-                    }
-                } else if (axiosError.request) {
-                    setError("Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng và thử lại.")
-                } else {
-                    setError(`Lỗi: ${axiosError.message}`)
-                }
+            if (error instanceof Error) {
+                setError(error.message || "Đăng nhập thất bại. Vui lòng thử lại.")
             } else {
                 setError("Đăng nhập thất bại. Vui lòng thử lại.")
             }
@@ -124,90 +103,123 @@ export function Login() {
     }
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="w-full max-w-md space-y-8 bg-white p-8 rounded-lg shadow-md">
-                <div>
-                    <h2 className="mt-6 text-center text-3xl font-bold tracking-tight">Đăng nhập</h2>
-                    <p className="mt-2 text-center text-sm text-gray-600">
-                        Hoặc{" "}
-                        <a href="/register" className="font-medium text-blue-600 hover:text-blue-500">
-                            đăng ký tài khoản mới
-                        </a>
-                    </p>
-                </div>
-
-                <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <div className="grid gap-6">
+            <form onSubmit={onSubmit}>
+                <div className="grid gap-4">
                     {error && <div className="bg-red-50 text-red-500 p-3 rounded-md text-sm">{error}</div>}
 
-                    <div className="space-y-4 rounded-md">
-                        <div>
-                            <label htmlFor="userName" className="block text-sm font-medium">
-                                Tên đăng nhập
-                            </label>
-                            <input
-                                id="userName"
-                                name="userName"
-                                type="text"
-                                autoComplete="username"
-                                required
-                                value={userName}
-                                onChange={(e) => setUserName(e.target.value)}
-                                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                placeholder="Tên đăng nhập"
-                            />
-                        </div>
+                    <div className="grid gap-2">
+                        <label htmlFor="userName" className="block text-sm font-medium">
+                            Tên đăng nhập
+                        </label>
+                        <input
+                            id="userName"
+                            name="userName"
+                            placeholder="Tên đăng nhập"
+                            type="text"
+                            autoCapitalize="none"
+                            autoComplete="username"
+                            autoCorrect="off"
+                            value={userName}
+                            onChange={(e) => setUserName(e.target.value)}
+                            disabled={isLoading}
+                            required
+                            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        />
+                    </div>
 
-                        <div>
+                    <div className="grid gap-2">
+                        <div className="flex items-center justify-between">
                             <label htmlFor="password" className="block text-sm font-medium">
                                 Mật khẩu
                             </label>
+                            <button
+                                type="button"
+                                className="text-sm font-medium text-blue-600 hover:text-blue-500"
+                                onClick={() => navigate("/forgot-password")}
+                            >
+                                Quên mật khẩu?
+                            </button>
+                        </div>
+                        <div className="relative">
                             <input
                                 id="password"
                                 name="password"
-                                type="password"
+                                type={showPassword ? "text" : "password"}
+                                autoCapitalize="none"
                                 autoComplete="current-password"
-                                required
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
+                                disabled={isLoading}
+                                required
                                 className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                placeholder="Mật khẩu"
                             />
+                            <button
+                                type="button"
+                                className="absolute right-0 top-0 h-full px-3 py-2"
+                                onClick={() => setShowPassword(!showPassword)}
+                            >
+                                {showPassword ? (
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="16"
+                                        height="16"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                    >
+                                        <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path>
+                                        <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path>
+                                        <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path>
+                                        <line x1="2" x2="22" y1="2" y2="22"></line>
+                                    </svg>
+                                ) : (
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="16"
+                                        height="16"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                    >
+                                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                )}
+                                <span className="sr-only">{showPassword ? "Hide password" : "Show password"}</span>
+                            </button>
                         </div>
                     </div>
 
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                            <input
-                                id="remember-me"
-                                name="remember-me"
-                                type="checkbox"
-                                checked={rememberMe}
-                                onChange={(e) => setRememberMe(e.target.checked)}
-                                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                            />
-                            <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-600">
-                                Ghi nhớ đăng nhập
-                            </label>
-                        </div>
-
-                        <div className="text-sm">
-                            <a href="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
-                                Quên mật khẩu?
-                            </a>
-                        </div>
+                    <div className="flex items-center space-x-2">
+                        <input
+                            id="remember-me"
+                            name="remember-me"
+                            type="checkbox"
+                            checked={rememberMe}
+                            onChange={(e) => setRememberMe(e.target.checked)}
+                            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <label htmlFor="remember-me" className="text-sm font-medium text-gray-700">
+                            Ghi nhớ đăng nhập
+                        </label>
                     </div>
 
-                    <div>
-                        <button
-                            type="submit"
-                            disabled={isLoading}
-                            className="group relative flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-500 focus:outline-none disabled:opacity-70"
-                        >
-                            {isLoading ? "Đang xử lý..." : "Đăng nhập"}
-                        </button>
-                    </div>
-                </form>
-            </div>
+                    <button
+                        type="submit"
+                        disabled={isLoading}
+                        className="group relative flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-500 focus:outline-none disabled:opacity-70"
+                    >
+                        {isLoading ? "Đang xử lý..." : "Đăng nhập"}
+                    </button>
+                </div>
+            </form>
         </div>
     )
 }

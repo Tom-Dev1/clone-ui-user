@@ -1,18 +1,19 @@
 import { Suspense, lazy } from "react"
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
-
 import LoadingSpinner from "@/components/loading-spinner"
 import { AuthGuard } from "./guards/auth-guard"
-import { GuestGuard } from "./guards/guest-guard"
 import { MainLayout } from "@/layouts/main-layout"
 import { UserRole } from "@/types/auth-type"
-import { RoleGuard } from "./guards/role-guard"
 import AgencyDashboard from "@/pages/agency/dashboard"
 import AgencyProfile from "@/pages/agency/AgencyProfile"
 import AgencyRequests from "@/pages/agency/request"
 import AgencyProductRequest from "@/pages/agency/product-request"
 import AgencyPayment from "@/pages/agency/payment"
 import AgencyOrders from "@/pages/agency/orders"
+import { LoginPage } from "@/pages/auth/login"
+import { ProtectedRoute } from "./ProtectedRoute"
+import { VerifyEmail } from "@/pages/VerifyEmail"
+import { DashboardRouter } from "@/components/DashboardRouter"
 
 
 // Lazy load pages for better performance
@@ -23,7 +24,6 @@ const CollectionSlug = lazy(() => import("@/pages/collections/collection-slug"))
 const BlogHome = lazy(() => import("@/pages/blogs/BlogHome"))
 const BlogNews = lazy(() => import("@/pages/blogs/BlogNews"))
 const ContactPage = lazy(() => import("@/pages/ContactPage"))
-const Login = lazy(() => import("@/pages/auth/login"))
 const Register = lazy(() => import("@/pages/auth/register"))
 const ForgotPassword = lazy(() => import("@/pages/auth/forgot-password"))
 const NotFound = lazy(() => import("@/pages/not-found"))
@@ -147,44 +147,35 @@ export const AppRouter = () => {
                             </MainLayout>
                         }
                     />
+                    <Route path="/login" element={<AuthGuard>  <LoginPage /> </AuthGuard>} />
+                    <Route path="/register" element={<AuthGuard><Register /> </AuthGuard>} />
+                    <Route path="/verify-email" element={<ProtectedRoute skipEmailVerification={true}>
+                        <VerifyEmail />
+                    </ProtectedRoute>} />
 
-                    {/* Auth routes - only accessible if NOT logged in */}
-                    <Route element={<GuestGuard />}>
-                        <Route path="/login" element={<Login />} />
-                        <Route path="/register" element={<Register />} />
-                        <Route path="/forgot-password" element={<ForgotPassword />} />
-                        <Route path="/verify-email" element={<></>} />
-                    </Route>
 
-                    {/* Protected routes - only accessible if logged in */}
-                    <Route element={<AuthGuard />}>
-                        {/* Common dashboard route */}
-                        <Route path="/dashboard" element={<h1 className=" px-2" />} />
 
-                        {/* SALES_MANAGER specific routes */}
-                        <Route element={<RoleGuard allowedRoles={[UserRole.SALES_MANAGER]} />}>
-                            <Route path="/sales/dashboard" element={<SalesDashboard />} />
-                            <Route path="/sales/cart" element={<SalesCart />} />
-                            <Route path="/sales/profile" element={<SalesProfile />} />
-                            <Route path="/sales/orders" element={<SalesOrders />} />
-                            <Route path="/sales/debt" element={<SalesDebt />} />
-                            <Route path="/sales/export" element={<SalesExports />} />
-                            <Route path="/sales/tax" element={<SalesTax />} />
-                            <Route path="/sales/product" element={<SalesProducts />} />
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
+                    <Route path="/dashboard" element={<DashboardRouter />} />
+                    <Route path="/sales/dashboard" element={<ProtectedRoute requiredRole={UserRole.SALES_MANAGER}><SalesDashboard /></ProtectedRoute>} />
+                    <Route path="/sales/cart" element={<ProtectedRoute requiredRole={UserRole.SALES_MANAGER}><SalesCart /></ProtectedRoute>} />
+                    <Route path="/sales/profile" element={<ProtectedRoute requiredRole={UserRole.SALES_MANAGER}><SalesProfile /></ProtectedRoute>} />
+                    <Route path="/sales/orders" element={<ProtectedRoute requiredRole={UserRole.SALES_MANAGER}><SalesOrders /></ProtectedRoute>} />
+                    <Route path="/sales/debt" element={<ProtectedRoute requiredRole={UserRole.SALES_MANAGER}><SalesDebt /></ProtectedRoute>} />
+                    <Route path="/sales/export" element={<ProtectedRoute requiredRole={UserRole.SALES_MANAGER}><SalesExports /></ProtectedRoute>} />
+                    <Route path="/sales/tax" element={<ProtectedRoute requiredRole={UserRole.SALES_MANAGER}><SalesTax /></ProtectedRoute>} />
+                    <Route path="/sales/product" element={<ProtectedRoute requiredRole={UserRole.SALES_MANAGER}><SalesProducts /></ProtectedRoute>} />
 
-                        </Route>
+                    <Route path="/agency/dashboard" element={<ProtectedRoute requiredRole={UserRole.AGENCY}><AgencyDashboard /></ProtectedRoute>} />
+                    <Route path="/agency/requests" element={<ProtectedRoute requiredRole={UserRole.AGENCY}><AgencyRequests /></ProtectedRoute>} />
+                    <Route path="/agency/product-request" element={<ProtectedRoute requiredRole={UserRole.AGENCY}><AgencyProductRequest /></ProtectedRoute>} />
+                    <Route path="/agency/orders" element={<ProtectedRoute requiredRole={UserRole.AGENCY}><AgencyOrders /></ProtectedRoute>} />
+                    <Route path="/agency/profile" element={<ProtectedRoute requiredRole={UserRole.AGENCY}><AgencyProfile /></ProtectedRoute>} />
+                    <Route path="/agency/payment" element={<ProtectedRoute requiredRole={UserRole.AGENCY}><AgencyPayment /></ProtectedRoute>} />
 
-                        {/* AGENCY specific routes */}
-                        <Route element={<RoleGuard allowedRoles={[UserRole.AGENCY]} />}>
-                            <Route path="/agency/dashboard" element={<AgencyDashboard />} />
-                            <Route path="/agency/requests" element={<AgencyRequests />} />
-                            <Route path="/agency/product-request" element={<AgencyProductRequest />} />
-                            <Route path="/agency/orders" element={<AgencyOrders />} />
-                            <Route path="/agency/profile" element={<AgencyProfile />} />
-                            <Route path="/agency/payment" element={<AgencyPayment />} />
 
-                        </Route>
-                    </Route>
+
+
 
                     {/* Catch all route for 404 */}
                     <Route path="/404" element={<NotFound />} />

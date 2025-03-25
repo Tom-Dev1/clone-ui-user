@@ -7,14 +7,8 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { useScrollDirection } from "@/hooks/use-scroll-direction"
-import {
-    isAuthenticated,
-    getUserInfo,
-    getUserRole,
-    getUserDisplayName,
-    logout,
-
-} from "@/utils/auth-utils"
+import { useAuth } from "@/contexts/AuthContext"
+import { UserRole } from "@/types/auth-type"
 import HoverButton from "./hover-button"
 import { UserAvatar } from "./user-avatar"
 import {
@@ -65,7 +59,6 @@ const baseMenuItems: MenuItem[] = [
     },
 ]
 
-
 // Define a new interface for menu items with categoryId
 interface CategoryMenuItem {
     title: string
@@ -85,12 +78,11 @@ export function SiteHeader({ isHomePage = false }: SiteHeaderProps) {
     const location = useLocation()
     const navigate = useNavigate()
 
-    // Get authentication state and user info from auth-utils
-    const authenticated = isAuthenticated()
-    const userInfo = getUserInfo()
-    const userRole = getUserRole()
+    // Use the useAuth hook instead of individual auth utility functions
+    const { user, userDetails, isAuthenticated, logout } = useAuth()
 
-    const displayName = getUserDisplayName()
+    // Check if email is verified
+    const isEmailVerified = userDetails?.verifyEmail === true
 
     const [scrolledPast500, setScrolledPast500] = useState(false)
 
@@ -170,12 +162,16 @@ export function SiteHeader({ isHomePage = false }: SiteHeaderProps) {
         }
     }, [])
 
+    // Get user role and display name from user object
+    const userRole = user?.role || ""
+    const displayName = user?.username || userDetails?.username || "User"
 
     const isSalesManager = () => {
-        return userRole === "4"
+        return userRole === UserRole.SALES_MANAGER
     }
+
     const isAgency = () => {
-        return userRole === "2"
+        return userRole === UserRole.AGENCY
     }
 
     // Get appropriate dashboard link based on user role
@@ -184,9 +180,9 @@ export function SiteHeader({ isHomePage = false }: SiteHeaderProps) {
 
         // Check user role and return appropriate dashboard link
         switch (userRole) {
-            case "4": // SALES_MANAGER
+            case UserRole.SALES_MANAGER: // SALES_MANAGER
                 return "/sales"
-            case "2": // AGENCY
+            case UserRole.AGENCY: // AGENCY
                 return "/agency"
             default:
                 return "/"
@@ -389,23 +385,35 @@ export function SiteHeader({ isHomePage = false }: SiteHeaderProps) {
                             </div>
 
                             <div className="mt-auto p-4 border-t">
-                                {authenticated && userInfo ? (
+                                {isAuthenticated && user ? (
                                     <div className="space-y-4">
                                         <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-md">
                                             <UserAvatar size="sm" />
                                             <div className="flex-1 min-w-0">
                                                 <p className="font-medium text-sm truncate">{displayName}</p>
-                                                <p className="text-xs text-muted-foreground truncate">{userRole || "Người dùng"}</p>
+                                                <p className="text-xs text-muted-foreground truncate">
+                                                    {!isEmailVerified ? "Email chưa xác thực" : userRole || "Người dùng"}
+                                                </p>
                                             </div>
                                         </div>
                                         <div className="grid grid-cols-2 gap-2">
-                                            <Link
-                                                to={getDashboardLink()}
-                                                className="text-center text-sm bg-muted py-2 px-3 rounded-md hover:bg-muted/80"
-                                                onClick={() => setSheetOpen(false)}
-                                            >
-                                                Dashboard
-                                            </Link>
+                                            {isEmailVerified ? (
+                                                <Link
+                                                    to={getDashboardLink()}
+                                                    className="text-center text-sm bg-muted py-2 px-3 rounded-md hover:bg-muted/80"
+                                                    onClick={() => setSheetOpen(false)}
+                                                >
+                                                    Dashboard
+                                                </Link>
+                                            ) : (
+                                                <Link
+                                                    to="/verify-email"
+                                                    className="text-center text-sm bg-muted py-2 px-3 rounded-md hover:bg-muted/80"
+                                                    onClick={() => setSheetOpen(false)}
+                                                >
+                                                    Xác thực email
+                                                </Link>
+                                            )}
                                             <button
                                                 onClick={() => {
                                                     handleLogout()
@@ -429,73 +437,81 @@ export function SiteHeader({ isHomePage = false }: SiteHeaderProps) {
                                         Đăng nhập
                                     </Button>
                                 )}
-
-
                             </div>
                         </div>
                     </SheetContent>
                 </Sheet>
 
                 <div className="ml-auto flex items-center space-x-4">
-                    {isSalesManager() && (
+                    {/* Only show cart indicator if user is verified and has appropriate role */}
+                    {isEmailVerified && (isSalesManager() || isAgency()) && (
                         <div className="mr-2">
                             <CartIndicator />
                         </div>
                     )}
-                    {isAgency() && (
-                        <div className="mr-2">
-                            <CartIndicator />
-                        </div>
-                    )}
+
                     {/* Auth Button - Desktop */}
-                    {authenticated && userInfo ? (
-                        <div className="hidden md:flex items-center">
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="sm" className="relative gap-2 px-3">
-                                        <UserAvatar size="sm" showInitial={false} />
-                                        <span className="font-medium text-sm hidden lg:inline-block">{displayName}</span>
-                                        <ChevronDown className="h-4 w-4 opacity-50" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-56">
-                                    <DropdownMenuLabel className="font-normal">
-                                        <div className="flex flex-col space-y-1">
-                                            <p className="font-medium text-sm">{displayName}</p>
-                                            {userInfo.email && <p className="text-xs text-muted-foreground">{userInfo.email}</p>}
-                                            {userRole && <p className="text-xs text-primary">{userRole}</p>}
-                                        </div>
-                                    </DropdownMenuLabel>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem asChild>
-                                        <Link to={`${getDashboardLink()}/dashboard`} className="cursor-pointer">
-                                            <User className="mr-2 h-4 w-4" />
-                                            <span>Dashboard</span>
-                                        </Link>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem asChild>
-                                        <Link to={`${getDashboardLink()}/profile`} className="cursor-pointer">
-                                            <Settings className="mr-2 h-4 w-4" />
-                                            <span>Hồ sơ cá nhân</span>
-                                        </Link>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem asChild>
-                                        <Link to={`${getDashboardLink()}/orders`} className="cursor-pointer">
-                                            <ShoppingBag className="mr-2 h-4 w-4" />
-                                            <span>Đơn hàng</span>
-                                        </Link>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem
-                                        onClick={handleLogout}
-                                        className="cursor-pointer text-destructive focus:text-destructive"
-                                    >
-                                        <LogOut className="mr-2 h-4 w-4" />
-                                        <span>Đăng xuất</span>
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </div>
+                    {isAuthenticated && user ? (
+                        isEmailVerified ? (
+                            // Show user dropdown only if email is verified
+                            <div className="hidden md:flex items-center">
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="sm" className="relative gap-2 px-3">
+                                            <UserAvatar size="sm" showInitial={false} />
+                                            <span className="font-medium text-sm hidden lg:inline-block">{displayName}</span>
+                                            <ChevronDown className="h-4 w-4 opacity-50" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="w-56">
+                                        <DropdownMenuLabel className="font-normal">
+                                            <div className="flex flex-col space-y-1">
+                                                <p className="font-medium text-sm">{displayName}</p>
+                                                {user.email && <p className="text-xs text-muted-foreground">{user.email}</p>}
+                                                {userRole && <p className="text-xs text-primary">{userRole}</p>}
+                                            </div>
+                                        </DropdownMenuLabel>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem asChild>
+                                            <Link to={`${getDashboardLink()}/dashboard`} className="cursor-pointer">
+                                                <User className="mr-2 h-4 w-4" />
+                                                <span>Dashboard</span>
+                                            </Link>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem asChild>
+                                            <Link to={`${getDashboardLink()}/profile`} className="cursor-pointer">
+                                                <Settings className="mr-2 h-4 w-4" />
+                                                <span>Hồ sơ cá nhân</span>
+                                            </Link>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem asChild>
+                                            <Link to={`${getDashboardLink()}/orders`} className="cursor-pointer">
+                                                <ShoppingBag className="mr-2 h-4 w-4" />
+                                                <span>Đơn hàng</span>
+                                            </Link>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                            onClick={handleLogout}
+                                            className="cursor-pointer text-destructive focus:text-destructive"
+                                        >
+                                            <LogOut className="mr-2 h-4 w-4" />
+                                            <span>Đăng xuất</span>
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
+                        ) : (
+                            // Show verification button if email is not verified
+                            <div className="hidden md:flex items-center space-x-2">
+                                <Button variant="outline" size="sm" onClick={() => navigate("/verify-email")}>
+                                    Xác thực email
+                                </Button>
+                                <Button variant="ghost" size="sm" onClick={handleLogout}>
+                                    Đăng xuất
+                                </Button>
+                            </div>
+                        )
                     ) : (
                         <Button variant="outline" size="sm" className="hidden md:flex" onClick={handleLogin}>
                             Đăng nhập
@@ -508,15 +524,21 @@ export function SiteHeader({ isHomePage = false }: SiteHeaderProps) {
                     </Button>
 
                     {/* User Icon - Mobile */}
-                    {authenticated && userInfo && (
-                        <Link to={getDashboardLink()} className="md:hidden">
-                            <Button variant="ghost" size="icon">
-                                <UserAvatar size="sm" showInitial={false} />
-                            </Button>
-                        </Link>
-                    )}
-
-
+                    {isAuthenticated &&
+                        user &&
+                        (isEmailVerified ? (
+                            <Link to={getDashboardLink()} className="md:hidden">
+                                <Button variant="ghost" size="icon">
+                                    <UserAvatar size="sm" showInitial={false} />
+                                </Button>
+                            </Link>
+                        ) : (
+                            <Link to="/verify-email" className="md:hidden">
+                                <Button variant="ghost" size="icon">
+                                    <UserAvatar size="sm" showInitial={false} />
+                                </Button>
+                            </Link>
+                        ))}
                 </div>
             </div>
         </div>
