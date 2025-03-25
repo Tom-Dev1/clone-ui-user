@@ -35,6 +35,7 @@ export interface ProductDetail {
     updatedBy: string
     updatedDate: string
     availableStock: number
+    price: number
     images: string[]
 }
 export interface PaginatedResponse<T> {

@@ -8,7 +8,7 @@ export interface CartItem {
   unit: string
   quantity: number
   availableStock: number
-  price?: number
+  price: number
   images?: string[]
 }
 
@@ -41,7 +41,7 @@ export const cartSlice = createSlice({
           unit: product.unit,
           quantity: Math.min(quantity, product.availableStock),
           availableStock: product.availableStock,
-
+          price: product.price,
           images: product.images,
         })
       }

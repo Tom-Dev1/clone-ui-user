@@ -34,6 +34,7 @@ export interface UserInfo {
     role: string
     roleName?: string
     exp?: number
+
 }
 
 export interface TokenResponse {
@@ -43,3 +44,14 @@ export interface TokenResponse {
     }
 }
 
+
+export interface User {
+    userId: string
+    userName: string
+    password: string
+    email: string
+    userType: UserType
+    phone: string
+    status: boolean
+    verifyEmail: boolean
+}

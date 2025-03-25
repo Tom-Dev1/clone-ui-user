@@ -26,7 +26,6 @@ const ContactPage = lazy(() => import("@/pages/ContactPage"))
 const Login = lazy(() => import("@/pages/auth/login"))
 const Register = lazy(() => import("@/pages/auth/register"))
 const ForgotPassword = lazy(() => import("@/pages/auth/forgot-password"))
-const Dashboard = lazy(() => import("@/pages/dashboard"))
 const NotFound = lazy(() => import("@/pages/not-found"))
 const ProductDetail = lazy(() => import("@/pages/collections/product-detail"))
 // Role-specific pages
@@ -160,7 +159,7 @@ export const AppRouter = () => {
                     {/* Protected routes - only accessible if logged in */}
                     <Route element={<AuthGuard />}>
                         {/* Common dashboard route */}
-                        <Route path="/dashboard" element={<Dashboard />} />
+                        <Route path="/dashboard" element={<h1 className=" px-2" />} />
 
                         {/* SALES_MANAGER specific routes */}
                         <Route element={<RoleGuard allowedRoles={[UserRole.SALES_MANAGER]} />}>

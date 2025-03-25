@@ -1,5 +1,6 @@
 import { UserRole } from "@/types/auth-type"
 
+
 interface JwtPayload {
     "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier": string
     "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name": string
@@ -61,6 +62,7 @@ export function getToken(): string | null {
  * @returns Vai trò của người dùng hoặc null nếu chưa đăng nhập
  */
 export function getUserRole(): string | null {
+
     const userInfo = getUserInfo()
     return userInfo ? userInfo.role : null
 }
@@ -72,6 +74,8 @@ export function getUserRole(): string | null {
 export function getUserRoleName(): string | null {
     return localStorage.getItem("role_name")
 }
+// 
+
 
 /**
  * Lấy thông tin người dùng đã đăng nhập từ JWT token
@@ -121,6 +125,7 @@ export function logout(): void {
     localStorage.removeItem("auth_token")
     localStorage.removeItem("role_name")
     localStorage.removeItem("user_info")
+    localStorage.removeItem("user_id")
     // Không xóa remembered_username để giữ tính năng ghi nhớ đăng nhập
 }
 

@@ -9,6 +9,7 @@ import { ResponsiveContainer } from "@/components/responsive-container"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ChevronRight, ChevronLeft, Phone, ShoppingCart, Plus, Minus } from "lucide-react"
 import { useCart } from "@/hooks/use-cart"
+import { formatCurrency } from "@/utils/utils"
 
 export default function ProductDetail() {
     const { id } = useParams<{ id: string }>()
@@ -225,8 +226,8 @@ export default function ProductDetail() {
                                         key={index}
                                         onClick={() => setActiveImageIndex(index)}
                                         className={`w-20 h-20 rounded-md border overflow-hidden flex-shrink-0 transition-all duration-200 ${activeImageIndex === index
-                                                ? "ring-2 ring-primary scale-105"
-                                                : "hover:ring-1 hover:ring-primary/50 hover:scale-[1.02]"
+                                            ? "ring-2 ring-primary scale-105"
+                                            : "hover:ring-1 hover:ring-primary/50 hover:scale-[1.02]"
                                             }`}
                                         aria-label={`View image ${index + 1}`}
                                         aria-current={activeImageIndex === index ? "true" : "false"}
@@ -273,6 +274,10 @@ export default function ProductDetail() {
                                 <span className="text-sm font-medium">
                                     {product.availableStock} {product.unit}
                                 </span>
+                            </div>
+                            <div className="flex justify-between border-b pb-2">
+                                <span className="text-sm">Giá</span>
+                                <span className="text-sm font-medium">{formatCurrency(product.price)} VND</span>
                             </div>
                         </div>
 

@@ -5,6 +5,15 @@ import { useNavigate } from "react-router-dom"
 import { get, put } from "@/api/axiosUtils"
 import { isAuthenticated, isSalesManager, getToken } from "@/utils/auth-utils"
 import { SalesLayout } from "@/layouts/sale-layout"
+import {
+    Pagination,
+    PaginationContent,
+    PaginationEllipsis,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+} from "@/components/ui/pagination"
 
 // Định nghĩa các kiểu dữ liệu
 interface Product {
@@ -47,8 +56,6 @@ interface RequestProduct {
     requestCode?: number
 }
 
-
-
 // Định nghĩa kiểu dữ liệu cho chi tiết đơn hàng
 interface OrderDetail {
     requestProductId: string
@@ -80,6 +87,10 @@ export default function SalesOrders() {
         to: undefined,
     })
 
+    const [currentPage, setCurrentPage] = useState(1)
+    const [itemsPerPage] = useState(15)
+    const [totalPages, setTotalPages] = useState(1)
+
     // Kiểm tra xác thực và quyền truy cập
     useEffect(() => {
         // Kiểm tra xem người dùng đã đăng nhập chưa
@@ -100,6 +111,7 @@ export default function SalesOrders() {
         const fetchOrders = async () => {
             setIsLoading(true)
             setError(null)
+            setCurrentPage(1) // Reset to first page when fetching new data
 
             try {
                 // Lấy token từ auth-service
@@ -184,21 +196,38 @@ export default function SalesOrders() {
             filtered = filtered.filter((order) => new Date(order.createdAt) <= toDateEnd)
         }
 
+        // Cập nhật tổng số trang
+        setTotalPages(Math.ceil(filtered.length / itemsPerPage))
         setFilteredOrders(filtered)
-    }, [orders, statusFilter, searchQuery, dateRange])
+    }, [orders, statusFilter, searchQuery, dateRange, itemsPerPage])
 
-    // Sắp xếp đơn hàng theo trạng thái
-    const sortedOrders = [...filteredOrders].sort((a, b) => {
-        // Thứ tự ưu tiên: PENDING -> APPROVED -> COMPLETED -> CANCELLED
-        const statusOrder = {
-            Pending: 0,
-            Approved: 1,
-            Completed: 2,
-            Canceled: 3,
-        }
+    // Calculate total pages whenever filtered orders change
+    useEffect(() => {
+        setTotalPages(Math.ceil(filteredOrders.length / itemsPerPage))
+    }, [filteredOrders, itemsPerPage])
 
-        return statusOrder[a.requestStatus] - statusOrder[b.requestStatus]
-    })
+    // Handle page change
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page)
+        // Scroll to top when changing page
+        window.scrollTo({ top: 0, behavior: "smooth" })
+    }
+
+    // Sắp xếp đơn hàng theo trạng thái và phân trang
+    const sortedOrders = [...filteredOrders]
+        .sort((a, b) => {
+            // Thứ tự ưu tiên: PENDING -> APPROVED -> COMPLETED -> CANCELLED
+            const statusOrder = {
+                Pending: 0,
+                Approved: 1,
+                Completed: 2,
+                Canceled: 3,
+            }
+
+            return statusOrder[a.requestStatus] - statusOrder[b.requestStatus]
+        })
+        // Paginate the results
+        .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
 
     // Hiển thị chi tiết đơn hàng
     const handleViewOrderDetail = async (order: RequestProduct) => {
@@ -600,6 +629,75 @@ export default function SalesOrders() {
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+                )}
+
+                {!isLoading && !error && filteredOrders.length > 0 && (
+                    <div className="mt-4 flex justify-center">
+                        <Pagination>
+                            <PaginationContent>
+                                <PaginationItem>
+                                    <PaginationPrevious
+                                        onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
+                                        className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                    />
+                                </PaginationItem>
+
+                                {/* First page */}
+                                {currentPage > 2 && (
+                                    <PaginationItem>
+                                        <PaginationLink onClick={() => handlePageChange(1)}>1</PaginationLink>
+                                    </PaginationItem>
+                                )}
+
+                                {/* Ellipsis if needed */}
+                                {currentPage > 3 && (
+                                    <PaginationItem>
+                                        <PaginationEllipsis />
+                                    </PaginationItem>
+                                )}
+
+                                {/* Previous page if not on first page */}
+                                {currentPage > 1 && (
+                                    <PaginationItem>
+                                        <PaginationLink onClick={() => handlePageChange(currentPage - 1)}>{currentPage - 1}</PaginationLink>
+                                    </PaginationItem>
+                                )}
+
+                                {/* Current page */}
+                                <PaginationItem>
+                                    <PaginationLink isActive>{currentPage}</PaginationLink>
+                                </PaginationItem>
+
+                                {/* Next page if not on last page */}
+                                {currentPage < totalPages && (
+                                    <PaginationItem>
+                                        <PaginationLink onClick={() => handlePageChange(currentPage + 1)}>{currentPage + 1}</PaginationLink>
+                                    </PaginationItem>
+                                )}
+
+                                {/* Ellipsis if needed */}
+                                {currentPage < totalPages - 2 && (
+                                    <PaginationItem>
+                                        <PaginationEllipsis />
+                                    </PaginationItem>
+                                )}
+
+                                {/* Last page if not already showing */}
+                                {currentPage < totalPages - 1 && (
+                                    <PaginationItem>
+                                        <PaginationLink onClick={() => handlePageChange(totalPages)}>{totalPages}</PaginationLink>
+                                    </PaginationItem>
+                                )}
+
+                                <PaginationItem>
+                                    <PaginationNext
+                                        onClick={() => currentPage < totalPages && handlePageChange(currentPage + 1)}
+                                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                                    />
+                                </PaginationItem>
+                            </PaginationContent>
+                        </Pagination>
                     </div>
                 )}
 
