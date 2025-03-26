@@ -1,13 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ResponsiveContainer } from "@/components/responsive-container"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import {
     Dialog,
@@ -16,328 +16,317 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from "@/components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { CalendarIcon, ClipboardList, CirclePlus, Eye, Filter, Search } from "lucide-react"
+import { format } from "date-fns"
+import { vi } from "date-fns/locale"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Loader2 } from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import {
-    ArrowUp,
-    ArrowDown,
-    Plus,
-    FileText,
-    CheckCircle,
-    XCircle,
-    Clock,
-    AlertCircle,
-    Search,
-    Filter,
-} from "lucide-react"
+import { AlertCircle } from "lucide-react"
 import { SalesLayout } from "@/layouts/sale-layout"
+import ExportRequestCreateDialog from "@/components/sales/dialogs/export-request-detail-dialog"
 
-// Định nghĩa các kiểu dữ liệu
-// interface Product {
-//     id: string
-//     code: string
-//     name: string
-//     unit: string
-//     stock: number
-// }
-
-interface ExportRequest {
-    id: string
-    type: "export" | "import"
-    requestNo: string
-    createdAt: string
-    createdBy: string
-    status: "pending" | "approved" | "completed" | "rejected"
-    reason: string
-    items: RequestItem[]
-    notes?: string
-    approvedBy?: string
-    approvedAt?: string
-    completedAt?: string
-    rejectedReason?: string
+// Define the API response interfaces
+interface RequestExportDetail {
+    requestExportDetailId: number
+    productId: number
+    requestedQuantity: number
 }
 
-interface RequestItem {
-    id: string
-    productId: string
-    productName: string
+interface ApiRequestExport {
+    requestExportId: number
+    orderId: string
+    requestedBy: number
+    approvedBy: number | null
+    status: "Processing" | "Requested" | "Approved"
+    approvedDate: string | null
+    note: string | null
+    requestExportDetails: RequestExportDetail[]
+}
+
+interface ApiProduct {
+    productId: number
     productCode: string
+    productName: string
     unit: string
-    quantity: number
+    defaultExpiration: number
+    categoryId: number
+    description: string
+    taxId: number
+    createdBy: string
+    createdDate: string
+    availableStock: number
+    price: number
+    images: string[]
+}
+
+// Sửa hàm getToken để lấy auth_token thay vì auto_token
+const getToken = () => {
+    if (typeof window !== "undefined") {
+        return localStorage.getItem("auth_token")
+    }
+    return null
+}
+
+// Đảm bảo fetchWithAuth sử dụng Bearer token đúng cách
+const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
+    const token = getToken()
+    if (!token) {
+        throw new Error("Authentication token not found")
+    }
+
+    const headers = {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        ...options.headers,
+    }
+
+    const response = await fetch(url, {
+        ...options,
+        headers,
+    })
+
+    if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`)
+    }
+
+    return response.json()
 }
 
 const SalesExports = () => {
-    // Trạng thái cho mẫu yêu cầu mới
-    const [newRequestType, setNewRequestType] = useState<"export" | "import">("export")
-    const [reason, setReason] = useState("")
-    const [notes, setNotes] = useState("")
-    const [requestItems, setRequestItems] = useState<RequestItem[]>([])
-    const [selectedProduct, setSelectedProduct] = useState("")
-    const [quantity, setQuantity] = useState<number>(1)
-
-    // Trạng thái cho bộ lọc và tìm kiếm
-    const [searchTerm, setSearchTerm] = useState("")
+    const [exportRequests, setExportRequests] = useState<ApiRequestExport[]>([])
+    const [loading, setLoading] = useState<boolean>(true)
+    const [error, setError] = useState<string | null>(null)
+    const [selectedRequest, setSelectedRequest] = useState<ApiRequestExport | null>(null)
+    const [detailsOpen, setDetailsOpen] = useState<boolean>(false)
+    const [products, setProducts] = useState<ApiProduct[]>([])
+    const [, setLoadingProducts] = useState<boolean>(false)
+    const [, setProductError] = useState<string | null>(null)
     const [statusFilter, setStatusFilter] = useState<string>("all")
-    const [typeFilter, setTypeFilter] = useState<string>("all")
-    const [dateFilter, setDateFilter] = useState<string>("all")
+    const [searchQuery, setSearchQuery] = useState("")
+    const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
+        from: undefined,
+        to: undefined,
+    })
+    const [filteredRequests, setFilteredRequests] = useState<ApiRequestExport[]>([])
+    const [authError, setAuthError] = useState<string | null>(null)
+    const [createDialogOpen, setCreateDialogOpen] = useState(false)
+    const [baseRequestId, setBaseRequestId] = useState<number | null>(null)
+    const [alertMessage, setAlertMessage] = useState<{
+        type: "error" | "success" | null
+        title: string
+        message: string
+    }>({ type: null, title: "", message: "" })
 
-    // Trạng thái cho hiển thị chi tiết
-    const [selectedRequest, setSelectedRequest] = useState<ExportRequest | null>(null)
-    const [showDetailSheet, setShowDetailSheet] = useState(false)
-
-    // Trạng thái lưu trữ dữ liệu
-    const products = [
-        { id: "1", code: "SP001", name: "Phân bón NPK", unit: "kg", stock: 1500 },
-        { id: "2", code: "SP002", name: "Thuốc trừ sâu sinh học", unit: "lít", stock: 350 },
-        { id: "3", code: "SP003", name: "Hạt giống lúa", unit: "kg", stock: 2000 },
-        { id: "4", code: "SP004", name: "Hạt giống rau muống", unit: "gói", stock: 800 },
-        { id: "5", code: "SP005", name: "Phân vi sinh", unit: "kg", stock: 1200 },
-        { id: "6", code: "SP006", name: "Thuốc kích thích tăng trưởng", unit: "chai", stock: 450 },
-        { id: "7", code: "SP007", name: "Chế phẩm xử lý đất", unit: "kg", stock: 600 },
-        { id: "8", code: "SP008", name: "Vôi nông nghiệp", unit: "kg", stock: 3000 },
-    ]
-
-    const [requests, setRequests] = useState<ExportRequest[]>([
-        {
-            id: "1",
-            type: "export",
-            requestNo: "XK-230315-001",
-            createdAt: "2023-03-15T09:23:45",
-            createdBy: "Nguyễn Văn A",
-            status: "completed",
-            reason: "Xuất hàng cho đại lý tỉnh Bắc Ninh",
-            items: [
-                { id: "i1", productId: "1", productName: "Phân bón NPK", productCode: "SP001", unit: "kg", quantity: 200 },
-                {
-                    id: "i2",
-                    productId: "2",
-                    productName: "Thuốc trừ sâu sinh học",
-                    productCode: "SP002",
-                    unit: "lít",
-                    quantity: 50,
-                },
-            ],
-            notes: "Giao hàng vào buổi sáng",
-            approvedBy: "Lê Thị B",
-            approvedAt: "2023-03-16T10:05:30",
-            completedAt: "2023-03-17T14:30:00",
-        },
-        {
-            id: "2",
-            type: "import",
-            requestNo: "NK-230320-001",
-            createdAt: "2023-03-20T11:45:12",
-            createdBy: "Nguyễn Văn A",
-            status: "approved",
-            reason: "Nhập thêm hàng từ nhà cung cấp",
-            items: [
-                { id: "i3", productId: "5", productName: "Phân vi sinh", productCode: "SP005", unit: "kg", quantity: 500 },
-                {
-                    id: "i4",
-                    productId: "6",
-                    productName: "Thuốc kích thích tăng trưởng",
-                    productCode: "SP006",
-                    unit: "chai",
-                    quantity: 100,
-                },
-            ],
-            approvedBy: "Lê Thị B",
-            approvedAt: "2023-03-21T09:10:25",
-        },
-        {
-            id: "3",
-            type: "export",
-            requestNo: "XK-230325-001",
-            createdAt: "2023-03-25T15:20:30",
-            createdBy: "Nguyễn Văn A",
-            status: "rejected",
-            reason: "Xuất hàng cho đại lý tỉnh Hải Dương",
-            items: [
-                { id: "i5", productId: "3", productName: "Hạt giống lúa", productCode: "SP003", unit: "kg", quantity: 150 },
-            ],
-            approvedBy: "Lê Thị B",
-            rejectedReason: "Không đủ số lượng trong kho",
-        },
-        {
-            id: "4",
-            type: "export",
-            requestNo: "XK-230330-001",
-            createdAt: "2023-03-30T08:15:00",
-            createdBy: "Nguyễn Văn A",
-            status: "pending",
-            reason: "Xuất hàng cho đại lý tỉnh Nam Định",
-            items: [
-                {
-                    id: "i6",
-                    productId: "4",
-                    productName: "Hạt giống rau muống",
-                    productCode: "SP004",
-                    unit: "gói",
-                    quantity: 300,
-                },
-                {
-                    id: "i7",
-                    productId: "7",
-                    productName: "Chế phẩm xử lý đất",
-                    productCode: "SP007",
-                    unit: "kg",
-                    quantity: 200,
-                },
-                { id: "i8", productId: "8", productName: "Vôi nông nghiệp", productCode: "SP008", unit: "kg", quantity: 500 },
-            ],
-            notes: "Cần giao trước ngày 5/4/2023",
-        },
-    ])
-
-    // Hàm thêm một sản phẩm vào danh sách yêu cầu
-    const addProductToRequest = () => {
-        if (!selectedProduct || quantity <= 0) return
-
-        const product = products.find((p) => p.id === selectedProduct)
-        if (!product) return
-
-        const newItem: RequestItem = {
-            id: `temp-${Date.now()}`,
-            productId: product.id,
-            productName: product.name,
-            productCode: product.code,
-            unit: product.unit,
-            quantity: quantity,
+    // Check for authentication token
+    useEffect(() => {
+        const token = getToken()
+        if (!token) {
+            setAuthError("Bạn chưa đăng nhập. Vui lòng đăng nhập để tiếp tục.")
+            setLoading(false)
         }
+    }, [])
 
-        setRequestItems([...requestItems, newItem])
-        setSelectedProduct("")
-        setQuantity(1)
-    }
+    // Fetch export requests from API
+    useEffect(() => {
+        const fetchExportRequests = async () => {
+            if (authError) return
 
-    // Hàm xóa một sản phẩm khỏi danh sách yêu cầu
-    const removeProductFromRequest = (itemId: string) => {
-        setRequestItems(requestItems.filter((item) => item.id !== itemId))
-    }
-
-    // Hàm tạo yêu cầu mới
-    const createNewRequest = () => {
-        if (reason.trim() === "" || requestItems.length === 0) {
-            alert("Vui lòng nhập đầy đủ thông tin và thêm ít nhất một sản phẩm!")
-            return
-        }
-
-        const newRequest: ExportRequest = {
-            id: `${requests.length + 1}`,
-            type: newRequestType,
-            requestNo:
-                newRequestType === "export"
-                    ? `XK-${new Date().toISOString().substring(2, 10).replace(/-/g, "")}-${String(requests.length + 1).padStart(3, "0")}`
-                    : `NK-${new Date().toISOString().substring(2, 10).replace(/-/g, "")}-${String(requests.length + 1).padStart(3, "0")}`,
-            createdAt: new Date().toISOString(),
-            createdBy: "Nguyễn Văn A", // Lấy từ thông tin người dùng đăng nhập
-            status: "pending",
-            reason: reason,
-            items: requestItems,
-            notes: notes || undefined,
-        }
-
-        setRequests([newRequest, ...requests])
-        resetForm()
-
-        // Hiển thị thông báo thành công
-        alert(`Đã tạo ${newRequestType === "export" ? "yêu cầu xuất kho" : "yêu cầu nhập kho"} thành công!`)
-    }
-
-    // Hàm reset form sau khi tạo yêu cầu
-    const resetForm = () => {
-        setNewRequestType("export")
-        setReason("")
-        setNotes("")
-        setRequestItems([])
-        setSelectedProduct("")
-        setQuantity(1)
-    }
-
-    // Hàm lọc yêu cầu theo điều kiện tìm kiếm
-    const filteredRequests = requests.filter((request) => {
-        // Lọc theo từ khóa tìm kiếm
-        const searchMatch =
-            searchTerm === "" ||
-            request.requestNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            request.reason.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            request.items.some(
-                (item) =>
-                    item.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                    item.productCode.toLowerCase().includes(searchTerm.toLowerCase()),
-            )
-
-        // Lọc theo trạng thái
-        const statusMatch = statusFilter === "all" || request.status === statusFilter
-
-        // Lọc theo loại yêu cầu
-        const typeMatch = typeFilter === "all" || request.type === typeFilter
-
-        // Lọc theo thời gian
-        let dateMatch = true
-        if (dateFilter !== "all") {
-            const today = new Date()
-            const requestDate = new Date(request.createdAt)
-
-            if (dateFilter === "today") {
-                dateMatch =
-                    requestDate.getDate() === today.getDate() &&
-                    requestDate.getMonth() === today.getMonth() &&
-                    requestDate.getFullYear() === today.getFullYear()
-            } else if (dateFilter === "thisWeek") {
-                const startOfWeek = new Date(today)
-                startOfWeek.setDate(today.getDate() - today.getDay())
-                startOfWeek.setHours(0, 0, 0, 0)
-                dateMatch = requestDate >= startOfWeek
-            } else if (dateFilter === "thisMonth") {
-                dateMatch = requestDate.getMonth() === today.getMonth() && requestDate.getFullYear() === today.getFullYear()
+            try {
+                setLoading(true)
+                const data = await fetchWithAuth("https://minhlong.mlhr.org/api/RequestExport/all")
+                setExportRequests(data)
+                setFilteredRequests(data)
+                setError(null)
+            } catch (err) {
+                console.error("Error fetching export requests:", err)
+                setError("Failed to load export requests. Please try again later.")
+            } finally {
+                setLoading(false)
             }
         }
 
-        return searchMatch && statusMatch && typeMatch && dateMatch
-    })
+        fetchExportRequests()
+    }, [authError])
 
-    // Hàm định dạng ngày tháng
-    const formatDate = (dateString: string) => {
-        const date = new Date(dateString)
-        return date.toLocaleDateString("vi-VN", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-        })
+    // Fetch products for displaying product details
+    useEffect(() => {
+        const fetchProducts = async () => {
+            if (authError) return
+
+            try {
+                setLoadingProducts(true)
+                const data = await fetchWithAuth("https://minhlong.mlhr.org/api/product")
+                setProducts(data)
+                setProductError(null)
+            } catch (err) {
+                console.error("Error fetching products:", err)
+                setProductError("Failed to load products. Please try again later.")
+            } finally {
+                setLoadingProducts(false)
+            }
+        }
+
+        fetchProducts()
+    }, [authError])
+
+    // Filter export requests based on status, search query, and date range
+    useEffect(() => {
+        let filtered = [...exportRequests]
+
+        // Filter by status
+        if (statusFilter !== "all") {
+            filtered = filtered.filter((request) => request.status === statusFilter)
+        }
+
+        // Filter by search query
+        if (searchQuery) {
+            const query = searchQuery.toLowerCase()
+            filtered = filtered.filter(
+                (request) =>
+                    request.orderId.toLowerCase().includes(query) ||
+                    (request.note && request.note.toLowerCase().includes(query)) ||
+                    request.requestExportId.toString().includes(query),
+            )
+        }
+
+        // Filter by date range
+        if (dateRange.from) {
+            filtered = filtered.filter((request) => {
+                if (!request.approvedDate) return false
+                return new Date(request.approvedDate) >= dateRange.from!
+            })
+        }
+        if (dateRange.to) {
+            filtered = filtered.filter((request) => {
+                if (!request.approvedDate) return false
+                return new Date(request.approvedDate) <= dateRange.to!
+            })
+        }
+
+        setFilteredRequests(filtered)
+    }, [exportRequests, statusFilter, searchQuery, dateRange])
+
+    // Clear alert after 5 seconds
+    useEffect(() => {
+        if (alertMessage.type) {
+            const timer = setTimeout(() => {
+                setAlertMessage({ type: null, title: "", message: "" })
+            }, 5000)
+            return () => clearTimeout(timer)
+        }
+    }, [alertMessage])
+
+    const handleViewDetails = (request: ApiRequestExport) => {
+        setSelectedRequest(request)
+        setDetailsOpen(true)
     }
 
-    // Hàm hiển thị trạng thái
-    const renderStatus = (status: string) => {
+    // Cập nhật hàm handleCreateRequest để chỉ hiển thị thông báo thành công
+    const handleCreateRequest = async (requestData: ApiRequestExport) => {
+        try {
+            // Refresh danh sách yêu cầu sau khi tạo thành công
+            const fetchExportRequests = async () => {
+                try {
+                    setLoading(true)
+                    const data = await fetchWithAuth("https://minhlong.mlhr.org/api/RequestExport/all")
+                    setExportRequests(data)
+                    setFilteredRequests(data)
+                    setError(null)
+                } catch (err) {
+                    console.error("Error fetching export requests:", err)
+                    setError("Failed to load export requests. Please try again later.")
+                } finally {
+                    setLoading(false)
+                }
+            }
+
+            // Hiển thị thông báo thành công
+            setAlertMessage({
+                type: "success",
+                title: "Thành công",
+                message: `Yêu cầu xuất kho #${requestData.requestExportId} đã được liên kết với kho.`,
+            })
+
+            // Gọi API để lấy danh sách yêu cầu mới
+            fetchExportRequests()
+
+            // Đóng dialog
+            setCreateDialogOpen(false)
+            setBaseRequestId(null)
+        } catch (err) {
+            console.error("Error handling export request:", err)
+            setAlertMessage({
+                type: "error",
+                title: "Lỗi",
+                message: "Không thể cập nhật danh sách yêu cầu xuất kho. Vui lòng thử lại sau.",
+            })
+        }
+    }
+
+    const handleCreateBasedOn = (requestId: number) => {
+        setBaseRequestId(requestId)
+        setCreateDialogOpen(true)
+    }
+
+    // Get product by ID
+    const getProduct = (productId: number) => {
+        return products.find((p) => p.productId === productId)
+    }
+
+    // Get product name by ID
+    const getProductName = (productId: number) => {
+        const product = getProduct(productId)
+        return product ? product.productName : `Product ID: ${productId}`
+    }
+
+    // Get product code by ID
+    const getProductCode = (productId: number) => {
+        const product = getProduct(productId)
+        return product ? product.productCode : "N/A"
+    }
+
+    // Get product unit by ID
+    const getProductUnit = (productId: number) => {
+        const product = getProduct(productId)
+        return product ? product.unit : "N/A"
+    }
+
+    // Get product price by ID
+    const getProductPrice = (productId: number) => {
+        const product = getProduct(productId)
+        return product ? product.price : 0
+    }
+
+    // Get product image by ID
+    const getProductImage = (productId: number) => {
+        const product = getProduct(productId)
+        return product && product.images && product.images.length > 0 ? product.images[0] : null
+    }
+
+    // Render status badge
+    const renderStatusBadge = (status: string) => {
         switch (status) {
-            case "pending":
+            case "Requested":
                 return (
-                    <Badge variant="outline" className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" /> Chờ duyệt
+                    <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                        Chờ duyệt
                     </Badge>
                 )
-            case "approved":
+            case "Approved":
                 return (
-                    <Badge variant="secondary" className="flex items-center gap-1">
-                        <CheckCircle className="h-3 w-3" /> Đã duyệt
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                        Đã duyệt
                     </Badge>
                 )
-            case "completed":
+            case "Processing":
                 return (
-                    <Badge variant="default" className="flex items-center gap-1 bg-green-100 text-green-800 hover:bg-green-100">
-                        <CheckCircle className="h-3 w-3" /> Hoàn thành
-                    </Badge>
-                )
-            case "rejected":
-                return (
-                    <Badge variant="destructive" className="flex items-center gap-1">
-                        <XCircle className="h-3 w-3" /> Từ chối
+                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                        Đang xử lý
                     </Badge>
                 )
             default:
@@ -345,470 +334,423 @@ const SalesExports = () => {
         }
     }
 
+    // Format date
+    const formatDate = (dateString: string | null) => {
+        if (!dateString) return "N/A"
+        try {
+            return format(new Date(dateString), "dd/MM/yyyy HH:mm")
+        } catch (error) {
+            console.log(error);
+
+            return "Invalid date"
+        }
+    }
+
+    // Format currency
+    const formatCurrency = (amount: number) => {
+        return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(amount)
+    }
+
+    // Calculate total requested quantity
+    const getTotalRequestedQuantity = (request: ApiRequestExport) => {
+        return request.requestExportDetails.reduce((total, item) => total + item.requestedQuantity, 0)
+    }
+
+    // Calculate total value of request
+    const getTotalValue = (request: ApiRequestExport) => {
+        return request.requestExportDetails.reduce((total, item) => {
+            const price = getProductPrice(item.productId)
+            return total + price * item.requestedQuantity
+        }, 0)
+    }
+
+    if (authError) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <div className="text-center">
+                    <p className="text-red-500 mb-4">{authError}</p>
+                    <Button onClick={() => (window.location.href = "/login")}>Đăng nhập</Button>
+                </div>
+            </div>
+        )
+    }
+
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <span className="ml-2">Đang tải yêu cầu xuất kho...</span>
+            </div>
+        )
+    }
+
+    if (error) {
+        return (
+            <div className="flex justify-center items-center h-screen">
+                <div className="text-center">
+                    <p className="text-red-500 mb-4">{error}</p>
+                    <Button onClick={() => window.location.reload()}>Thử lại</Button>
+                </div>
+            </div>
+        )
+    }
+
     return (
         <SalesLayout>
             <div className="py-8">
                 <ResponsiveContainer>
-                    <Tabs defaultValue="list" className="space-y-6">
-                        <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-2">
-                            <TabsList className="mb-4 md:mb-0">
-                                <TabsTrigger value="list" className="flex items-center gap-2">
-                                    <FileText className="h-4 w-4" />
-                                    <span>Danh sách yêu cầu</span>
+                    {alertMessage.type && (
+                        <Alert variant={alertMessage.type === "error" ? "destructive" : "default"} className="mb-6">
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertTitle>{alertMessage.title}</AlertTitle>
+                            <AlertDescription>{alertMessage.message}</AlertDescription>
+                        </Alert>
+                    )}
+
+                    <div className="flex justify-between items-center mb-6">
+                        <h1 className="text-2xl font-bold">Quản Lý Yêu Cầu Xuất Kho</h1>
+
+                    </div>
+
+                    <Tabs defaultValue="all" className="space-y-6">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                            <TabsList>
+                                <TabsTrigger value="all" onClick={() => setStatusFilter("all")}>
+                                    Tất cả
                                 </TabsTrigger>
-                                <TabsTrigger value="new" className="flex items-center gap-2">
-                                    <Plus className="h-4 w-4" />
-                                    <span>Tạo yêu cầu mới</span>
+                                <TabsTrigger value="Requested" onClick={() => setStatusFilter("Requested")}>
+                                    Chờ duyệt
+                                </TabsTrigger>
+                                <TabsTrigger value="Approved" onClick={() => setStatusFilter("Approved")}>
+                                    Đã duyệt
+                                </TabsTrigger>
+                                <TabsTrigger value="Processing" onClick={() => setStatusFilter("Processing")}>
+                                    Đang xử lý
                                 </TabsTrigger>
                             </TabsList>
 
-                            <div className="flex flex-col sm:flex-row gap-2">
-                                <div className="relative">
-                                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <div className="flex items-center gap-2 w-full sm:w-auto">
+                                <div className="relative flex-1 sm:flex-none">
+                                    <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                     <Input
-                                        type="search"
                                         placeholder="Tìm kiếm yêu cầu..."
-                                        className="pl-8 w-full sm:w-[200px] md:w-[260px]"
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="pl-8"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
                                     />
                                 </div>
 
-                                <Dialog>
-                                    <DialogTrigger asChild>
-                                        <Button variant="outline" className="flex items-center gap-2">
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button variant="outline" size="icon">
                                             <Filter className="h-4 w-4" />
-                                            <span>Lọc</span>
                                         </Button>
-                                    </DialogTrigger>
-                                    <DialogContent className="sm:max-w-[425px]">
-                                        <DialogHeader>
-                                            <DialogTitle>Lọc yêu cầu</DialogTitle>
-                                            <DialogDescription>Điều chỉnh các bộ lọc bên dưới để tìm kiếm yêu cầu.</DialogDescription>
-                                        </DialogHeader>
-                                        <div className="grid gap-4 py-4">
-                                            <div className="grid gap-2">
-                                                <Label htmlFor="status">Trạng thái</Label>
-                                                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                                                    <SelectTrigger id="status">
-                                                        <SelectValue placeholder="Chọn trạng thái" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="all">Tất cả trạng thái</SelectItem>
-                                                        <SelectItem value="pending">Chờ duyệt</SelectItem>
-                                                        <SelectItem value="approved">Đã duyệt</SelectItem>
-                                                        <SelectItem value="completed">Hoàn thành</SelectItem>
-                                                        <SelectItem value="rejected">Từ chối</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                            <div className="grid gap-2">
-                                                <Label htmlFor="type">Loại yêu cầu</Label>
-                                                <Select value={typeFilter} onValueChange={setTypeFilter}>
-                                                    <SelectTrigger id="type">
-                                                        <SelectValue placeholder="Chọn loại yêu cầu" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="all">Tất cả loại</SelectItem>
-                                                        <SelectItem value="export">Xuất kho</SelectItem>
-                                                        <SelectItem value="import">Nhập kho</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                            <div className="grid gap-2">
-                                                <Label htmlFor="date">Thời gian</Label>
-                                                <Select value={dateFilter} onValueChange={setDateFilter}>
-                                                    <SelectTrigger id="date">
-                                                        <SelectValue placeholder="Chọn thời gian" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="all">Tất cả thời gian</SelectItem>
-                                                        <SelectItem value="today">Hôm nay</SelectItem>
-                                                        <SelectItem value="thisWeek">Tuần này</SelectItem>
-                                                        <SelectItem value="thisMonth">Tháng này</SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-                                        </div>
-                                        <DialogFooter>
-                                            <Button
-                                                type="submit"
-                                                onClick={() => {
-                                                    setStatusFilter("all")
-                                                    setTypeFilter("all")
-                                                    setDateFilter("all")
-                                                }}
-                                                variant="outline"
-                                            >
-                                                Đặt lại
-                                            </Button>
-                                            <Button type="submit">Áp dụng</Button>
-                                        </DialogFooter>
-                                    </DialogContent>
-                                </Dialog>
-                            </div>
-                        </div>
-
-                        {/* Tab nội dung: Danh sách các yêu cầu */}
-                        <TabsContent value="list" className="space-y-6">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Danh sách yêu cầu xuất nhập kho</CardTitle>
-                                    <CardDescription>Quản lý tất cả các yêu cầu xuất nhập kho và theo dõi trạng thái</CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    {filteredRequests.length === 0 ? (
-                                        <div className="text-center py-6">
-                                            <p className="text-muted-foreground">Không tìm thấy yêu cầu nào phù hợp với tiêu chí tìm kiếm.</p>
-                                        </div>
-                                    ) : (
-                                        <div className="rounded-md border">
-                                            <Table>
-                                                <TableHeader>
-                                                    <TableRow>
-                                                        <TableHead className="w-[120px]">Mã yêu cầu</TableHead>
-                                                        <TableHead>Loại</TableHead>
-                                                        <TableHead>Ngày tạo</TableHead>
-                                                        <TableHead className="hidden md:table-cell">Lý do</TableHead>
-                                                        <TableHead>Trạng thái</TableHead>
-                                                        <TableHead className="hidden md:table-cell">Số sản phẩm</TableHead>
-                                                        <TableHead className="text-right">Chi tiết</TableHead>
-                                                    </TableRow>
-                                                </TableHeader>
-                                                <TableBody>
-                                                    {filteredRequests.map((request) => (
-                                                        <TableRow key={request.id}>
-                                                            <TableCell className="font-medium">{request.requestNo}</TableCell>
-                                                            <TableCell>
-                                                                {request.type === "export" ? (
-                                                                    <Badge
-                                                                        variant="outline"
-                                                                        className="flex items-center gap-1 bg-orange-50 text-orange-800 hover:bg-orange-50"
-                                                                    >
-                                                                        <ArrowUp className="h-3 w-3" /> Xuất kho
-                                                                    </Badge>
-                                                                ) : (
-                                                                    <Badge
-                                                                        variant="outline"
-                                                                        className="flex items-center gap-1 bg-blue-50 text-blue-800 hover:bg-blue-50"
-                                                                    >
-                                                                        <ArrowDown className="h-3 w-3" /> Nhập kho
-                                                                    </Badge>
-                                                                )}
-                                                            </TableCell>
-                                                            <TableCell>{formatDate(request.createdAt)}</TableCell>
-                                                            <TableCell className="hidden md:table-cell max-w-[300px] truncate">
-                                                                {request.reason}
-                                                            </TableCell>
-                                                            <TableCell>{renderStatus(request.status)}</TableCell>
-                                                            <TableCell className="hidden md:table-cell">{request.items.length}</TableCell>
-                                                            <TableCell className="text-right">
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-4" align="end">
+                                        <div className="space-y-2">
+                                            <h4 className="font-medium text-sm">Lọc theo ngày</h4>
+                                            <div className="flex flex-col gap-2">
+                                                <div className="grid gap-2">
+                                                    <div className="flex items-center gap-2">
+                                                        <Label className="text-xs">Từ ngày</Label>
+                                                        <Popover>
+                                                            <PopoverTrigger asChild>
                                                                 <Button
                                                                     variant="outline"
                                                                     size="sm"
-                                                                    onClick={() => {
-                                                                        setSelectedRequest(request)
-                                                                        setShowDetailSheet(true)
-                                                                    }}
+                                                                    className="w-full justify-start text-left font-normal"
                                                                 >
-                                                                    Xem
+                                                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                                                    {dateRange.from ? format(dateRange.from, "dd/MM/yyyy") : <span>Chọn ngày</span>}
                                                                 </Button>
-                                                            </TableCell>
-                                                        </TableRow>
-                                                    ))}
-                                                </TableBody>
-                                            </Table>
-                                        </div>
-                                    )}
-                                </CardContent>
-                            </Card>
-
-                            {/* Sheet hiển thị chi tiết yêu cầu */}
-                            <Sheet open={showDetailSheet} onOpenChange={setShowDetailSheet}>
-                                <SheetContent className="w-full sm:max-w-[540px] overflow-y-auto">
-                                    <SheetHeader>
-                                        <SheetTitle>Chi tiết yêu cầu {selectedRequest?.requestNo}</SheetTitle>
-                                        <SheetDescription>
-                                            {selectedRequest?.type === "export" ? "Yêu cầu xuất kho" : "Yêu cầu nhập kho"}
-                                        </SheetDescription>
-                                    </SheetHeader>
-
-                                    {selectedRequest && (
-                                        <div className="mt-6 space-y-6">
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <h4 className="text-sm font-medium text-muted-foreground mb-1">Mã yêu cầu</h4>
-                                                    <p>{selectedRequest.requestNo}</p>
-                                                </div>
-                                                <div>
-                                                    <h4 className="text-sm font-medium text-muted-foreground mb-1">Ngày tạo</h4>
-                                                    <p>{formatDate(selectedRequest.createdAt)}</p>
-                                                </div>
-                                                <div>
-                                                    <h4 className="text-sm font-medium text-muted-foreground mb-1">Người tạo</h4>
-                                                    <p>{selectedRequest.createdBy}</p>
-                                                </div>
-                                                <div>
-                                                    <h4 className="text-sm font-medium text-muted-foreground mb-1">Trạng thái</h4>
-                                                    <p>{renderStatus(selectedRequest.status)}</p>
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <h4 className="text-sm font-medium text-muted-foreground mb-1">Lý do</h4>
-                                                <p>{selectedRequest.reason}</p>
-                                            </div>
-
-                                            {selectedRequest.notes && (
-                                                <div>
-                                                    <h4 className="text-sm font-medium text-muted-foreground mb-1">Ghi chú</h4>
-                                                    <p>{selectedRequest.notes}</p>
-                                                </div>
-                                            )}
-
-                                            <div>
-                                                <h4 className="text-sm font-medium mb-2">Danh sách sản phẩm</h4>
-                                                <div className="rounded-md border">
-                                                    <Table>
-                                                        <TableHeader>
-                                                            <TableRow>
-                                                                <TableHead>Mã SP</TableHead>
-                                                                <TableHead>Tên sản phẩm</TableHead>
-                                                                <TableHead className="text-right">Số lượng</TableHead>
-                                                                <TableHead className="text-right">Đơn vị</TableHead>
-                                                            </TableRow>
-                                                        </TableHeader>
-                                                        <TableBody>
-                                                            {selectedRequest.items.map((item) => (
-                                                                <TableRow key={item.id}>
-                                                                    <TableCell>{item.productCode}</TableCell>
-                                                                    <TableCell>{item.productName}</TableCell>
-                                                                    <TableCell className="text-right">{item.quantity}</TableCell>
-                                                                    <TableCell className="text-right">{item.unit}</TableCell>
-                                                                </TableRow>
-                                                            ))}
-                                                        </TableBody>
-                                                    </Table>
-                                                </div>
-                                            </div>
-
-                                            {selectedRequest.status !== "pending" && (
-                                                <div className="space-y-4">
-                                                    <div className="border-t pt-4">
-                                                        <h4 className="text-sm font-medium mb-2">Thông tin duyệt</h4>
-
-                                                        {selectedRequest.status === "rejected" ? (
-                                                            <Alert variant="destructive">
-                                                                <AlertCircle className="h-4 w-4" />
-                                                                <AlertTitle>Yêu cầu bị từ chối</AlertTitle>
-                                                                <AlertDescription>
-                                                                    {selectedRequest.rejectedReason || "Không có lý do từ chối"}
-                                                                </AlertDescription>
-                                                            </Alert>
-                                                        ) : (
-                                                            <div className="grid grid-cols-2 gap-4">
-                                                                {selectedRequest.approvedBy && (
-                                                                    <>
-                                                                        <div>
-                                                                            <h4 className="text-sm font-medium text-muted-foreground mb-1">Người duyệt</h4>
-                                                                            <p>{selectedRequest.approvedBy}</p>
-                                                                        </div>
-                                                                        <div>
-                                                                            <h4 className="text-sm font-medium text-muted-foreground mb-1">Ngày duyệt</h4>
-                                                                            <p>{selectedRequest.approvedAt ? formatDate(selectedRequest.approvedAt) : ""}</p>
-                                                                        </div>
-                                                                    </>
-                                                                )}
-                                                                {selectedRequest.status === "completed" && selectedRequest.completedAt && (
-                                                                    <div className="col-span-2">
-                                                                        <h4 className="text-sm font-medium text-muted-foreground mb-1">Ngày hoàn thành</h4>
-                                                                        <p>{formatDate(selectedRequest.completedAt)}</p>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        )}
+                                                            </PopoverTrigger>
+                                                            <PopoverContent className="w-auto p-0" align="start">
+                                                                <Calendar
+                                                                    mode="single"
+                                                                    selected={dateRange.from}
+                                                                    onSelect={(date) => setDateRange({ ...dateRange, from: date })}
+                                                                    initialFocus
+                                                                    locale={vi}
+                                                                />
+                                                            </PopoverContent>
+                                                        </Popover>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <Label className="text-xs">Đến ngày</Label>
+                                                        <Popover>
+                                                            <PopoverTrigger asChild>
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    className="w-full justify-start text-left font-normal"
+                                                                >
+                                                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                                                    {dateRange.to ? format(dateRange.to, "dd/MM/yyyy") : <span>Chọn ngày</span>}
+                                                                </Button>
+                                                            </PopoverTrigger>
+                                                            <PopoverContent className="w-auto p-0" align="start">
+                                                                <Calendar
+                                                                    mode="single"
+                                                                    selected={dateRange.to}
+                                                                    onSelect={(date) => setDateRange({ ...dateRange, to: date })}
+                                                                    initialFocus
+                                                                    locale={vi}
+                                                                />
+                                                            </PopoverContent>
+                                                        </Popover>
                                                     </div>
                                                 </div>
-                                            )}
-
-                                            <div className="flex justify-end pt-4">
-                                                <Button variant="outline" onClick={() => setShowDetailSheet(false)}>
-                                                    Đóng
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => setDateRange({ from: undefined, to: undefined })}
+                                                >
+                                                    Xóa bộ lọc
                                                 </Button>
                                             </div>
                                         </div>
-                                    )}
-                                </SheetContent>
-                            </Sheet>
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
+                        </div>
+
+                        <TabsContent value="all" className="space-y-4">
+                            {filteredRequests.length === 0 ? (
+                                <div className="bg-muted/20 rounded-lg p-8 text-center">
+                                    <ClipboardList className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                                    <h3 className="text-lg font-medium mb-2">Không tìm thấy yêu cầu xuất kho</h3>
+                                    <p className="text-muted-foreground mb-4">
+                                        Không có yêu cầu xuất kho nào phù hợp với điều kiện tìm kiếm.
+                                    </p>
+                                    <Button
+                                        onClick={() => {
+                                            setStatusFilter("all")
+                                            setSearchQuery("")
+                                            setDateRange({ from: undefined, to: undefined })
+                                        }}
+                                    >
+                                        Xóa bộ lọc
+                                    </Button>
+                                </div>
+                            ) : (
+                                <div className="bg-white rounded-lg border overflow-hidden">
+                                    <div className="overflow-x-auto">
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead className="w-[120px]">Mã yêu cầu</TableHead>
+                                                    <TableHead className="w-[120px]">Mã đơn hàng</TableHead>
+                                                    <TableHead className="w-[120px]">Ngày duyệt</TableHead>
+                                                    <TableHead>Ghi chú</TableHead>
+                                                    <TableHead className="w-[100px]">Số SP</TableHead>
+                                                    <TableHead className="w-[100px]">Tổng SL</TableHead>
+                                                    <TableHead className="w-[120px]">Tổng giá trị</TableHead>
+                                                    <TableHead className="w-[120px]">Trạng thái</TableHead>
+                                                    <TableHead className="w-[120px] text-right">Thao tác</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {filteredRequests.map((request) => (
+                                                    <TableRow key={request.requestExportId}>
+                                                        <TableCell className="font-medium">{request.requestExportId}</TableCell>
+                                                        <TableCell>{request.orderId.substring(0, 8)}...</TableCell>
+                                                        <TableCell>{formatDate(request.approvedDate)}</TableCell>
+                                                        <TableCell>{request.note || "Không có ghi chú"}</TableCell>
+                                                        <TableCell>{request.requestExportDetails.length}</TableCell>
+                                                        <TableCell>{getTotalRequestedQuantity(request)}</TableCell>
+                                                        <TableCell>{formatCurrency(getTotalValue(request))}</TableCell>
+                                                        <TableCell>{renderStatusBadge(request.status)}</TableCell>
+                                                        <TableCell className="text-right">
+                                                            <div className="flex justify-end gap-2">
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    onClick={() => handleViewDetails(request)}
+                                                                    title="Xem chi tiết"
+                                                                >
+                                                                    <Eye className="h-4 w-4" />
+                                                                </Button>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    onClick={() => handleCreateBasedOn(request.requestExportId)}
+                                                                    title="Tạo yêu cầu dựa trên yêu cầu này"
+                                                                >
+                                                                    <CirclePlus className="h-4 w-4" />
+                                                                </Button>
+                                                            </div>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </div>
+                                </div>
+                            )}
                         </TabsContent>
 
-                        {/* Tab nội dung: Tạo yêu cầu mới */}
-                        <TabsContent value="new" className="space-y-6">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Tạo yêu cầu xuất nhập kho mới</CardTitle>
-                                    <CardDescription>Điền đầy đủ thông tin để tạo yêu cầu mới</CardDescription>
-                                </CardHeader>
-                                <CardContent className="space-y-6">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="requestType">Loại yêu cầu</Label>
-                                            <Select
-                                                value={newRequestType}
-                                                onValueChange={(value) => setNewRequestType(value as "export" | "import")}
-                                            >
-                                                <SelectTrigger id="requestType">
-                                                    <SelectValue placeholder="Chọn loại yêu cầu" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="export">Xuất kho</SelectItem>
-                                                    <SelectItem value="import">Nhập kho</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
+                        <TabsContent value="Requested" className="space-y-4">
+                            {/* Content is filtered by the useEffect */}
+                        </TabsContent>
 
-                                        <div className="space-y-2">
-                                            <Label htmlFor="reason">Lý do {newRequestType === "export" ? "xuất" : "nhập"} kho</Label>
-                                            <Input
-                                                id="reason"
-                                                placeholder={`Nhập lý do ${newRequestType === "export" ? "xuất" : "nhập"} kho`}
-                                                value={reason}
-                                                onChange={(e) => setReason(e.target.value)}
-                                            />
-                                        </div>
-                                    </div>
+                        <TabsContent value="Approved" className="space-y-4">
+                            {/* Content is filtered by the useEffect */}
+                        </TabsContent>
 
-                                    <div>
-                                        <Label htmlFor="notes">Ghi chú (không bắt buộc)</Label>
-                                        <Textarea
-                                            id="notes"
-                                            placeholder="Nhập ghi chú nếu có"
-                                            className="h-20 mt-1"
-                                            value={notes}
-                                            onChange={(e) => setNotes(e.target.value)}
-                                        />
-                                    </div>
-
-                                    <div className="border rounded-lg p-4">
-                                        <h3 className="text-sm font-medium mb-4">Thêm sản phẩm vào yêu cầu</h3>
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                                            <div>
-                                                <Label htmlFor="product">Sản phẩm</Label>
-                                                <Select value={selectedProduct} onValueChange={setSelectedProduct}>
-                                                    <SelectTrigger id="product">
-                                                        <SelectValue placeholder="Chọn sản phẩm" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {products.map((product) => (
-                                                            <SelectItem key={product.id} value={product.id}>
-                                                                {product.code} - {product.name}
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                            </div>
-
-                                            <div>
-                                                <Label htmlFor="quantity">Số lượng</Label>
-                                                <Input
-                                                    id="quantity"
-                                                    type="number"
-                                                    min="1"
-                                                    value={quantity}
-                                                    onChange={(e) => setQuantity(Number.parseInt(e.target.value) || 0)}
-                                                />
-                                            </div>
-
-                                            <div className="flex items-end">
-                                                <Button onClick={addProductToRequest} className="w-full">
-                                                    Thêm sản phẩm
-                                                </Button>
-                                            </div>
-                                        </div>
-
-                                        {requestItems.length > 0 ? (
-                                            <div className="border rounded-md">
-                                                <Table>
-                                                    <TableHeader>
-                                                        <TableRow>
-                                                            <TableHead>Mã SP</TableHead>
-                                                            <TableHead>Tên sản phẩm</TableHead>
-                                                            <TableHead className="text-right">Số lượng</TableHead>
-                                                            <TableHead className="text-right">Đơn vị</TableHead>
-                                                            <TableHead className="text-right">Thao tác</TableHead>
-                                                        </TableRow>
-                                                    </TableHeader>
-                                                    <TableBody>
-                                                        {requestItems.map((item) => (
-                                                            <TableRow key={item.id}>
-                                                                <TableCell>{item.productCode}</TableCell>
-                                                                <TableCell>{item.productName}</TableCell>
-                                                                <TableCell className="text-right">{item.quantity}</TableCell>
-                                                                <TableCell className="text-right">{item.unit}</TableCell>
-                                                                <TableCell className="text-right">
-                                                                    <Button
-                                                                        variant="ghost"
-                                                                        size="sm"
-                                                                        onClick={() => removeProductFromRequest(item.id)}
-                                                                        className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
-                                                                    >
-                                                                        <XCircle className="h-4 w-4" />
-                                                                    </Button>
-                                                                </TableCell>
-                                                            </TableRow>
-                                                        ))}
-                                                    </TableBody>
-                                                </Table>
-                                            </div>
-                                        ) : (
-                                            <div className="text-center py-6 border rounded-md">
-                                                <p className="text-muted-foreground">
-                                                    Chưa có sản phẩm nào. Vui lòng thêm sản phẩm vào yêu cầu.
-                                                </p>
-                                            </div>
-                                        )}
-                                    </div>
-                                </CardContent>
-                                <CardFooter className="flex justify-between">
-                                    <Button variant="outline" onClick={resetForm}>
-                                        Đặt lại
-                                    </Button>
-                                    <Button onClick={createNewRequest}>
-                                        {newRequestType === "export" ? "Tạo yêu cầu xuất kho" : "Tạo yêu cầu nhập kho"}
-                                    </Button>
-                                </CardFooter>
-                            </Card>
-
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Hướng dẫn sử dụng</CardTitle>
-                                    <CardDescription>Thông tin để hoàn thành yêu cầu xuất nhập kho</CardDescription>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <Alert>
-                                        <AlertCircle className="h-4 w-4" />
-                                        <AlertTitle>Lưu ý quan trọng</AlertTitle>
-                                        <AlertDescription>
-                                            Yêu cầu xuất/nhập kho sẽ cần được quản lý kho duyệt trước khi thực hiện. Vui lòng điền đầy đủ
-                                            thông tin để việc duyệt yêu cầu được nhanh chóng.
-                                        </AlertDescription>
-                                    </Alert>
-
-                                    <div>
-                                        <h3 className="text-sm font-medium mb-2">Quy trình xuất/nhập kho</h3>
-                                        <ol className="list-decimal ml-4 space-y-1 text-sm text-muted-foreground">
-                                            <li>Tạo yêu cầu xuất/nhập kho với đầy đủ thông tin</li>
-                                            <li>Quản lý kho xem xét và duyệt yêu cầu</li>
-                                            <li>Sau khi được duyệt, bộ phận kho sẽ thực hiện xuất/nhập hàng</li>
-                                            <li>Khi hoàn thành, trạng thái yêu cầu sẽ được cập nhật thành "Hoàn thành"</li>
-                                        </ol>
-                                    </div>
-                                </CardContent>
-                            </Card>
+                        <TabsContent value="Processing" className="space-y-4">
+                            {/* Content is filtered by the useEffect */}
                         </TabsContent>
                     </Tabs>
                 </ResponsiveContainer>
             </div>
+
+            {/* Dialog for viewing export request details */}
+            <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
+                <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+                    <DialogHeader>
+                        <DialogTitle>Chi tiết yêu cầu xuất kho</DialogTitle>
+                        <DialogDescription>Mã yêu cầu: {selectedRequest?.requestExportId}</DialogDescription>
+                    </DialogHeader>
+
+                    {selectedRequest && (
+                        <ScrollArea className="flex-1 pr-4">
+                            <div className="space-y-6 py-2">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <Card>
+                                        <CardHeader className="pb-2">
+                                            <CardTitle className="text-base">Thông tin yêu cầu</CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <dl className="grid grid-cols-2 gap-1 text-sm">
+                                                <dt className="text-muted-foreground">Mã yêu cầu:</dt>
+                                                <dd>{selectedRequest.requestExportId}</dd>
+
+                                                <dt className="text-muted-foreground">Mã đơn hàng:</dt>
+                                                <dd>{selectedRequest.orderId}</dd>
+
+                                                <dt className="text-muted-foreground">Người yêu cầu:</dt>
+                                                <dd>ID: {selectedRequest.requestedBy}</dd>
+
+                                                <dt className="text-muted-foreground">Trạng thái:</dt>
+                                                <dd>{renderStatusBadge(selectedRequest.status)}</dd>
+
+                                                {selectedRequest.approvedBy && (
+                                                    <>
+                                                        <dt className="text-muted-foreground">Người duyệt:</dt>
+                                                        <dd>ID: {selectedRequest.approvedBy}</dd>
+                                                    </>
+                                                )}
+
+                                                {selectedRequest.approvedDate && (
+                                                    <>
+                                                        <dt className="text-muted-foreground">Ngày duyệt:</dt>
+                                                        <dd>{formatDate(selectedRequest.approvedDate)}</dd>
+                                                    </>
+                                                )}
+
+                                                {selectedRequest.note && (
+                                                    <>
+                                                        <dt className="text-muted-foreground">Ghi chú:</dt>
+                                                        <dd>{selectedRequest.note}</dd>
+                                                    </>
+                                                )}
+                                            </dl>
+                                        </CardContent>
+                                    </Card>
+
+                                    <Card>
+                                        <CardHeader className="pb-2">
+                                            <CardTitle className="text-base">Thông tin tổng hợp</CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <dl className="grid grid-cols-2 gap-1 text-sm">
+                                                <dt className="text-muted-foreground">Số lượng sản phẩm:</dt>
+                                                <dd>{selectedRequest.requestExportDetails.length}</dd>
+
+                                                <dt className="text-muted-foreground">Tổng số lượng:</dt>
+                                                <dd>{getTotalRequestedQuantity(selectedRequest)}</dd>
+
+                                                <dt className="text-muted-foreground">Tổng giá trị:</dt>
+                                                <dd className="font-medium">{formatCurrency(getTotalValue(selectedRequest))}</dd>
+                                            </dl>
+                                        </CardContent>
+                                    </Card>
+                                </div>
+
+                                <Card>
+                                    <CardHeader className="pb-2">
+                                        <CardTitle className="text-base">Danh sách sản phẩm</CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead className="w-[60px]"></TableHead>
+                                                    <TableHead className="w-[80px]">Mã SP</TableHead>
+                                                    <TableHead>Tên sản phẩm</TableHead>
+                                                    <TableHead className="w-[80px]">Đơn vị</TableHead>
+                                                    <TableHead className="w-[100px]">Số lượng</TableHead>
+                                                    <TableHead className="w-[120px]">Đơn giá</TableHead>
+                                                    <TableHead className="w-[120px]">Thành tiền</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {selectedRequest.requestExportDetails.map((item) => {
+                                                    const productPrice = getProductPrice(item.productId)
+                                                    const totalPrice = productPrice * item.requestedQuantity
+                                                    const productImage = getProductImage(item.productId)
+
+                                                    return (
+                                                        <TableRow key={item.requestExportDetailId}>
+                                                            <TableCell>
+                                                                <Avatar className="h-10 w-10">
+                                                                    {productImage ? (
+                                                                        <AvatarImage src={productImage} alt={getProductName(item.productId)} />
+                                                                    ) : (
+                                                                        <AvatarFallback>{getProductCode(item.productId).substring(0, 2)}</AvatarFallback>
+                                                                    )}
+                                                                </Avatar>
+                                                            </TableCell>
+                                                            <TableCell>{getProductCode(item.productId)}</TableCell>
+                                                            <TableCell>{getProductName(item.productId)}</TableCell>
+                                                            <TableCell>{getProductUnit(item.productId)}</TableCell>
+                                                            <TableCell>{item.requestedQuantity}</TableCell>
+                                                            <TableCell>{formatCurrency(productPrice)}</TableCell>
+                                                            <TableCell>{formatCurrency(totalPrice)}</TableCell>
+                                                        </TableRow>
+                                                    )
+                                                })}
+                                            </TableBody>
+                                        </Table>
+                                    </CardContent>
+                                </Card>
+                            </div>
+                        </ScrollArea>
+                    )}
+
+                    <DialogFooter className="pt-4">
+                        <Button variant="outline" onClick={() => setDetailsOpen(false)}>
+                            Đóng
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                setDetailsOpen(false)
+                                handleCreateBasedOn(selectedRequest!.requestExportId)
+                            }}
+                        >
+                            Chọn kho để xuất hàng
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Dialog for creating new export request */}
+            <ExportRequestCreateDialog
+                open={createDialogOpen}
+                onOpenChange={setCreateDialogOpen}
+                requestExportId={baseRequestId}
+                onCreateRequest={handleCreateRequest}
+            />
         </SalesLayout>
     )
 }
