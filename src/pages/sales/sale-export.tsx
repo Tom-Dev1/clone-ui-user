@@ -6,7 +6,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -18,11 +17,9 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { CalendarIcon, ClipboardList, CirclePlus, Eye, Filter, Search } from "lucide-react"
-import { format } from "date-fns"
-import { vi } from "date-fns/locale"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { ClipboardList, CirclePlus, Eye, Search } from "lucide-react"
+
+
 import { Loader2 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -337,16 +334,26 @@ const SalesExports = () => {
 
     //
     // Format date
-    const formatDate = (dateString: string | null) => {
-        if (!dateString) return "N/A"
-        try {
-            return format(new Date(dateString), "dd/MM/yyyy HH:mm")
-        } catch (error) {
-            console.log(error);
+    const formatDate = (dateString: string | null): string => {
+        if (!dateString) return "N/A";
 
-            return "Invalid date"
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) {
+            return "Invalid date";
         }
-    }
+
+        const pad = (n: number): string => n.toString().padStart(2, '0');
+
+        const day = pad(date.getDate());
+        const month = pad(date.getMonth() + 1); // Tháng trong JS bắt đầu từ 0
+        const year = date.getFullYear();
+
+        const hours = pad(date.getHours());
+        const minutes = pad(date.getMinutes());
+
+        return `${day}/${month}/${year} ${hours}:${minutes}`;
+    };
+
 
     // Format currency
     const formatCurrency = (amount: number) => {
@@ -442,7 +449,7 @@ const SalesExports = () => {
                                     />
                                 </div>
 
-                                <Popover>
+                                {/* <Popover>
                                     <PopoverTrigger asChild>
                                         <Button variant="outline" size="icon">
                                             <Filter className="h-4 w-4" />
@@ -472,7 +479,6 @@ const SalesExports = () => {
                                                                     selected={dateRange.from}
                                                                     onSelect={(date) => setDateRange({ ...dateRange, from: date })}
                                                                     initialFocus
-                                                                    locale={vi}
                                                                 />
                                                             </PopoverContent>
                                                         </Popover>
@@ -496,7 +502,7 @@ const SalesExports = () => {
                                                                     selected={dateRange.to}
                                                                     onSelect={(date) => setDateRange({ ...dateRange, to: date })}
                                                                     initialFocus
-                                                                    locale={vi}
+
                                                                 />
                                                             </PopoverContent>
                                                         </Popover>
@@ -512,7 +518,7 @@ const SalesExports = () => {
                                             </div>
                                         </div>
                                     </PopoverContent>
-                                </Popover>
+                                </Popover> */}
                             </div>
                         </div>
 
