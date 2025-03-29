@@ -15,63 +15,35 @@ import {
     PaginationPrevious,
 } from "@/components/ui/pagination"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Loader2, Package, ShoppingCart } from "lucide-react"
 
-// Định nghĩa các kiểu dữ liệu
-interface Product {
+// Định nghĩa các kiểu dữ liệu mới phù hợp với API response
+interface RequestProductDetail {
+    requestProductDetailId: number
     productId: number
-    productCode: string
     productName: string
     unit: string
-    defaultExpiration: number
-    categoryId: number
-    description: string
-    taxId: number
-    images: string[]
-    availableStock: number
-    createdBy?: string
-    createdDate?: string
-    updatedBy?: string
-    updatedDate?: string
-    requestProductDetail?: []
-}
-
-interface RequestProductDetail {
-    requestDetailId: number
-    requestProductId: string
-    productId: number
     quantity: number
-    price: number
-    unit: string
-    product: Product
+    unitPrice: number
 }
 
 interface RequestProduct {
     requestProductId: string
+    requestCode: string
     agencyId: number
+    agencyName: string
+    approvedName?: string
     approvedBy: number | null
-    createdAt: string
-    updatedAt: string | null
     requestStatus: "Pending" | "Approved" | "Completed" | "Canceled"
+    createdAt: string
+    updatedAt?: string
     requestProductDetails: RequestProductDetail[]
-    agencyName?: string // Thêm tên đại lý nếu có
-    requestCode?: number
-    totalQuantity?: number
-    totalProductTypes?: number
+    isLoading?: boolean // Thêm trạng thái loading cho từng đơn hàng
 }
 
-// Định nghĩa kiểu dữ liệu cho chi tiết đơn hàng
-interface OrderDetail {
-    requestProductId: string
-    requestCode: number
-    agencyId: number
-    approvedBy: number | null
-    createdAt: string
-    updatedAt: string | null
-    requestStatus: "Pending" | "Approved" | "Completed" | "Canceled"
-    requestProductDetails: RequestProductDetail[]
-    agencyName?: string
-}
+// Định nghĩa kiểu dữ liệu cho chi tiết đơn hàng (giống với RequestProduct)
+type OrderDetail = RequestProduct
 
 export default function SalesOrders() {
     const navigate = useNavigate()
@@ -82,7 +54,7 @@ export default function SalesOrders() {
     const [isLoadingDetails, setIsLoadingDetails] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [selectedOrder, setSelectedOrder] = useState<RequestProduct | null>(null)
-    const [orderDetail, setOrderDetail] = useState<OrderDetail | null>(null) // State mới để lưu chi tiết đơn hàng
+    const [orderDetail, setOrderDetail] = useState<OrderDetail | null>(null)
     const [showOrderDetail, setShowOrderDetail] = useState(false)
     const [statusFilter, setStatusFilter] = useState<string>("all")
     const [searchQuery, setSearchQuery] = useState("")
@@ -94,8 +66,9 @@ export default function SalesOrders() {
     const [currentPage, setCurrentPage] = useState(1)
     const [itemsPerPage] = useState(15)
     const [totalPages, setTotalPages] = useState(1)
-    const [, setTotalProducts] = useState(0)
-    const [, setTotalQuantity] = useState(0)
+    const [totalProducts, setTotalProducts] = useState(0)
+    const [totalQuantity, setTotalQuantity] = useState(0)
+    const [detailsLoaded, setDetailsLoaded] = useState<Record<string, boolean>>({})
 
     // Kiểm tra xác thực và quyền truy cập
     useEffect(() => {
@@ -128,63 +101,29 @@ export default function SalesOrders() {
                     return
                 }
 
-                // Gọi API lấy danh sách đơn hàng với đầy đủ chi tiết
-                const response = await get<RequestProduct[]>("/request-products/with-details")
+                const response = await get<RequestProduct[]>("/request-products")
 
                 if (response.success && Array.isArray(response.result)) {
-                    // Thêm tên đại lý mẫu (trong thực tế sẽ lấy từ API)
-                    const ordersWithAgencyNames = response.result.map((order) => ({
+                    // Dữ liệu đã có đầy đủ thông tin từ API
+                    const ordersWithLoadingState = response.result.map((order) => ({
                         ...order,
-                        agencyName: `Đại lý ${order.agencyId}`,
+                        isLoading: false,
                     }))
 
-                    setOrders(ordersWithAgencyNames)
-                    setFilteredOrders(ordersWithAgencyNames)
+                    setOrders(ordersWithLoadingState)
+                    setFilteredOrders(ordersWithLoadingState)
 
-                    // Tính tổng số sản phẩm và tổng số lượng
-                    calculateTotals(ordersWithAgencyNames)
+                    // Cập nhật tổng số sản phẩm và số lượng
+                    updateTotals(ordersWithLoadingState)
+
+                    // Đánh dấu tất cả đơn hàng đã được tải chi tiết
+                    const loadedDetails: Record<string, boolean> = {}
+                    ordersWithLoadingState.forEach((order) => {
+                        loadedDetails[order.requestProductId] = true
+                    })
+                    setDetailsLoaded(loadedDetails)
                 } else {
-                    // Nếu API không trả về chi tiết, thử gọi API cũ
-                    const fallbackResponse = await get<RequestProduct[]>("/request-products")
-
-                    if (fallbackResponse.success && Array.isArray(fallbackResponse.result)) {
-                        // Sau đó gọi API chi tiết cho từng đơn hàng
-                        const ordersWithDetails = await Promise.all(
-                            fallbackResponse.result.map(async (order) => {
-                                try {
-                                    const detailResponse = await get<RequestProduct[]>(`/request-products/${order.requestProductId}`)
-                                    if (
-                                        detailResponse.success &&
-                                        Array.isArray(detailResponse.result) &&
-                                        detailResponse.result.length > 0
-                                    ) {
-                                        return {
-                                            ...detailResponse.result[0],
-                                            agencyName: `Đại lý ${order.agencyId}`,
-                                        }
-                                    }
-                                    return {
-                                        ...order,
-                                        agencyName: `Đại lý ${order.agencyId}`,
-                                    }
-                                } catch (error) {
-                                    console.error(`Error fetching details for order ${order.requestProductId}:`, error)
-                                    return {
-                                        ...order,
-                                        agencyName: `Đại lý ${order.agencyId}`,
-                                    }
-                                }
-                            }),
-                        )
-
-                        setOrders(ordersWithDetails)
-                        setFilteredOrders(ordersWithDetails)
-
-                        // Tính tổng số sản phẩm và tổng số lượng
-                        calculateTotals(ordersWithDetails)
-                    } else {
-                        setError("Không thể tải dữ liệu đơn hàng")
-                    }
+                    setError("Không thể tải dữ liệu đơn hàng")
                 }
             } catch (err) {
                 console.error("Error fetching orders:", err)
@@ -202,21 +141,22 @@ export default function SalesOrders() {
         }
 
         fetchOrders()
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [navigate])
 
-    // Tính tổng số sản phẩm và tổng số lượng
-    const calculateTotals = (orderList: RequestProduct[]) => {
-        let products = 0
-        let quantity = 0
+    // Hàm cập nhật tổng số sản phẩm và số lượng
+    const updateTotals = (ordersList: RequestProduct[]) => {
+        let totalProductCount = 0
+        let totalQuantityCount = 0
 
-        orderList.forEach((order) => {
-            products += getTotalProductTypes(order)
-            quantity += getTotalQuantity(order)
+        ordersList.forEach((order) => {
+            if (order.requestProductDetails && order.requestProductDetails.length > 0) {
+                totalProductCount += order.requestProductDetails.length
+                totalQuantityCount += order.requestProductDetails.reduce((sum, detail) => sum + detail.quantity, 0)
+            }
         })
 
-        setTotalProducts(products)
-        setTotalQuantity(quantity)
+        setTotalProducts(totalProductCount)
+        setTotalQuantity(totalQuantityCount)
     }
 
     // Lọc đơn hàng theo trạng thái, từ khóa tìm kiếm và khoảng thời gian
@@ -241,13 +181,10 @@ export default function SalesOrders() {
             filtered = filtered.filter(
                 (order) =>
                     order.requestProductId.toLowerCase().includes(query) ||
-                    order.agencyName?.toLowerCase().includes(query) ||
+                    order.requestCode.toLowerCase().includes(query) ||
+                    order.agencyName.toLowerCase().includes(query) ||
                     (order.requestProductDetails &&
-                        order.requestProductDetails.some(
-                            (detail) =>
-                                detail.product.productName.toLowerCase().includes(query) ||
-                                detail.product.productCode.toLowerCase().includes(query),
-                        )),
+                        order.requestProductDetails.some((detail) => detail.productName.toLowerCase().includes(query))),
             )
         }
 
@@ -264,10 +201,6 @@ export default function SalesOrders() {
         // Cập nhật tổng số trang
         setTotalPages(Math.ceil(filtered.length / itemsPerPage))
         setFilteredOrders(filtered)
-
-        // Tính lại tổng số sản phẩm và tổng số lượng khi lọc
-        calculateTotals(filtered)
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [orders, statusFilter, searchQuery, dateRange, itemsPerPage])
 
     // Calculate total pages whenever filtered orders change
@@ -306,25 +239,16 @@ export default function SalesOrders() {
 
             // Hiển thị dữ liệu cơ bản trước khi có kết quả API
             setSelectedOrder(order)
+            setOrderDetail(null) // Reset orderDetail khi mở modal mới
 
-            // Nếu đơn hàng đã có chi tiết đầy đủ, không cần gọi API nữa
-            if (order.requestProductDetails && order.requestProductDetails.length > 0) {
-                setOrderDetail({
-                    requestProductId: order.requestProductId,
-                    requestCode: order.requestCode || 0,
-                    agencyId: order.agencyId,
-                    approvedBy: order.approvedBy,
-                    createdAt: order.createdAt,
-                    updatedAt: order.updatedAt || null,
-                    requestStatus: order.requestStatus,
-                    requestProductDetails: order.requestProductDetails,
-                    agencyName: order.agencyName || `Đại lý ${order.agencyId}`,
-                })
+            // Nếu đã tải chi tiết cho đơn hàng này, sử dụng dữ liệu có sẵn
+            if (detailsLoaded[order.requestProductId]) {
+                setOrderDetail(order)
                 setIsLoadingDetails(false)
                 return
             }
 
-            // Nếu chưa có chi tiết, gọi API
+            // Lấy token từ auth-service
             const token = getToken()
 
             if (!token) {
@@ -350,35 +274,25 @@ export default function SalesOrders() {
                 const detail = data[0]
 
                 // Cập nhật state với dữ liệu chi tiết từ API
-                const orderDetailData: OrderDetail = {
-                    requestProductId: detail.requestProductId,
-                    requestCode: detail.requestCode,
-                    agencyId: detail.agencyId,
-                    approvedBy: detail.approvedBy,
-                    createdAt: detail.createdAt,
-                    updatedAt: detail.updatedAt,
-                    requestStatus: detail.requestStatus,
-                    requestProductDetails: detail.requestProductDetails,
-                    agencyName: `Đại lý ${detail.agencyId}`, // Thêm tên đại lý
-                }
+                setOrderDetail(detail)
 
-                setOrderDetail(orderDetailData)
-
-                // Cập nhật lại order trong danh sách để lần sau không cần gọi API nữa
+                // Cập nhật orders với chi tiết mới
                 const updatedOrders = orders.map((o) =>
-                    o.requestProductId === order.requestProductId
-                        ? { ...o, requestProductDetails: detail.requestProductDetails }
-                        : o,
+                    o.requestProductId === order.requestProductId ? { ...o, ...detail } : o,
                 )
                 setOrders(updatedOrders)
 
-                // Cập nhật lại filtered orders
+                // Cập nhật filtered orders
                 const updatedFilteredOrders = filteredOrders.map((o) =>
-                    o.requestProductId === order.requestProductId
-                        ? { ...o, requestProductDetails: detail.requestProductDetails }
-                        : o,
+                    o.requestProductId === order.requestProductId ? { ...o, ...detail } : o,
                 )
                 setFilteredOrders(updatedFilteredOrders)
+
+                // Đánh dấu đã tải chi tiết cho đơn hàng này
+                setDetailsLoaded((prev) => ({
+                    ...prev,
+                    [order.requestProductId]: true,
+                }))
             } else {
                 console.warn("Không thể tải chi tiết đơn hàng từ API. Sử dụng dữ liệu cơ bản.")
             }
@@ -421,7 +335,13 @@ export default function SalesOrders() {
                 // Cập nhật trạng thái đơn hàng trong state
                 const updatedOrders = orders.map((order) =>
                     order.requestProductId === requestProductId
-                        ? { ...order, requestStatus: "Approved" as const, updatedAt: new Date().toISOString(), approvedBy: 4 }
+                        ? {
+                            ...order,
+                            requestStatus: "Approved" as const,
+                            updatedAt: new Date().toISOString(),
+                            approvedBy: 4,
+                            approvedName: "Cao Kien Quoc", // Thêm tên người phê duyệt
+                        }
                         : order,
                 )
                 setOrders(updatedOrders)
@@ -433,6 +353,7 @@ export default function SalesOrders() {
                         requestStatus: "Approved",
                         updatedAt: new Date().toISOString(),
                         approvedBy: 4,
+                        approvedName: "Cao Kien Quoc",
                     })
                 }
 
@@ -443,6 +364,7 @@ export default function SalesOrders() {
                         requestStatus: "Approved",
                         updatedAt: new Date().toISOString(),
                         approvedBy: 4,
+                        approvedName: "Cao Kien Quoc",
                     })
                 }
 
@@ -529,7 +451,7 @@ export default function SalesOrders() {
     // Tính tổng số lượng sản phẩm trong đơn hàng
     const getTotalQuantity = (order: RequestProduct) => {
         if (!order.requestProductDetails || !Array.isArray(order.requestProductDetails)) {
-            return order.totalQuantity || 0 // Sử dụng giá trị từ API nếu có
+            return 0
         }
         return order.requestProductDetails.reduce((total, detail) => total + detail.quantity, 0)
     }
@@ -537,7 +459,7 @@ export default function SalesOrders() {
     // Tính tổng số loại sản phẩm trong đơn hàng
     const getTotalProductTypes = (order: RequestProduct) => {
         if (!order.requestProductDetails || !Array.isArray(order.requestProductDetails)) {
-            return order.totalProductTypes || 0 // Sử dụng giá trị từ API nếu có
+            return 0
         }
         return order.requestProductDetails.length
     }
@@ -547,7 +469,7 @@ export default function SalesOrders() {
         if (!order.requestProductDetails || !Array.isArray(order.requestProductDetails)) {
             return 0
         }
-        return order.requestProductDetails.reduce((total, detail) => total + detail.price * detail.quantity, 0)
+        return order.requestProductDetails.reduce((total, detail) => total + detail.unitPrice * detail.quantity, 0)
     }
 
     // Hiển thị trạng thái đơn hàng
@@ -608,11 +530,10 @@ export default function SalesOrders() {
 
     return (
         <SalesLayout>
-            <div className="m-4">
+            <div className="p-6">
                 <div className="flex justify-between items-center mb-6">
-                    <div className="ml-4 flex justify-between items-center ">
-                        <h1 className="text-2xl font-bold">Quản Lý Đơn Hàng</h1>
-                    </div>
+                    <h1 className="text-2xl font-bold">Quản lý đơn hàng</h1>
+
                     <div className="flex items-center space-x-2">
                         <label htmlFor="status-filter" className="text-sm font-medium text-gray-700">
                             Lọc theo trạng thái:
@@ -631,6 +552,44 @@ export default function SalesOrders() {
                     </div>
                 </div>
 
+                {/* Thêm thẻ tổng quan */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <Card>
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-base flex items-center">
+                                <ShoppingCart className="h-4 w-4 mr-2" />
+                                Tổng đơn hàng
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-2xl font-bold">{formatNumber(filteredOrders.length)}</p>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-base flex items-center">
+                                <Package className="h-4 w-4 mr-2" />
+                                Tổng loại sản phẩm
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-2xl font-bold">{formatNumber(totalProducts)}</p>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-base flex items-center">
+                                <ShoppingCart className="h-4 w-4 mr-2" />
+                                Tổng số lượng
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-2xl font-bold">{formatNumber(totalQuantity)}</p>
+                        </CardContent>
+                    </Card>
+                </div>
 
                 <div className="mb-4">
                     <input
@@ -720,13 +679,46 @@ export default function SalesOrders() {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.agencyName}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                {getTotalProductTypes(order)}
+                                                {order.isLoading ? (
+                                                    <Loader2 className="h-4 w-4 animate-spin inline" />
+                                                ) : detailsLoaded[order.requestProductId] ? (
+                                                    getTotalProductTypes(order)
+                                                ) : (
+                                                    <button
+                                                        onClick={() => handleViewOrderDetail(order)}
+                                                        className="text-blue-600 hover:text-blue-900 text-xs"
+                                                    >
+                                                        Xem
+                                                    </button>
+                                                )}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                {formatNumber(getTotalQuantity(order))}
+                                                {order.isLoading ? (
+                                                    <Loader2 className="h-4 w-4 animate-spin inline" />
+                                                ) : detailsLoaded[order.requestProductId] ? (
+                                                    formatNumber(getTotalQuantity(order))
+                                                ) : (
+                                                    <button
+                                                        onClick={() => handleViewOrderDetail(order)}
+                                                        className="text-blue-600 hover:text-blue-900 text-xs"
+                                                    >
+                                                        Xem
+                                                    </button>
+                                                )}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {formatCurrency(getTotalOrderValue(order))}
+                                                {order.isLoading ? (
+                                                    <Loader2 className="h-4 w-4 animate-spin inline" />
+                                                ) : detailsLoaded[order.requestProductId] ? (
+                                                    formatCurrency(getTotalOrderValue(order))
+                                                ) : (
+                                                    <button
+                                                        onClick={() => handleViewOrderDetail(order)}
+                                                        className="text-blue-600 hover:text-blue-900 text-xs"
+                                                    >
+                                                        Xem
+                                                    </button>
+                                                )}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">{renderStatusBadge(order.requestStatus)}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -842,7 +834,7 @@ export default function SalesOrders() {
                                     <h2 className="text-xl font-bold">
                                         {isLoadingDetails
                                             ? "Đang tải chi tiết đơn hàng..."
-                                            : `Chi tiết đơn hàng #${(orderDetail || selectedOrder)?.requestCode}`}
+                                            : `Chi tiết đơn hàng ${(orderDetail || selectedOrder)?.requestCode}`}
                                     </h2>
                                     <button onClick={() => setShowOrderDetail(false)} className="text-gray-500 hover:text-gray-700">
                                         ✕
@@ -875,10 +867,10 @@ export default function SalesOrders() {
                                                     <p className="font-medium">{formatDateTime(orderDetail.updatedAt)}</p>
                                                 </div>
                                             )}
-                                            {orderDetail.requestCode !== undefined && (
+                                            {orderDetail.approvedName && (
                                                 <div>
-                                                    <p className="text-sm text-gray-500">Mã yêu cầu</p>
-                                                    <p className="font-medium">{orderDetail.requestCode}</p>
+                                                    <p className="text-sm text-gray-500">Người duyệt</p>
+                                                    <p className="font-medium">{orderDetail.approvedName}</p>
                                                 </div>
                                             )}
                                         </div>
@@ -902,7 +894,7 @@ export default function SalesOrders() {
                                                     <p className="font-medium text-lg">
                                                         {formatCurrency(
                                                             orderDetail.requestProductDetails?.reduce(
-                                                                (sum, item) => sum + item.price * item.quantity,
+                                                                (sum, item) => sum + item.unitPrice * item.quantity,
                                                                 0,
                                                             ) || 0,
                                                         )}
@@ -956,16 +948,16 @@ export default function SalesOrders() {
                                                 </thead>
                                                 <tbody className="bg-white divide-y divide-gray-200">
                                                     {orderDetail.requestProductDetails.map((detail) => (
-                                                        <tr key={detail.requestDetailId}>
-                                                            <td className="px-4 py-3 text-sm text-gray-900">{detail.product.productCode}</td>
-                                                            <td className="px-4 py-3 text-sm text-gray-900">{detail.product.productName}</td>
-                                                            <td className="px-4 py-3 text-sm text-gray-500">{detail.unit || detail.product.unit}</td>
+                                                        <tr key={detail.requestProductDetailId}>
+                                                            <td className="px-4 py-3 text-sm text-gray-900">{detail.productId}</td>
+                                                            <td className="px-4 py-3 text-sm text-gray-900">{detail.productName}</td>
+                                                            <td className="px-4 py-3 text-sm text-gray-500">{detail.unit}</td>
                                                             <td className="px-4 py-3 text-sm text-gray-500">{formatNumber(detail.quantity)}</td>
                                                             <td className="px-4 py-3 text-sm text-gray-500">
-                                                                {detail.price > 0 ? formatCurrency(detail.price) : "Chưa có giá"}
+                                                                {detail.unitPrice > 0 ? formatCurrency(detail.unitPrice) : "Chưa có giá"}
                                                             </td>
                                                             <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                                                                {detail.price > 0 ? formatCurrency(detail.price * detail.quantity) : "N/A"}
+                                                                {detail.unitPrice > 0 ? formatCurrency(detail.unitPrice * detail.quantity) : "N/A"}
                                                             </td>
                                                         </tr>
                                                     ))}
@@ -1018,87 +1010,6 @@ export default function SalesOrders() {
                                                 </div>
                                             )}
                                         </div>
-
-                                        <div className="bg-gray-50 p-4 rounded-lg mb-6">
-                                            <div className="grid grid-cols-3 gap-4">
-                                                <div>
-                                                    <p className="text-sm text-gray-500">Số loại sản phẩm</p>
-                                                    <p className="font-medium text-lg">{getTotalProductTypes(selectedOrder)}</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm text-gray-500">Tổng số lượng</p>
-                                                    <p className="font-medium text-lg">{formatNumber(getTotalQuantity(selectedOrder))}</p>
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm text-gray-500">Tổng giá trị</p>
-                                                    <p className="font-medium text-lg">{formatCurrency(getTotalOrderValue(selectedOrder))}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <h3 className="font-medium mb-2">Sản phẩm</h3>
-                                        {selectedOrder.requestProductDetails && selectedOrder.requestProductDetails.length > 0 ? (
-                                            <table className="min-w-full divide-y divide-gray-200 mb-4">
-                                                <thead className="bg-gray-50">
-                                                    <tr>
-                                                        <th
-                                                            scope="col"
-                                                            className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                                        >
-                                                            Mã SP
-                                                        </th>
-                                                        <th
-                                                            scope="col"
-                                                            className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                                        >
-                                                            Tên sản phẩm
-                                                        </th>
-                                                        <th
-                                                            scope="col"
-                                                            className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                                        >
-                                                            Đơn vị
-                                                        </th>
-                                                        <th
-                                                            scope="col"
-                                                            className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                                        >
-                                                            Số lượng
-                                                        </th>
-                                                        <th
-                                                            scope="col"
-                                                            className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                                        >
-                                                            Đơn giá
-                                                        </th>
-                                                        <th
-                                                            scope="col"
-                                                            className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                                                        >
-                                                            Thành tiền
-                                                        </th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="bg-white divide-y divide-gray-200">
-                                                    {selectedOrder.requestProductDetails.map((detail) => (
-                                                        <tr key={detail.requestDetailId}>
-                                                            <td className="px-4 py-3 text-sm text-gray-900">{detail.product.productCode}</td>
-                                                            <td className="px-4 py-3 text-sm text-gray-900">{detail.product.productName}</td>
-                                                            <td className="px-4 py-3 text-sm text-gray-500">{detail.unit || detail.product.unit}</td>
-                                                            <td className="px-4 py-3 text-sm text-gray-500">{formatNumber(detail.quantity)}</td>
-                                                            <td className="px-4 py-3 text-sm text-gray-500">
-                                                                {detail.price > 0 ? formatCurrency(detail.price) : "Chưa có giá"}
-                                                            </td>
-                                                            <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                                                                {detail.price > 0 ? formatCurrency(detail.price * detail.quantity) : "N/A"}
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        ) : (
-                                            <p className="text-center py-4 text-gray-500">Không có thông tin chi tiết sản phẩm</p>
-                                        )}
 
                                         <div className="flex justify-end space-x-2 mt-6">
                                             <button

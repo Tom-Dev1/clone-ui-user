@@ -27,24 +27,29 @@ import { AlertCircle } from "lucide-react"
 import { SalesLayout } from "@/layouts/sale-layout"
 import ExportRequestCreateDialog from "@/components/sales/dialogs/export-request-detail-dialog"
 
-// Define the API response interfaces
+// Cập nhật interface để phù hợp với cấu trúc API mới
 interface RequestExportDetail {
     requestExportDetailId: number
     productId: number
+    productName: string
+    unit: string
+    price: number
     requestedQuantity: number
 }
 
-interface ApiRequestExport {
+interface RequestExport {
     requestExportId: number
     orderId: string
-    requestedBy: number
-    approvedBy: number | null
-    status: "Processing" | "Requested" | "Approved"
-    approvedDate: string | null
-    note: string | null
+    requestExportCode: string
+    agencyName: string
+    approvedByName: string
+    status: string
+    approvedDate: string
+    note: string
     requestExportDetails: RequestExportDetail[]
 }
 
+// Giữ lại interface ApiProduct để sử dụng cho các sản phẩm từ API product
 interface ApiProduct {
     productId: number
     productCode: string
@@ -95,10 +100,10 @@ const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
 }
 
 const SalesExports = () => {
-    const [exportRequests, setExportRequests] = useState<ApiRequestExport[]>([])
+    const [exportRequests, setExportRequests] = useState<RequestExport[]>([])
     const [loading, setLoading] = useState<boolean>(true)
     const [error, setError] = useState<string | null>(null)
-    const [selectedRequest, setSelectedRequest] = useState<ApiRequestExport | null>(null)
+    const [selectedRequest, setSelectedRequest] = useState<RequestExport | null>(null)
     const [detailsOpen, setDetailsOpen] = useState<boolean>(false)
     const [products, setProducts] = useState<ApiProduct[]>([])
     const [, setLoadingProducts] = useState<boolean>(false)
@@ -109,7 +114,7 @@ const SalesExports = () => {
         from: undefined,
         to: undefined,
     })
-    const [filteredRequests, setFilteredRequests] = useState<ApiRequestExport[]>([])
+    const [filteredRequests, setFilteredRequests] = useState<RequestExport[]>([])
     const [authError, setAuthError] = useState<string | null>(null)
     const [createDialogOpen, setCreateDialogOpen] = useState(false)
     const [baseRequestId, setBaseRequestId] = useState<number | null>(null)
@@ -186,8 +191,10 @@ const SalesExports = () => {
             filtered = filtered.filter(
                 (request) =>
                     request.orderId.toLowerCase().includes(query) ||
+                    request.requestExportCode.toLowerCase().includes(query) ||
                     (request.note && request.note.toLowerCase().includes(query)) ||
-                    request.requestExportId.toString().includes(query),
+                    request.requestExportId.toString().includes(query) ||
+                    request.agencyName.toLowerCase().includes(query),
             )
         }
 
@@ -218,13 +225,13 @@ const SalesExports = () => {
         }
     }, [alertMessage])
 
-    const handleViewDetails = (request: ApiRequestExport) => {
+    const handleViewDetails = (request: RequestExport) => {
         setSelectedRequest(request)
         setDetailsOpen(true)
     }
 
     // Cập nhật hàm handleCreateRequest để chỉ hiển thị thông báo thành công
-    const handleCreateRequest = async (requestData: ApiRequestExport) => {
+    const handleCreateRequest = async (requestData: RequestExport) => {
         try {
             // Refresh danh sách yêu cầu sau khi tạo thành công
             const fetchExportRequests = async () => {
@@ -270,36 +277,48 @@ const SalesExports = () => {
         setCreateDialogOpen(true)
     }
 
-    // Get product by ID
+    // Get product by ID - Không cần thay đổi vì vẫn sử dụng API product
     const getProduct = (productId: number) => {
         return products.find((p) => p.productId === productId)
     }
 
-    // Get product name by ID
-    const getProductName = (productId: number) => {
+    // Các hàm lấy thông tin sản phẩm - Không cần thay đổi vì vẫn sử dụng API product
+    // hoặc có thể sử dụng thông tin trực tiếp từ requestExportDetails nếu có
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const getProductName = (productId: number, details?: RequestExportDetail[]) => {
+        if (details) {
+            const detail = details.find((d) => d.productId === productId)
+            if (detail) return detail.productName
+        }
         const product = getProduct(productId)
         return product ? product.productName : `Product ID: ${productId}`
     }
 
-    // Get product code by ID
     const getProductCode = (productId: number) => {
         const product = getProduct(productId)
         return product ? product.productCode : "N/A"
     }
 
-    // Get product unit by ID
-    const getProductUnit = (productId: number) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const getProductUnit = (productId: number, details?: RequestExportDetail[]) => {
+        if (details) {
+            const detail = details.find((d) => d.productId === productId)
+            if (detail) return detail.unit
+        }
         const product = getProduct(productId)
         return product ? product.unit : "N/A"
     }
 
-    // Get product price by ID
-    const getProductPrice = (productId: number) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const getProductPrice = (productId: number, details?: RequestExportDetail[]) => {
+        if (details) {
+            const detail = details.find((d) => d.productId === productId)
+            if (detail) return detail.price
+        }
         const product = getProduct(productId)
         return product ? product.price : 0
     }
 
-    // Get product image by ID
     const getProductImage = (productId: number) => {
         const product = getProduct(productId)
         return product && product.images && product.images.length > 0 ? product.images[0] : null
@@ -331,16 +350,13 @@ const SalesExports = () => {
         }
     }
 
-
-    //
     // Format date
     const formatDate = (dateString: string | null) => {
         if (!dateString) return "N/A"
         try {
             return format(new Date(dateString), "dd/MM/yyyy HH:mm")
         } catch (error) {
-            console.log(error);
-
+            console.log(error)
             return "Invalid date"
         }
     }
@@ -351,15 +367,14 @@ const SalesExports = () => {
     }
 
     // Calculate total requested quantity
-    const getTotalRequestedQuantity = (request: ApiRequestExport) => {
+    const getTotalRequestedQuantity = (request: RequestExport) => {
         return request.requestExportDetails.reduce((total, item) => total + item.requestedQuantity, 0)
     }
 
-    // Calculate total value of request
-    const getTotalValue = (request: ApiRequestExport) => {
+    // Calculate total value of request - Cập nhật để sử dụng price từ requestExportDetails
+    const getTotalValue = (request: RequestExport) => {
         return request.requestExportDetails.reduce((total, item) => {
-            const price = getProductPrice(item.productId)
-            return total + price * item.requestedQuantity
+            return total + item.price * item.requestedQuantity
         }, 0)
     }
 
@@ -397,7 +412,6 @@ const SalesExports = () => {
     return (
         <SalesLayout>
             <div className="bg-white max-h[90vh] m-4 ">
-
                 {alertMessage.type && (
                     <Alert variant={alertMessage.type === "error" ? "destructive" : "default"} className="mb-6">
                         <AlertCircle className="h-4 w-4" />
@@ -535,9 +549,10 @@ const SalesExports = () => {
                                         <TableHeader>
                                             <TableRow>
                                                 <TableHead className="w-[120px] text-center">Mã yêu cầu</TableHead>
-                                                <TableHead className="w-[120px] text-center">Mã đơn hàng</TableHead>
-                                                <TableHead className="w-[120px] text-center">Ngày duyệt</TableHead>
-                                                <TableHead className=" text-center">Ghi chú</TableHead>
+                                                <TableHead className="w-[170px] text-center">Mã phiếu xuất</TableHead>
+                                                <TableHead className="w-[160px] text-center">Đại lý</TableHead>
+                                                <TableHead className="w-[160px] text-center">Ngày duyệt</TableHead>
+                                                <TableHead className="text-center">Ghi chú</TableHead>
                                                 <TableHead className="w-[100px] text-center">Số SP</TableHead>
                                                 <TableHead className="w-[100px] text-center">Tổng SL</TableHead>
                                                 <TableHead className="w-[120px] text-center">Tổng giá trị</TableHead>
@@ -548,15 +563,18 @@ const SalesExports = () => {
                                         <TableBody>
                                             {filteredRequests.map((request) => (
                                                 <TableRow key={request.requestExportId}>
-                                                    <TableCell className="font-medium">{request.requestExportId}</TableCell>
-                                                    <TableCell>{request.orderId.substring(0, 8)}...</TableCell>
-                                                    <TableCell>{formatDate(request.approvedDate)}</TableCell>
+                                                    <TableCell className="font-medium text-center">{request.requestExportId}</TableCell>
+                                                    <TableCell className="w-[170px] text-center">{request.requestExportCode}</TableCell>
+                                                    <TableCell className="w-[160px] text-center">{request.agencyName}</TableCell>
+                                                    <TableCell className="w-[160px] text-center">{formatDate(request.approvedDate)}</TableCell>
                                                     <TableCell>{request.note || "Không có ghi chú"}</TableCell>
                                                     <TableCell className="w-[120px] text-center">{request.requestExportDetails.length}</TableCell>
                                                     <TableCell className="w-[120px] text-center">{getTotalRequestedQuantity(request)}</TableCell>
-                                                    <TableCell className="w-[120px] text-right">{formatCurrency(getTotalValue(request))}</TableCell>
+                                                    <TableCell className="w-[120px] text-right">
+                                                        {formatCurrency(getTotalValue(request))}
+                                                    </TableCell>
                                                     <TableCell className="w-[120px] text-center">{renderStatusBadge(request.status)}</TableCell>
-                                                    <TableCell >
+                                                    <TableCell>
                                                         <div className="flex justify-around">
                                                             <Button
                                                                 variant="ghost"
@@ -597,19 +615,20 @@ const SalesExports = () => {
                         {/* Content is filtered by the useEffect */}
                     </TabsContent>
                 </Tabs>
-
             </div>
 
             {/* Dialog for viewing export request details */}
-            <Dialog open={detailsOpen} onOpenChange={setDetailsOpen} >
+            <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
                 <DialogContent className="flex flex-col min-w-[100vh] max-h-[90vh]">
                     <DialogHeader>
                         <DialogTitle>Chi tiết yêu cầu xuất kho</DialogTitle>
-                        <DialogDescription>Mã yêu cầu: {selectedRequest?.requestExportId}</DialogDescription>
+                        <DialogDescription>
+                            Mã yêu cầu: {selectedRequest?.requestExportId} - {selectedRequest?.requestExportCode}
+                        </DialogDescription>
                     </DialogHeader>
 
                     {selectedRequest && (
-                        <ScrollArea className="flex-1 overflow-y-auto  ">
+                        <ScrollArea className="flex-1 overflow-y-auto">
                             <div className="space-y-6 py-2">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <Card>
@@ -617,32 +636,26 @@ const SalesExports = () => {
                                             <CardTitle className="text-base">Thông tin yêu cầu</CardTitle>
                                         </CardHeader>
                                         <CardContent>
-                                            <dl className="grid grid-cols-2 gap-1 text-sm text-center">
+                                            <dl className="grid grid-cols-2 gap-1 text-sm text-left">
                                                 <dt className="text-muted-foreground">Mã yêu cầu:</dt>
                                                 <dd>{selectedRequest.requestExportId}</dd>
 
-                                                <dt className="text-muted-foreground">Mã đơn hàng:</dt>
-                                                <dd>{selectedRequest.orderId}</dd>
+                                                <dt className="text-muted-foreground">Mã phiếu xuất:</dt>
+                                                <dd>{selectedRequest.requestExportCode}</dd>
 
-                                                <dt className="text-muted-foreground">Người yêu cầu:</dt>
-                                                <dd>ID: {selectedRequest.requestedBy}</dd>
+
+
+                                                <dt className="text-muted-foreground">Đại lý:</dt>
+                                                <dd>{selectedRequest.agencyName}</dd>
 
                                                 <dt className="text-muted-foreground">Trạng thái:</dt>
                                                 <dd>{renderStatusBadge(selectedRequest.status)}</dd>
 
-                                                {selectedRequest.approvedBy && (
-                                                    <>
-                                                        <dt className="text-muted-foreground">Người duyệt:</dt>
-                                                        <dd>ID: {selectedRequest.approvedBy}</dd>
-                                                    </>
-                                                )}
+                                                <dt className="text-muted-foreground">Người duyệt:</dt>
+                                                <dd>{selectedRequest.approvedByName || "Chưa duyệt"}</dd>
 
-                                                {selectedRequest.approvedDate && (
-                                                    <>
-                                                        <dt className="text-muted-foreground">Ngày duyệt:</dt>
-                                                        <dd>{formatDate(selectedRequest.approvedDate)}</dd>
-                                                    </>
-                                                )}
+                                                <dt className="text-muted-foreground">Ngày duyệt:</dt>
+                                                <dd>{formatDate(selectedRequest.approvedDate)}</dd>
 
                                                 {selectedRequest.note && (
                                                     <>
@@ -692,8 +705,7 @@ const SalesExports = () => {
                                             </TableHeader>
                                             <TableBody>
                                                 {selectedRequest.requestExportDetails.map((item) => {
-                                                    const productPrice = getProductPrice(item.productId)
-                                                    const totalPrice = productPrice * item.requestedQuantity
+                                                    const totalPrice = item.price * item.requestedQuantity
                                                     const productImage = getProductImage(item.productId)
 
                                                     return (
@@ -701,17 +713,17 @@ const SalesExports = () => {
                                                             <TableCell>
                                                                 <Avatar className="h-10 w-10">
                                                                     {productImage ? (
-                                                                        <AvatarImage src={productImage} alt={getProductName(item.productId)} />
+                                                                        <AvatarImage src={productImage} alt={item.productName} />
                                                                     ) : (
                                                                         <AvatarFallback>{getProductCode(item.productId).substring(0, 2)}</AvatarFallback>
                                                                     )}
                                                                 </Avatar>
                                                             </TableCell>
                                                             <TableCell>{getProductCode(item.productId)}</TableCell>
-                                                            <TableCell>{getProductName(item.productId)}</TableCell>
-                                                            <TableCell>{getProductUnit(item.productId)}</TableCell>
+                                                            <TableCell>{item.productName}</TableCell>
+                                                            <TableCell>{item.unit}</TableCell>
                                                             <TableCell>{item.requestedQuantity}</TableCell>
-                                                            <TableCell>{formatCurrency(productPrice)}</TableCell>
+                                                            <TableCell>{formatCurrency(item.price)}</TableCell>
                                                             <TableCell>{formatCurrency(totalPrice)}</TableCell>
                                                         </TableRow>
                                                     )

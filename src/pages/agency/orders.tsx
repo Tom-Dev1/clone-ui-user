@@ -1,5 +1,3 @@
-"use client"
-
 import type React from "react"
 import { useState, useEffect } from "react"
 import { Badge } from "../../components/ui/badge"
@@ -30,41 +28,28 @@ import {
 import { AgencyLayout } from "@/layouts/agency-layout"
 
 // Định nghĩa các interface cho dữ liệu
-interface RequestProduct {
-    requestProductId: string
-    agencyId: number
-    approvedBy: number
-    createdAt: string
-    updatedAt: string
-    requestStatus: string
-}
-
 interface OrderDetail {
     orderDetailId: string
     orderId: string
     productId: number
+    productName: string
     quantity: number
-    price: number
-    discount: number
-    finalPrice: number
-    product?: {
-        productId: number
-        productName: string
-        price: number
-    }
+    unitPrice: number
+    totalAmount: number
+    unit: string
+    createdAt: string
 }
 
 interface Order {
-
     orderId: string
-    orderCode: number
+    orderCode: string
     orderDate: string
-    salesAgentId: number
     discount: number
     finalPrice: number
     status: string
-    requestCode: number
-    requestProduct: RequestProduct
+    salesName: string
+    agencyName: string
+    requestCode: string
     orderDetails: OrderDetail[]
 }
 
@@ -132,10 +117,13 @@ const AgencyOrders: React.FC = () => {
 
             // Lọc theo từ khóa tìm kiếm
             if (searchTerm.trim() !== "") {
+                const searchTermLower = searchTerm.toLowerCase()
                 filtered = filtered.filter(
                     (order) =>
-                        order.orderId.toLowerCase().includes(searchTerm.toLowerCase())
-
+                        order.orderCode.toLowerCase().includes(searchTermLower) ||
+                        order.agencyName.toLowerCase().includes(searchTermLower) ||
+                        order.requestCode.toLowerCase().includes(searchTermLower) ||
+                        order.salesName.toLowerCase().includes(searchTermLower),
                 )
             }
 
@@ -206,7 +194,6 @@ const AgencyOrders: React.FC = () => {
         setOrderToCancel(orderId)
         setIsAlertDialogOpen(true)
     }
-    console.log("orderToCancel", orderToCancel);
 
     // Hàm để hủy đơn hàng
     const handleCancelOrder = async () => {
@@ -245,15 +232,10 @@ const AgencyOrders: React.FC = () => {
             const date = new Date(dateString)
             return (
                 date.toLocaleDateString("vi-VN") +
-                " " +
-                date.toLocaleTimeString("vi-VN", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                })
+                " "
             )
         } catch (error) {
-            console.log("Error formatting date:", error);
-
+            console.log("Error formatting date:", error)
             return dateString
         }
     }
@@ -317,7 +299,7 @@ const AgencyOrders: React.FC = () => {
                         <div className="flex flex-col md:flex-row gap-4 mb-6">
                             <div className="flex-1">
                                 <Input
-                                    placeholder="Tìm kiếm theo mã đơn hàng..."
+                                    placeholder="Tìm kiếm theo mã đơn hàng, đại lý, nhân viên..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     className="w-full"
@@ -350,8 +332,10 @@ const AgencyOrders: React.FC = () => {
                                     <TableHeader>
                                         <TableRow>
                                             <TableHead>Mã đơn hàng</TableHead>
+                                            <TableHead>Đại lý</TableHead>
+                                            <TableHead>Người duyệt</TableHead>
                                             <TableHead>Ngày đặt</TableHead>
-                                            <TableHead >Trạng thái</TableHead>
+                                            <TableHead>Trạng thái</TableHead>
                                             <TableHead className="text-center">Tổng tiền</TableHead>
                                             <TableHead className="text-center">Thao tác</TableHead>
                                         </TableRow>
@@ -360,6 +344,8 @@ const AgencyOrders: React.FC = () => {
                                         {filteredOrders.map((order) => (
                                             <TableRow key={order.orderId}>
                                                 <TableCell className="font-medium">{order.orderCode}</TableCell>
+                                                <TableCell>{order.agencyName}</TableCell>
+                                                <TableCell>{order.salesName}</TableCell>
                                                 <TableCell>{formatDate(order.orderDate)}</TableCell>
                                                 <TableCell>{renderStatusBadge(order.status)}</TableCell>
                                                 <TableCell className="text-center">{order.finalPrice.toLocaleString("vi-VN")} đ</TableCell>
@@ -412,7 +398,7 @@ const AgencyOrders: React.FC = () => {
                     <DialogContent className="sm:max-w-[600px]">
                         <DialogHeader>
                             <DialogTitle>Chi tiết đơn hàng</DialogTitle>
-                            <DialogDescription>Mã đơn hàng: {selectedOrder?.orderId}</DialogDescription>
+                            <DialogDescription>Mã đơn hàng: {selectedOrder?.orderCode}</DialogDescription>
                         </DialogHeader>
 
                         {selectedOrder && (
@@ -427,12 +413,16 @@ const AgencyOrders: React.FC = () => {
                                         <div className="mt-1">{renderStatusBadge(selectedOrder.status)}</div>
                                     </div>
                                     <div>
-                                        <p className="text-sm font-medium text-gray-500">Mã yêu cầu</p>
-                                        <p>{selectedOrder.orderCode}</p>
+                                        <p className="text-sm font-medium text-gray-500">Đại lý</p>
+                                        <p>{selectedOrder.agencyName}</p>
                                     </div>
                                     <div>
-                                        <p className="text-sm font-medium text-gray-500">Trạng thái yêu cầu</p>
-                                        <p>{selectedOrder.requestProduct.requestStatus}</p>
+                                        <p className="text-sm font-medium text-gray-500">Người duyệt đơn</p>
+                                        <p>{selectedOrder.salesName}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-500">Mã yêu cầu</p>
+                                        <p>{selectedOrder.requestCode}</p>
                                     </div>
                                 </div>
 
@@ -446,6 +436,7 @@ const AgencyOrders: React.FC = () => {
                                                 <TableHeader>
                                                     <TableRow>
                                                         <TableHead>Sản phẩm</TableHead>
+                                                        <TableHead>Đơn vị</TableHead>
                                                         <TableHead className="text-right">Số lượng</TableHead>
                                                         <TableHead className="text-right">Đơn giá</TableHead>
                                                         <TableHead className="text-right">Thành tiền</TableHead>
@@ -454,11 +445,14 @@ const AgencyOrders: React.FC = () => {
                                                 <TableBody>
                                                     {selectedOrder.orderDetails.map((detail) => (
                                                         <TableRow key={detail.orderDetailId}>
-                                                            <TableCell>{detail.product?.productName || `Sản phẩm #${detail.productId}`}</TableCell>
+                                                            <TableCell>
+                                                                {detail.productName !== "N/A" ? detail.productName : `Sản phẩm #${detail.productId}`}
+                                                            </TableCell>
+                                                            <TableCell>{detail.unit}</TableCell>
                                                             <TableCell className="text-right">{detail.quantity}</TableCell>
-                                                            <TableCell className="text-right">{detail.price.toLocaleString("vi-VN")} đ</TableCell>
+                                                            <TableCell className="text-right">{detail.unitPrice.toLocaleString("vi-VN")} đ</TableCell>
                                                             <TableCell className="text-right">
-                                                                {detail.finalPrice.toLocaleString("vi-VN")} đ
+                                                                {detail.totalAmount.toLocaleString("vi-VN")} đ
                                                             </TableCell>
                                                         </TableRow>
                                                     ))}
