@@ -1,7 +1,4 @@
-"use client"
-
 import { useState, useEffect } from "react"
-import { ResponsiveContainer } from "@/components/responsive-container"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -399,223 +396,220 @@ const SalesExports = () => {
 
     return (
         <SalesLayout>
-            <div className="py-8">
-                <ResponsiveContainer>
-                    {alertMessage.type && (
-                        <Alert variant={alertMessage.type === "error" ? "destructive" : "default"} className="mb-6">
-                            <AlertCircle className="h-4 w-4" />
-                            <AlertTitle>{alertMessage.title}</AlertTitle>
-                            <AlertDescription>{alertMessage.message}</AlertDescription>
-                        </Alert>
-                    )}
+            <div className="bg-white max-h[90vh] m-4 ">
 
-                    <div className="flex justify-between items-center mb-6">
-                        <h1 className="text-2xl font-bold">Quản Lý Yêu Cầu Xuất Kho</h1>
+                {alertMessage.type && (
+                    <Alert variant={alertMessage.type === "error" ? "destructive" : "default"} className="mb-6">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>{alertMessage.title}</AlertTitle>
+                        <AlertDescription>{alertMessage.message}</AlertDescription>
+                    </Alert>
+                )}
+                <div className="ml-4 flex justify-between items-center mb-4">
+                    <h1 className="text-2xl font-bold">Quản Lý Yêu Cầu Xuất Kho</h1>
+                </div>
+                <Tabs defaultValue="all" className="space-y-6 mx-4">
+                    <div className=" mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <TabsList>
+                            <TabsTrigger value="all" onClick={() => setStatusFilter("all")}>
+                                Tất cả
+                            </TabsTrigger>
+                            <TabsTrigger value="Requested" onClick={() => setStatusFilter("Requested")}>
+                                Chờ duyệt
+                            </TabsTrigger>
+                            <TabsTrigger value="Approved" onClick={() => setStatusFilter("Approved")}>
+                                Đã duyệt
+                            </TabsTrigger>
+                            <TabsTrigger value="Processing" onClick={() => setStatusFilter("Processing")}>
+                                Đang xử lý
+                            </TabsTrigger>
+                        </TabsList>
 
+                        <div className="flex items-center gap-2 w-full sm:w-auto">
+                            <div className="relative flex-1 sm:flex-none">
+                                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    placeholder="Tìm kiếm yêu cầu..."
+                                    className="pl-8"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                            </div>
+
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button variant="outline" size="icon">
+                                        <Filter className="h-4 w-4" />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-4" align="end">
+                                    <div className="space-y-2">
+                                        <h4 className="font-medium text-sm">Lọc theo ngày</h4>
+                                        <div className="flex flex-col gap-2">
+                                            <div className="grid gap-2">
+                                                <div className="flex items-center gap-2">
+                                                    <Label className="text-xs">Từ ngày</Label>
+                                                    <Popover>
+                                                        <PopoverTrigger asChild>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                className="w-full justify-start text-left font-normal"
+                                                            >
+                                                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                                                {dateRange.from ? format(dateRange.from, "dd/MM/yyyy") : <span>Chọn ngày</span>}
+                                                            </Button>
+                                                        </PopoverTrigger>
+                                                        <PopoverContent className="w-auto p-0" align="start">
+                                                            <Calendar
+                                                                mode="single"
+                                                                selected={dateRange.from}
+                                                                onSelect={(date) => setDateRange({ ...dateRange, from: date })}
+                                                                initialFocus
+                                                                locale={vi}
+                                                            />
+                                                        </PopoverContent>
+                                                    </Popover>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <Label className="text-xs">Đến ngày</Label>
+                                                    <Popover>
+                                                        <PopoverTrigger asChild>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                className="w-full justify-start text-left font-normal"
+                                                            >
+                                                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                                                {dateRange.to ? format(dateRange.to, "dd/MM/yyyy") : <span>Chọn ngày</span>}
+                                                            </Button>
+                                                        </PopoverTrigger>
+                                                        <PopoverContent className="w-auto p-0" align="start">
+                                                            <Calendar
+                                                                mode="single"
+                                                                selected={dateRange.to}
+                                                                onSelect={(date) => setDateRange({ ...dateRange, to: date })}
+                                                                initialFocus
+                                                                locale={vi}
+                                                            />
+                                                        </PopoverContent>
+                                                    </Popover>
+                                                </div>
+                                            </div>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => setDateRange({ from: undefined, to: undefined })}
+                                            >
+                                                Xóa bộ lọc
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </PopoverContent>
+                            </Popover>
+                        </div>
                     </div>
 
-                    <Tabs defaultValue="all" className="space-y-6">
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                            <TabsList>
-                                <TabsTrigger value="all" onClick={() => setStatusFilter("all")}>
-                                    Tất cả
-                                </TabsTrigger>
-                                <TabsTrigger value="Requested" onClick={() => setStatusFilter("Requested")}>
-                                    Chờ duyệt
-                                </TabsTrigger>
-                                <TabsTrigger value="Approved" onClick={() => setStatusFilter("Approved")}>
-                                    Đã duyệt
-                                </TabsTrigger>
-                                <TabsTrigger value="Processing" onClick={() => setStatusFilter("Processing")}>
-                                    Đang xử lý
-                                </TabsTrigger>
-                            </TabsList>
-
-                            <div className="flex items-center gap-2 w-full sm:w-auto">
-                                <div className="relative flex-1 sm:flex-none">
-                                    <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                    <Input
-                                        placeholder="Tìm kiếm yêu cầu..."
-                                        className="pl-8"
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                    />
-                                </div>
-
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <Button variant="outline" size="icon">
-                                            <Filter className="h-4 w-4" />
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-4" align="end">
-                                        <div className="space-y-2">
-                                            <h4 className="font-medium text-sm">Lọc theo ngày</h4>
-                                            <div className="flex flex-col gap-2">
-                                                <div className="grid gap-2">
-                                                    <div className="flex items-center gap-2">
-                                                        <Label className="text-xs">Từ ngày</Label>
-                                                        <Popover>
-                                                            <PopoverTrigger asChild>
-                                                                <Button
-                                                                    variant="outline"
-                                                                    size="sm"
-                                                                    className="w-full justify-start text-left font-normal"
-                                                                >
-                                                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                                                    {dateRange.from ? format(dateRange.from, "dd/MM/yyyy") : <span>Chọn ngày</span>}
-                                                                </Button>
-                                                            </PopoverTrigger>
-                                                            <PopoverContent className="w-auto p-0" align="start">
-                                                                <Calendar
-                                                                    mode="single"
-                                                                    selected={dateRange.from}
-                                                                    onSelect={(date) => setDateRange({ ...dateRange, from: date })}
-                                                                    initialFocus
-                                                                    locale={vi}
-                                                                />
-                                                            </PopoverContent>
-                                                        </Popover>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <Label className="text-xs">Đến ngày</Label>
-                                                        <Popover>
-                                                            <PopoverTrigger asChild>
-                                                                <Button
-                                                                    variant="outline"
-                                                                    size="sm"
-                                                                    className="w-full justify-start text-left font-normal"
-                                                                >
-                                                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                                                    {dateRange.to ? format(dateRange.to, "dd/MM/yyyy") : <span>Chọn ngày</span>}
-                                                                </Button>
-                                                            </PopoverTrigger>
-                                                            <PopoverContent className="w-auto p-0" align="start">
-                                                                <Calendar
-                                                                    mode="single"
-                                                                    selected={dateRange.to}
-                                                                    onSelect={(date) => setDateRange({ ...dateRange, to: date })}
-                                                                    initialFocus
-                                                                    locale={vi}
-                                                                />
-                                                            </PopoverContent>
-                                                        </Popover>
-                                                    </div>
-                                                </div>
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() => setDateRange({ from: undefined, to: undefined })}
-                                                >
-                                                    Xóa bộ lọc
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    </PopoverContent>
-                                </Popover>
+                    <TabsContent value="all" className="space-y-4">
+                        {filteredRequests.length === 0 ? (
+                            <div className="bg-muted/20 rounded-lg p-8 text-center">
+                                <ClipboardList className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                                <h3 className="text-lg font-medium mb-2">Không tìm thấy yêu cầu xuất kho</h3>
+                                <p className="text-muted-foreground mb-4">
+                                    Không có yêu cầu xuất kho nào phù hợp với điều kiện tìm kiếm.
+                                </p>
+                                <Button
+                                    onClick={() => {
+                                        setStatusFilter("all")
+                                        setSearchQuery("")
+                                        setDateRange({ from: undefined, to: undefined })
+                                    }}
+                                >
+                                    Xóa bộ lọc
+                                </Button>
                             </div>
-                        </div>
-
-                        <TabsContent value="all" className="space-y-4">
-                            {filteredRequests.length === 0 ? (
-                                <div className="bg-muted/20 rounded-lg p-8 text-center">
-                                    <ClipboardList className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                                    <h3 className="text-lg font-medium mb-2">Không tìm thấy yêu cầu xuất kho</h3>
-                                    <p className="text-muted-foreground mb-4">
-                                        Không có yêu cầu xuất kho nào phù hợp với điều kiện tìm kiếm.
-                                    </p>
-                                    <Button
-                                        onClick={() => {
-                                            setStatusFilter("all")
-                                            setSearchQuery("")
-                                            setDateRange({ from: undefined, to: undefined })
-                                        }}
-                                    >
-                                        Xóa bộ lọc
-                                    </Button>
-                                </div>
-                            ) : (
-                                <div className="bg-white rounded-lg border overflow-hidden">
-                                    <div className="overflow-x-auto">
-                                        <Table>
-                                            <TableHeader>
-                                                <TableRow>
-                                                    <TableHead className="w-[120px]">Mã yêu cầu</TableHead>
-                                                    <TableHead className="w-[120px]">Mã đơn hàng</TableHead>
-                                                    <TableHead className="w-[120px]">Ngày duyệt</TableHead>
-                                                    <TableHead>Ghi chú</TableHead>
-                                                    <TableHead className="w-[100px]">Số SP</TableHead>
-                                                    <TableHead className="w-[100px]">Tổng SL</TableHead>
-                                                    <TableHead className="w-[120px]">Tổng giá trị</TableHead>
-                                                    <TableHead className="w-[120px]">Trạng thái</TableHead>
-                                                    <TableHead className="w-[120px] text-right">Thao tác</TableHead>
+                        ) : (
+                            <div className="bg-white rounded-lg border overflow-hidden">
+                                <div className="overflow-x-auto">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead className="w-[120px] text-center">Mã yêu cầu</TableHead>
+                                                <TableHead className="w-[120px] text-center">Mã đơn hàng</TableHead>
+                                                <TableHead className="w-[120px] text-center">Ngày duyệt</TableHead>
+                                                <TableHead className=" text-center">Ghi chú</TableHead>
+                                                <TableHead className="w-[100px] text-center">Số SP</TableHead>
+                                                <TableHead className="w-[100px] text-center">Tổng SL</TableHead>
+                                                <TableHead className="w-[120px] text-center">Tổng giá trị</TableHead>
+                                                <TableHead className="w-[120px] text-center">Trạng thái</TableHead>
+                                                <TableHead className="w-[120px] text-center">Thao tác</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {filteredRequests.map((request) => (
+                                                <TableRow key={request.requestExportId}>
+                                                    <TableCell className="font-medium">{request.requestExportId}</TableCell>
+                                                    <TableCell>{request.orderId.substring(0, 8)}...</TableCell>
+                                                    <TableCell>{formatDate(request.approvedDate)}</TableCell>
+                                                    <TableCell>{request.note || "Không có ghi chú"}</TableCell>
+                                                    <TableCell className="w-[120px] text-center">{request.requestExportDetails.length}</TableCell>
+                                                    <TableCell className="w-[120px] text-center">{getTotalRequestedQuantity(request)}</TableCell>
+                                                    <TableCell className="w-[120px] text-right">{formatCurrency(getTotalValue(request))}</TableCell>
+                                                    <TableCell className="w-[120px] text-center">{renderStatusBadge(request.status)}</TableCell>
+                                                    <TableCell >
+                                                        <div className="flex justify-around">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                onClick={() => handleViewDetails(request)}
+                                                                title="Xem chi tiết"
+                                                            >
+                                                                <Eye className="h-4 w-4" />
+                                                            </Button>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                onClick={() => handleCreateBasedOn(request.requestExportId)}
+                                                                title="Tạo yêu cầu dựa trên yêu cầu này"
+                                                            >
+                                                                <CirclePlus className="h-4 w-4" />
+                                                            </Button>
+                                                        </div>
+                                                    </TableCell>
                                                 </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {filteredRequests.map((request) => (
-                                                    <TableRow key={request.requestExportId}>
-                                                        <TableCell className="font-medium">{request.requestExportId}</TableCell>
-                                                        <TableCell>{request.orderId.substring(0, 8)}...</TableCell>
-                                                        <TableCell>{formatDate(request.approvedDate)}</TableCell>
-                                                        <TableCell>{request.note || "Không có ghi chú"}</TableCell>
-                                                        <TableCell>{request.requestExportDetails.length}</TableCell>
-                                                        <TableCell>{getTotalRequestedQuantity(request)}</TableCell>
-                                                        <TableCell>{formatCurrency(getTotalValue(request))}</TableCell>
-                                                        <TableCell>{renderStatusBadge(request.status)}</TableCell>
-                                                        <TableCell className="text-right">
-                                                            <div className="flex justify-end gap-2">
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="icon"
-                                                                    onClick={() => handleViewDetails(request)}
-                                                                    title="Xem chi tiết"
-                                                                >
-                                                                    <Eye className="h-4 w-4" />
-                                                                </Button>
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="icon"
-                                                                    onClick={() => handleCreateBasedOn(request.requestExportId)}
-                                                                    title="Tạo yêu cầu dựa trên yêu cầu này"
-                                                                >
-                                                                    <CirclePlus className="h-4 w-4" />
-                                                                </Button>
-                                                            </div>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
-                                    </div>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
                                 </div>
-                            )}
-                        </TabsContent>
+                            </div>
+                        )}
+                    </TabsContent>
 
-                        <TabsContent value="Requested" className="space-y-4">
-                            {/* Content is filtered by the useEffect */}
-                        </TabsContent>
+                    <TabsContent value="Requested" className="space-y-4">
+                        {/* Content is filtered by the useEffect */}
+                    </TabsContent>
 
-                        <TabsContent value="Approved" className="space-y-4">
-                            {/* Content is filtered by the useEffect */}
-                        </TabsContent>
+                    <TabsContent value="Approved" className="space-y-4">
+                        {/* Content is filtered by the useEffect */}
+                    </TabsContent>
 
-                        <TabsContent value="Processing" className="space-y-4">
-                            {/* Content is filtered by the useEffect */}
-                        </TabsContent>
-                    </Tabs>
-                </ResponsiveContainer>
+                    <TabsContent value="Processing" className="space-y-4">
+                        {/* Content is filtered by the useEffect */}
+                    </TabsContent>
+                </Tabs>
+
             </div>
 
             {/* Dialog for viewing export request details */}
-            <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
-                <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+            <Dialog open={detailsOpen} onOpenChange={setDetailsOpen} >
+                <DialogContent className="flex flex-col min-w-[100vh] max-h-[90vh]">
                     <DialogHeader>
                         <DialogTitle>Chi tiết yêu cầu xuất kho</DialogTitle>
                         <DialogDescription>Mã yêu cầu: {selectedRequest?.requestExportId}</DialogDescription>
                     </DialogHeader>
 
                     {selectedRequest && (
-                        <ScrollArea className="flex-1 pr-4">
+                        <ScrollArea className="flex-1 overflow-y-auto  ">
                             <div className="space-y-6 py-2">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <Card>
@@ -623,7 +617,7 @@ const SalesExports = () => {
                                             <CardTitle className="text-base">Thông tin yêu cầu</CardTitle>
                                         </CardHeader>
                                         <CardContent>
-                                            <dl className="grid grid-cols-2 gap-1 text-sm">
+                                            <dl className="grid grid-cols-2 gap-1 text-sm text-center">
                                                 <dt className="text-muted-foreground">Mã yêu cầu:</dt>
                                                 <dd>{selectedRequest.requestExportId}</dd>
 

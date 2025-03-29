@@ -213,7 +213,7 @@ export function SalesLayout({ children }: SalesLayoutProps) {
                 </aside>
 
                 {/* Main content */}
-                <main className="flex-1">{children}</main>
+                <main className="flex-1 bg-white">{children}</main>
             </div>
         </div>
     )

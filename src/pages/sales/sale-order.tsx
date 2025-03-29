@@ -608,10 +608,11 @@ export default function SalesOrders() {
 
     return (
         <SalesLayout>
-            <div className="p-6">
+            <div className="m-4">
                 <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-2xl font-bold">Quản lý đơn hàng</h1>
-
+                    <div className="ml-4 flex justify-between items-center ">
+                        <h1 className="text-2xl font-bold">Quản Lý Đơn Hàng</h1>
+                    </div>
                     <div className="flex items-center space-x-2">
                         <label htmlFor="status-filter" className="text-sm font-medium text-gray-700">
                             Lọc theo trạng thái:
