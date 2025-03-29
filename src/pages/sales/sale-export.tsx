@@ -284,40 +284,12 @@ const SalesExports = () => {
 
     // Các hàm lấy thông tin sản phẩm - Không cần thay đổi vì vẫn sử dụng API product
     // hoặc có thể sử dụng thông tin trực tiếp từ requestExportDetails nếu có
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const getProductName = (productId: number, details?: RequestExportDetail[]) => {
-        if (details) {
-            const detail = details.find((d) => d.productId === productId)
-            if (detail) return detail.productName
-        }
-        const product = getProduct(productId)
-        return product ? product.productName : `Product ID: ${productId}`
-    }
 
     const getProductCode = (productId: number) => {
         const product = getProduct(productId)
         return product ? product.productCode : "N/A"
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const getProductUnit = (productId: number, details?: RequestExportDetail[]) => {
-        if (details) {
-            const detail = details.find((d) => d.productId === productId)
-            if (detail) return detail.unit
-        }
-        const product = getProduct(productId)
-        return product ? product.unit : "N/A"
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const getProductPrice = (productId: number, details?: RequestExportDetail[]) => {
-        if (details) {
-            const detail = details.find((d) => d.productId === productId)
-            if (detail) return detail.price
-        }
-        const product = getProduct(productId)
-        return product ? product.price : 0
-    }
 
     const getProductImage = (productId: number) => {
         const product = getProduct(productId)
