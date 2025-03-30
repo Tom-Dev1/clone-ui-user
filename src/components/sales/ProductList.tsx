@@ -22,6 +22,7 @@ import {
 import AddProductDialog from "./dialogs/AddProductDialog"
 import ViewProductDialog from "./dialogs/ViewProductDialog"
 import EditProductDialog from "./dialogs/EditProductDialog"
+import { formatCurrency } from "@/utils/utils"
 // import { formatCurrencyVND } from "@/utils/format-price"
 
 // Cập nhật interface Product để phù hợp với cấu trúc dữ liệu mới
@@ -653,7 +654,7 @@ const ProductList = () => {
                                             <TableCell className="w-[180px] text-center">{product.productCode || "N/A"}</TableCell>
                                             <TableCell>{product.productName || "N/A"}</TableCell>
                                             <TableCell className="w-[120px] text-center">{product.unit || "N/A"}</TableCell>
-                                            <TableCell className="text-right">{product.price || "0"}</TableCell>
+                                            <TableCell className="text-right">{formatCurrency(product.price || 0)} đ</TableCell>
 
                                             <TableCell className="w-[120px] text-right">{product.availableStock}</TableCell>
                                             <TableCell className="w-[180px] text-center">{formatDate(product.createdDate)}</TableCell>

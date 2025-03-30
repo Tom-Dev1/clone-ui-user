@@ -1,8 +1,9 @@
+"use client"
+
 import type React from "react"
 import { useState, useEffect } from "react"
 import { Badge } from "../../components/ui/badge"
 import { Button } from "../../components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table"
 import { Input } from "../../components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select"
@@ -26,6 +27,7 @@ import {
     AlertDialogTitle,
 } from "../../components/ui/alert-dialog"
 import { AgencyLayout } from "@/layouts/agency-layout"
+import { useAuth } from "@/contexts/AuthContext"
 
 // Định nghĩa các interface cho dữ liệu
 interface OrderDetail {
@@ -68,6 +70,8 @@ const AgencyOrders: React.FC = () => {
     const [actionLoading, setActionLoading] = useState<boolean>(false)
 
     const token = localStorage.getItem("auth_token") || ""
+    const { user } = useAuth()
+    console.log(user)
 
     // Hàm để lấy danh sách đơn hàng
     const fetchOrders = async () => {
@@ -230,10 +234,7 @@ const AgencyOrders: React.FC = () => {
     const formatDate = (dateString: string) => {
         try {
             const date = new Date(dateString)
-            return (
-                date.toLocaleDateString("vi-VN") +
-                " "
-            )
+            return date.toLocaleDateString("vi-VN") + " "
         } catch (error) {
             console.log("Error formatting date:", error)
             return dateString
@@ -245,21 +246,13 @@ const AgencyOrders: React.FC = () => {
         return (
             <AgencyLayout>
                 <div className="container mx-auto py-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Đơn hàng của tôi</CardTitle>
-                            <CardDescription>Danh sách đơn hàng của bạn</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-4">
-                                {Array.from({ length: 5 }).map((_, index) => (
-                                    <div key={index} className="flex items-center space-x-4">
-                                        <Skeleton className="h-12 w-full" />
-                                    </div>
-                                ))}
+                    <div className="space-y-4">
+                        {Array.from({ length: 5 }).map((_, index) => (
+                            <div key={index} className="flex items-center space-x-4">
+                                <Skeleton className="h-12 w-full" />
                             </div>
-                        </CardContent>
-                    </Card>
+                        ))}
+                    </div>
                 </div>
             </AgencyLayout>
         )
@@ -270,18 +263,10 @@ const AgencyOrders: React.FC = () => {
         return (
             <AgencyLayout>
                 <div className="container mx-auto py-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Đơn hàng của tôi</CardTitle>
-                            <CardDescription>Danh sách đơn hàng của bạn</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="flex flex-col items-center justify-center py-12">
-                                <p className="text-red-500 mb-4">{error}</p>
-                                <Button onClick={fetchOrders}>Thử lại</Button>
-                            </div>
-                        </CardContent>
-                    </Card>
+                    <div className="flex flex-col items-center justify-center py-12">
+                        <p className="text-red-500 mb-4">{error}</p>
+                        <Button onClick={fetchOrders}>Thử lại</Button>
+                    </div>
                 </div>
             </AgencyLayout>
         )
@@ -289,109 +274,108 @@ const AgencyOrders: React.FC = () => {
 
     return (
         <AgencyLayout>
-            <div className="container mx-auto py-6">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Đơn hàng của tôi</CardTitle>
-                        <CardDescription>Danh sách đơn hàng của bạn</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="flex flex-col md:flex-row gap-4 mb-6">
-                            <div className="flex-1">
-                                <Input
-                                    placeholder="Tìm kiếm theo mã đơn hàng, đại lý, nhân viên..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full"
-                                />
-                            </div>
-                            <div className="w-full md:w-64">
-                                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Lọc theo trạng thái" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">Tất cả trạng thái</SelectItem>
-                                        <SelectItem value="WaitPaid">Chờ thanh toán</SelectItem>
-                                        <SelectItem value="Paid">Đã thanh toán</SelectItem>
-                                        <SelectItem value="Processing">Đang xử lý</SelectItem>
-                                        <SelectItem value="Delivery">Đang giao hàng</SelectItem>
-                                        <SelectItem value="Canceled">Đã hủy</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
+            <div className="m-4">
+                <div className="mb-4">
+                    <h1 className="text-2xl font-bold">Quản Lý đơn hàng của tôi</h1>
+                    <p className="text-gray-500 mt-1">Xem lại đơn hàng mà bạn đã yêu cầu</p>
+                </div>
 
-                        {filteredOrders.length === 0 ? (
-                            <div className="text-center py-12">
-                                <p className="text-gray-500">Không tìm thấy đơn hàng nào</p>
-                            </div>
-                        ) : (
-                            <div className="overflow-x-auto">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Mã đơn hàng</TableHead>
-                                            <TableHead>Đại lý</TableHead>
-                                            <TableHead>Người duyệt</TableHead>
-                                            <TableHead>Ngày đặt</TableHead>
-                                            <TableHead>Trạng thái</TableHead>
-                                            <TableHead className="text-center">Tổng tiền</TableHead>
-                                            <TableHead className="text-center">Thao tác</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {filteredOrders.map((order) => (
-                                            <TableRow key={order.orderId}>
-                                                <TableCell className="font-medium">{order.orderCode}</TableCell>
-                                                <TableCell>{order.agencyName}</TableCell>
-                                                <TableCell>{order.salesName}</TableCell>
-                                                <TableCell>{formatDate(order.orderDate)}</TableCell>
-                                                <TableCell>{renderStatusBadge(order.status)}</TableCell>
-                                                <TableCell className="text-center">{order.finalPrice.toLocaleString("vi-VN")} đ</TableCell>
-                                                <TableCell className="w-60">
-                                                    <div className="flex ml-2 gap-3">
-                                                        <div>
-                                                            <Button variant="outline" size="sm" onClick={() => viewOrderDetails(order)}>
-                                                                Xem chi tiết
-                                                            </Button>
-                                                        </div>
-                                                        <div className="gap-3 flex">
-                                                            {order.status === "WaitPaid" && (
-                                                                <>
-                                                                    <div>
-                                                                        <Button
-                                                                            variant="default"
-                                                                            size="sm"
-                                                                            onClick={() => handlePayment(order.orderId)}
-                                                                            disabled={actionLoading}
-                                                                        >
-                                                                            Thanh toán
-                                                                        </Button>
-                                                                    </div>
-                                                                    <div>
-                                                                        <Button
-                                                                            variant="destructive"
-                                                                            size="sm"
-                                                                            onClick={() => confirmCancelOrder(order.orderId)}
-                                                                            disabled={actionLoading}
-                                                                        >
-                                                                            Hủy
-                                                                        </Button>
-                                                                    </div>
-                                                                </>
-                                                            )}
-                                                        </div>
+                <div className="bg-white">
+                    <div className="flex flex-col md:flex-row gap-4 mb-6">
+                        <div className="flex-1">
+                            <Input
+                                placeholder="Tìm kiếm theo mã đơn hàng, đại lý, nhân viên..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full"
+                            />
+                        </div>
+                        <div className="w-full md:w-64">
+                            <Select value={statusFilter} onValueChange={setStatusFilter}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Lọc theo trạng thái" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Tất cả trạng thái</SelectItem>
+                                    <SelectItem value="WaitPaid">Chờ thanh toán</SelectItem>
+                                    <SelectItem value="Paid">Đã thanh toán</SelectItem>
+                                    <SelectItem value="Processing">Đang xử lý</SelectItem>
+                                    <SelectItem value="Delivery">Đang giao hàng</SelectItem>
+                                    <SelectItem value="Canceled">Đã hủy</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                    {filteredOrders.length === 0 ? (
+                        <div className="text-center py-12">
+                            <p className="text-gray-500">Không tìm thấy đơn hàng nào</p>
+                        </div>
+                    ) : (
+                        <div className="overflow-x-auto ">
+                            <Table className="border rounded-sm">
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Mã đơn hàng</TableHead>
+                                        <TableHead>Đại lý</TableHead>
+                                        <TableHead>Người duyệt</TableHead>
+                                        <TableHead>Ngày đặt</TableHead>
+                                        <TableHead>Trạng thái</TableHead>
+                                        <TableHead className="text-center">Tổng tiền</TableHead>
+                                        <TableHead className="text-center">Thao tác</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {filteredOrders.map((order) => (
+                                        <TableRow key={order.orderId}>
+                                            <TableCell className="font-medium">{order.orderCode}</TableCell>
+                                            <TableCell>{order.agencyName}</TableCell>
+                                            <TableCell>{order.salesName}</TableCell>
+                                            <TableCell>{formatDate(order.orderDate)}</TableCell>
+                                            <TableCell>{renderStatusBadge(order.status)}</TableCell>
+                                            <TableCell className="text-center">{order.finalPrice.toLocaleString("vi-VN")} đ</TableCell>
+                                            <TableCell className="w-60">
+                                                <div className="flex ml-2 gap-3">
+                                                    <div>
+                                                        <Button variant="outline" size="sm" onClick={() => viewOrderDetails(order)}>
+                                                            Xem chi tiết
+                                                        </Button>
                                                     </div>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
+                                                    <div className="gap-3 flex">
+                                                        {order.status === "WaitPaid" && (
+                                                            <>
+                                                                <div>
+                                                                    <Button
+                                                                        variant="default"
+                                                                        size="sm"
+                                                                        onClick={() => handlePayment(order.orderId)}
+                                                                        disabled={actionLoading}
+                                                                    >
+                                                                        Thanh toán
+                                                                    </Button>
+                                                                </div>
+                                                                <div>
+                                                                    <Button
+                                                                        variant="destructive"
+                                                                        size="sm"
+                                                                        onClick={() => confirmCancelOrder(order.orderId)}
+                                                                        disabled={actionLoading}
+                                                                    >
+                                                                        Hủy
+                                                                    </Button>
+                                                                </div>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </div>
+                    )}
+                </div>
 
                 {/* Dialog để hiển thị chi tiết đơn hàng */}
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

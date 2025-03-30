@@ -17,7 +17,20 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { CalendarIcon, ClipboardList, Eye, Filter, Search } from "lucide-react"
+import {
+    CalendarIcon,
+    ClipboardList,
+    Eye,
+    Filter,
+    Search,
+    ArrowUpDown,
+    ArrowUp,
+    ArrowDown,
+    ChevronLeft,
+    ChevronRight,
+    ChevronsLeft,
+    ChevronsRight,
+} from "lucide-react"
 import { format } from "date-fns"
 import { vi } from "date-fns/locale"
 import { Calendar } from "@/components/ui/calendar"
@@ -27,6 +40,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
 import { AgencyLayout } from "@/layouts/agency-layout"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 // Cập nhật interface theo cấu trúc API mới
 interface RequestProductDetail {
@@ -49,6 +63,8 @@ interface RequestProduct {
     createdAt: string
     requestProductDetails: RequestProductDetail[]
 }
+
+type SortDirection = "asc" | "desc"
 
 // Hàm lấy token xác thực
 const getToken = () => {
@@ -103,6 +119,16 @@ const AgencyRequests = () => {
         message: string
     }>({ type: null, title: "", message: "" })
 
+    // Thêm state cho sắp xếp
+    const [sortField, setSortField] = useState<string>("createdAt")
+    const [sortDirection, setSortDirection] = useState<SortDirection>("desc")
+
+    // Thêm state cho phân trang
+    const [currentPage, setCurrentPage] = useState(1)
+    const [itemsPerPage, setItemsPerPage] = useState(5)
+    const [paginatedRequests, setPaginatedRequests] = useState<RequestProduct[]>([])
+    const [totalPages, setTotalPages] = useState(1)
+
     // Kiểm tra token xác thực
     useEffect(() => {
         const token = getToken()
@@ -134,7 +160,56 @@ const AgencyRequests = () => {
         fetchRequests()
     }, [authError])
 
-    // Lọc yêu cầu dựa trên trạng thái, từ khóa tìm kiếm và khoảng thời gian
+    // Hàm sắp xếp yêu cầu
+    const sortRequests = (requestsToSort: RequestProduct[]) => {
+        return [...requestsToSort].sort((a, b) => {
+            let valueA, valueB
+
+            // Xác định giá trị để so sánh dựa trên trường sắp xếp
+            switch (sortField) {
+                case "createdAt":
+                    valueA = new Date(a.createdAt).getTime()
+                    valueB = new Date(b.createdAt).getTime()
+                    break
+                case "requestCode":
+                    valueA = a.requestCode
+                    valueB = b.requestCode
+                    break
+                case "agencyName":
+                    valueA = a.agencyName
+                    valueB = b.agencyName
+                    break
+                case "totalQuantity":
+                    valueA = getTotalQuantity(a)
+                    valueB = getTotalQuantity(b)
+                    break
+                case "totalValue":
+                    valueA = getTotalValue(a)
+                    valueB = getTotalValue(b)
+                    break
+                case "productCount":
+                    valueA = a.requestProductDetails.length
+                    valueB = b.requestProductDetails.length
+                    break
+                case "requestStatus":
+                    valueA = a.requestStatus
+                    valueB = b.requestStatus
+                    break
+                default:
+                    valueA = new Date(a.createdAt).getTime()
+                    valueB = new Date(b.createdAt).getTime()
+            }
+
+            // So sánh các giá trị
+            if (sortDirection === "asc") {
+                return valueA > valueB ? 1 : -1
+            } else {
+                return valueA < valueB ? 1 : -1
+            }
+        })
+    }
+
+    // Lọc và sắp xếp yêu cầu dựa trên trạng thái, từ khóa tìm kiếm và khoảng thời gian
     useEffect(() => {
         let filtered = [...requests]
 
@@ -167,8 +242,28 @@ const AgencyRequests = () => {
             })
         }
 
-        setFilteredRequests(filtered)
-    }, [requests, statusFilter, searchQuery, dateRange])
+        // Sắp xếp kết quả
+        const sorted = sortRequests(filtered)
+        setFilteredRequests(sorted)
+
+        // Reset về trang đầu tiên khi thay đổi bộ lọc
+        setCurrentPage(1)
+    }, [requests, statusFilter, searchQuery, dateRange, sortField, sortDirection])
+
+    // Cập nhật phân trang khi filteredRequests hoặc currentPage thay đổi
+    useEffect(() => {
+        // Tính tổng số trang
+        const total = Math.ceil(filteredRequests.length / itemsPerPage)
+        setTotalPages(total || 1) // Đảm bảo có ít nhất 1 trang
+
+        // Tính chỉ số bắt đầu và kết thúc cho trang hiện tại
+        const startIndex = (currentPage - 1) * itemsPerPage
+        const endIndex = Math.min(startIndex + itemsPerPage, filteredRequests.length)
+
+        // Lấy dữ liệu cho trang hiện tại
+        const paginatedData = filteredRequests.slice(startIndex, endIndex)
+        setPaginatedRequests(paginatedData)
+    }, [filteredRequests, currentPage, itemsPerPage])
 
     // Xóa thông báo sau 5 giây
     useEffect(() => {
@@ -183,6 +278,41 @@ const AgencyRequests = () => {
     const handleViewDetails = (request: RequestProduct) => {
         setSelectedRequest(request)
         setDetailsOpen(true)
+    }
+
+    // Xử lý thay đổi sắp xếp
+    const handleSortChange = (field: string) => {
+        if (field === sortField) {
+            // Nếu đã sắp xếp theo trường này, đảo ngược hướng sắp xếp
+            setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+        } else {
+            // Nếu sắp xếp theo trường mới, đặt trường mới và hướng mặc định
+            setSortField(field)
+            setSortDirection("desc")
+        }
+    }
+
+    // Xử lý thay đổi trang
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page)
+    }
+
+    // Xử lý thay đổi số lượng item mỗi trang
+    const handleItemsPerPageChange = (value: string) => {
+        setItemsPerPage(Number(value))
+        setCurrentPage(1) // Reset về trang đầu tiên khi thay đổi số lượng item mỗi trang
+    }
+
+    // Hiển thị biểu tượng sắp xếp
+    const renderSortIcon = (field: string) => {
+        if (field !== sortField) {
+            return <ArrowUpDown className="h-4 w-4 ml-1 inline" />
+        }
+        return sortDirection === "asc" ? (
+            <ArrowUp className="h-4 w-4 ml-1 inline" />
+        ) : (
+            <ArrowDown className="h-4 w-4 ml-1 inline" />
+        )
     }
 
     // Hiển thị badge trạng thái
@@ -223,7 +353,7 @@ const AgencyRequests = () => {
 
     // Định dạng tiền tệ
     const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(amount)
+        return amount.toLocaleString("vi-VN") + " đ"
     }
 
     // Tính tổng số lượng sản phẩm
@@ -236,6 +366,26 @@ const AgencyRequests = () => {
         return request.requestProductDetails.reduce((total, item) => {
             return total + item.unitPrice * item.quantity
         }, 0)
+    }
+
+    // Tạo mảng các số trang để hiển thị
+    const getPageNumbers = () => {
+        const pageNumbers = []
+        const maxPagesToShow = 5 // Số lượng nút trang tối đa hiển thị
+
+        let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2))
+        const endPage = Math.min(totalPages, startPage + maxPagesToShow - 1)
+
+        // Điều chỉnh startPage nếu endPage đã đạt giới hạn
+        if (endPage === totalPages) {
+            startPage = Math.max(1, endPage - maxPagesToShow + 1)
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            pageNumbers.push(i)
+        }
+
+        return pageNumbers
     }
 
     if (authError) {
@@ -271,7 +421,7 @@ const AgencyRequests = () => {
 
     return (
         <AgencyLayout>
-            <div className="bg-white max-h-[90vh] m-4">
+            <div className="m-4">
                 {alertMessage.type && (
                     <Alert variant={alertMessage.type === "error" ? "destructive" : "default"} className="mb-6">
                         <AlertCircle className="h-4 w-4" />
@@ -279,10 +429,10 @@ const AgencyRequests = () => {
                         <AlertDescription>{alertMessage.message}</AlertDescription>
                     </Alert>
                 )}
-                <div className="ml-4 flex justify-between items-center mb-4">
+                <div className="flex justify-between items-center mb-4">
                     <h1 className="text-2xl font-bold">Quản Lý Yêu Cầu Đặt Hàng</h1>
                 </div>
-                <Tabs defaultValue="all" className="space-y-6 mx-4">
+                <Tabs defaultValue="all" className="space-y-6">
                     <div className="mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <TabsList>
                             <TabsTrigger value="all" onClick={() => setStatusFilter("all")}>
@@ -294,7 +444,7 @@ const AgencyRequests = () => {
                             <TabsTrigger value="Approved" onClick={() => setStatusFilter("Approved")}>
                                 Đã duyệt
                             </TabsTrigger>
-                            <TabsTrigger value="Rejected" onClick={() => setStatusFilter("Rejected")}>
+                            <TabsTrigger value="Rejected" onClick={() => setStatusFilter("Canceled")}>
                                 Từ chối
                             </TabsTrigger>
                         </TabsList>
@@ -406,19 +556,54 @@ const AgencyRequests = () => {
                                     <Table>
                                         <TableHeader>
                                             <TableRow>
-                                                <TableHead className="w-[160px] text-center">Mã yêu cầu</TableHead>
-                                                <TableHead className="w-[160px] text-center">Ngày tạo</TableHead>
-                                                <TableHead className="w-[160px] text-center">Đại lý</TableHead>
+                                                <TableHead
+                                                    className="w-[160px] text-center cursor-pointer"
+                                                    onClick={() => handleSortChange("requestCode")}
+                                                >
+                                                    Mã yêu cầu {renderSortIcon("requestCode")}
+                                                </TableHead>
+                                                <TableHead
+                                                    className="w-[160px] text-center cursor-pointer"
+                                                    onClick={() => handleSortChange("createdAt")}
+                                                >
+                                                    Ngày tạo {renderSortIcon("createdAt")}
+                                                </TableHead>
+                                                <TableHead
+                                                    className="w-[160px] text-center cursor-pointer"
+                                                    onClick={() => handleSortChange("agencyName")}
+                                                >
+                                                    Đại lý {renderSortIcon("agencyName")}
+                                                </TableHead>
                                                 <TableHead className="w-[120px] text-center">Người duyệt</TableHead>
-                                                <TableHead className="w-[120px] text-center">Số SP</TableHead>
-                                                <TableHead className="w-[120px] text-center">Tổng SL</TableHead>
-                                                <TableHead className="w-[130px] text-right">Tổng giá trị</TableHead>
-                                                <TableHead className="w-[120px] text-center">Trạng thái</TableHead>
+                                                <TableHead
+                                                    className="w-[120px] text-center cursor-pointer"
+                                                    onClick={() => handleSortChange("productCount")}
+                                                >
+                                                    Số SP {renderSortIcon("productCount")}
+                                                </TableHead>
+                                                <TableHead
+                                                    className="w-[120px] text-center cursor-pointer"
+                                                    onClick={() => handleSortChange("totalQuantity")}
+                                                >
+                                                    Tổng SL {renderSortIcon("totalQuantity")}
+                                                </TableHead>
+                                                <TableHead
+                                                    className="w-[130px] text-right cursor-pointer"
+                                                    onClick={() => handleSortChange("totalValue")}
+                                                >
+                                                    Tổng giá trị {renderSortIcon("totalValue")}
+                                                </TableHead>
+                                                <TableHead
+                                                    className="w-[120px] text-center cursor-pointer"
+                                                    onClick={() => handleSortChange("requestStatus")}
+                                                >
+                                                    Trạng thái {renderSortIcon("requestStatus")}
+                                                </TableHead>
                                                 <TableHead className="w-[80px] text-center">Thao tác</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            {filteredRequests.map((request) => (
+                                            {paginatedRequests.map((request) => (
                                                 <TableRow key={request.requestProductId}>
                                                     <TableCell className="font-medium">{request.requestCode}</TableCell>
                                                     <TableCell className="text-center"> {formatDate(request.createdAt)}</TableCell>
@@ -445,6 +630,81 @@ const AgencyRequests = () => {
                                             ))}
                                         </TableBody>
                                     </Table>
+                                </div>
+
+                                {/* Phân trang */}
+                                <div className="flex items-center justify-between px-4 py-4 border-t">
+                                    <div className="flex items-center gap-2">
+                                        <p className="text-sm text-muted-foreground">Hiển thị</p>
+                                        <Select value={itemsPerPage.toString()} onValueChange={handleItemsPerPageChange}>
+                                            <SelectTrigger className="h-8 w-[70px]">
+                                                <SelectValue placeholder={itemsPerPage.toString()} />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="5">5</SelectItem>
+                                                <SelectItem value="10">10</SelectItem>
+                                                <SelectItem value="15">15</SelectItem>
+                                                <SelectItem value="20">20</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        <p className="text-sm text-muted-foreground">trên tổng số {filteredRequests.length} yêu cầu</p>
+                                    </div>
+
+                                    <div className="flex items-center gap-1">
+                                        <Button
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={() => handlePageChange(1)}
+                                            disabled={currentPage === 1}
+                                            className="h-8 w-8"
+                                        >
+                                            <ChevronsLeft className="h-4 w-4" />
+                                            <span className="sr-only">Trang đầu</span>
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={() => handlePageChange(currentPage - 1)}
+                                            disabled={currentPage === 1}
+                                            className="h-8 w-8"
+                                        >
+                                            <ChevronLeft className="h-4 w-4" />
+                                            <span className="sr-only">Trang trước</span>
+                                        </Button>
+
+                                        {getPageNumbers().map((page) => (
+                                            <Button
+                                                key={page}
+                                                variant={currentPage === page ? "default" : "outline"}
+                                                size="icon"
+                                                onClick={() => handlePageChange(page)}
+                                                className="h-8 w-8"
+                                            >
+                                                {page}
+                                            </Button>
+                                        ))}
+
+                                        <Button
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={() => handlePageChange(currentPage + 1)}
+                                            disabled={currentPage === totalPages}
+                                            className="h-8 w-8"
+                                        >
+                                            <ChevronRight className="h-4 w-4" />
+                                            <span className="sr-only">Trang sau</span>
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={() => handlePageChange(totalPages)}
+                                            disabled={currentPage === totalPages}
+                                            className="h-8 w-8"
+                                        >
+                                            <ChevronsRight className="h-4 w-4" />
+                                            <span className="sr-only">Trang cuối</span>
+                                        </Button>
+                                    </div>
                                 </div>
                             </div>
                         )}

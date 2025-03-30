@@ -2,7 +2,6 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { AgencyLayout } from "@/layouts/agency-layout"
-import { ResponsiveContainer } from "@/components/responsive-container"
 import { isAuthenticated, isAgency } from "@/utils/auth-utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -171,163 +170,162 @@ export default function AgencyProductRequest() {
 
     return (
         <AgencyLayout>
-            <div className="py-8">
-                <ResponsiveContainer>
-                    <div className="mb-6">
-                        <h1 className="text-2xl font-bold">Yêu cầu sản phẩm</h1>
-                        <p className="text-gray-500 mt-1">Xem lại và gửi yêu cầu đặt hàng sản phẩm</p>
-                    </div>
+            <div className="m-4">
 
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex justify-between items-center">
-                                <span>Giỏ hàng của bạn</span>
-                                <span className="text-sm font-normal bg-primary/10 text-primary px-3 py-1 rounded-full">
-                                    {itemCount} sản phẩm
-                                </span>
-                            </CardTitle>
-                            <CardDescription>Danh sách sản phẩm đã chọn</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            {cartItems.length > 0 ? (
-                                <div>
-                                    <div className="border rounded-md overflow-hidden">
-                                        <Table>
-                                            <TableHeader>
-                                                <TableRow>
-                                                    <TableHead>Sản phẩm</TableHead>
-                                                    <TableHead>Đơn vị</TableHead>
-                                                    <TableHead className="text-center">Số lượng</TableHead>
-                                                    <TableHead className="text-right">Đơn giá</TableHead>
-                                                    <TableHead className="text-right">Thành tiền</TableHead>
-                                                    <TableHead className="w-[50px]"></TableHead>
+                <div className="mb-6">
+                    <h1 className="text-2xl font-bold">Yêu cầu sản phẩm</h1>
+                    <p className="text-gray-500 mt-1">Xem lại và gửi yêu cầu đặt hàng sản phẩm</p>
+                </div>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex justify-between items-center">
+                            <span>Giỏ hàng của bạn</span>
+                            <span className="text-sm font-normal bg-primary/10 text-primary px-3 py-1 rounded-full">
+                                {itemCount} sản phẩm
+                            </span>
+                        </CardTitle>
+                        <CardDescription>Danh sách sản phẩm đã chọn</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {cartItems.length > 0 ? (
+                            <div>
+                                <div className="border rounded-md overflow-hidden">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Sản phẩm</TableHead>
+                                                <TableHead>Đơn vị</TableHead>
+                                                <TableHead className="text-center">Số lượng</TableHead>
+                                                <TableHead className="text-right">Đơn giá</TableHead>
+                                                <TableHead className="text-right">Thành tiền</TableHead>
+                                                <TableHead className="w-[50px]"></TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {cartItems.map((item) => (
+                                                <TableRow key={item.productId}>
+                                                    <TableCell>
+                                                        <div>
+                                                            <div className="font-medium">{item.productName}</div>
+                                                            <div className="text-sm text-gray-500">{item.productCode}</div>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>{item.unit}</TableCell>
+                                                    <TableCell className="text-center">
+                                                        <div className="flex flex-col items-center">
+                                                            <div className="flex items-center">
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="icon"
+                                                                    className="h-8 w-8"
+                                                                    onClick={() => handleQuantityChange(item.productId, item.quantity - 1)}
+                                                                    disabled={item.quantity <= 1}
+                                                                >
+                                                                    -
+                                                                </Button>
+                                                                <input
+                                                                    type="number"
+                                                                    value={item.quantity}
+                                                                    onChange={(e) => handleQuantityInputChange(item.productId, e)}
+                                                                    min={1}
+                                                                    max={item.availableStock}
+                                                                    className="mx-2 w-16 text-center border rounded-md py-1"
+                                                                    aria-label={`Số lượng ${item.productName}`}
+                                                                />
+                                                                <Button
+                                                                    variant="outline"
+                                                                    size="icon"
+                                                                    className="h-8 w-8"
+                                                                    onClick={() => handleQuantityChange(item.productId, item.quantity + 1)}
+                                                                    disabled={item.quantity >= item.availableStock}
+                                                                >
+                                                                    +
+                                                                </Button>
+                                                            </div>
+                                                            <div className="mt-1 text-xs">
+                                                                <span
+                                                                    className={`${item.quantity >= item.availableStock
+                                                                        ? "text-red-500"
+                                                                        : item.quantity > item.availableStock * 0.8
+                                                                            ? "text-orange-500"
+                                                                            : "text-green-500"
+                                                                        }`}
+                                                                >
+                                                                    Có sẵn: {item.availableStock} {item.unit}
+                                                                </span>
+                                                            </div>
+                                                            {quantityErrors[item.productId] && (
+                                                                <div className="mt-1 text-xs text-red-500 flex items-center">
+                                                                    <AlertCircle className="h-3 w-3 mr-1" />
+                                                                    {quantityErrors[item.productId]}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell className="text-right">{(item.price || 0).toLocaleString("vi-VN")} đ</TableCell>
+                                                    <TableCell className="text-right">
+                                                        {((item.price || 0) * item.quantity).toLocaleString("vi-VN")} đ
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Button variant="ghost" size="icon" onClick={() => removeItem(item.productId)}>
+                                                            <Trash2 className="h-4 w-4 text-red-500" />
+                                                        </Button>
+                                                    </TableCell>
                                                 </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {cartItems.map((item) => (
-                                                    <TableRow key={item.productId}>
-                                                        <TableCell>
-                                                            <div>
-                                                                <div className="font-medium">{item.productName}</div>
-                                                                <div className="text-sm text-gray-500">{item.productCode}</div>
-                                                            </div>
-                                                        </TableCell>
-                                                        <TableCell>{item.unit}</TableCell>
-                                                        <TableCell className="text-center">
-                                                            <div className="flex flex-col items-center">
-                                                                <div className="flex items-center">
-                                                                    <Button
-                                                                        variant="outline"
-                                                                        size="icon"
-                                                                        className="h-8 w-8"
-                                                                        onClick={() => handleQuantityChange(item.productId, item.quantity - 1)}
-                                                                        disabled={item.quantity <= 1}
-                                                                    >
-                                                                        -
-                                                                    </Button>
-                                                                    <input
-                                                                        type="number"
-                                                                        value={item.quantity}
-                                                                        onChange={(e) => handleQuantityInputChange(item.productId, e)}
-                                                                        min={1}
-                                                                        max={item.availableStock}
-                                                                        className="mx-2 w-16 text-center border rounded-md py-1"
-                                                                        aria-label={`Số lượng ${item.productName}`}
-                                                                    />
-                                                                    <Button
-                                                                        variant="outline"
-                                                                        size="icon"
-                                                                        className="h-8 w-8"
-                                                                        onClick={() => handleQuantityChange(item.productId, item.quantity + 1)}
-                                                                        disabled={item.quantity >= item.availableStock}
-                                                                    >
-                                                                        +
-                                                                    </Button>
-                                                                </div>
-                                                                <div className="mt-1 text-xs">
-                                                                    <span
-                                                                        className={`${item.quantity >= item.availableStock
-                                                                            ? "text-red-500"
-                                                                            : item.quantity > item.availableStock * 0.8
-                                                                                ? "text-orange-500"
-                                                                                : "text-green-500"
-                                                                            }`}
-                                                                    >
-                                                                        Có sẵn: {item.availableStock} {item.unit}
-                                                                    </span>
-                                                                </div>
-                                                                {quantityErrors[item.productId] && (
-                                                                    <div className="mt-1 text-xs text-red-500 flex items-center">
-                                                                        <AlertCircle className="h-3 w-3 mr-1" />
-                                                                        {quantityErrors[item.productId]}
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </TableCell>
-                                                        <TableCell className="text-right">{(item.price || 0).toLocaleString("vi-VN")} đ</TableCell>
-                                                        <TableCell className="text-right">
-                                                            {((item.price || 0) * item.quantity).toLocaleString("vi-VN")} đ
-                                                        </TableCell>
-                                                        <TableCell>
-                                                            <Button variant="ghost" size="icon" onClick={() => removeItem(item.productId)}>
-                                                                <Trash2 className="h-4 w-4 text-red-500" />
-                                                            </Button>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
-                                    </div>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </div>
 
-                                    <div className="mt-4 p-4 bg-gray-50 rounded-md">
-                                        <div className="flex justify-between font-medium">
-                                            <span>Tổng cộng:</span>
-                                            <span>{totalPrice.toLocaleString("vi-VN")} đ</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="mt-6 space-y-4">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="note">Ghi chú</Label>
-                                            <Textarea
-                                                id="note"
-                                                placeholder="Nhập ghi chú cho đơn hàng (nếu có)"
-                                                value={note}
-                                                onChange={(e) => setNote(e.target.value)}
-                                            />
-                                        </div>
+                                <div className="mt-4 p-4 bg-gray-50 rounded-md">
+                                    <div className="flex justify-between font-medium">
+                                        <span>Tổng cộng:</span>
+                                        <span>{totalPrice.toLocaleString("vi-VN")} đ</span>
                                     </div>
                                 </div>
-                            ) : (
-                                <div className="text-center py-12 border rounded-md">
-                                    <ShoppingCart className="h-12 w-12 mx-auto text-gray-300 mb-2" />
-                                    <p className="text-gray-500 mb-4">Chưa có sản phẩm nào trong giỏ hàng</p>
-                                    <Button onClick={() => navigate("/collections")}>Tiếp tục mua sắm</Button>
+
+                                <div className="mt-6 space-y-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="note">Ghi chú</Label>
+                                        <Textarea
+                                            id="note"
+                                            placeholder="Nhập ghi chú cho đơn hàng (nếu có)"
+                                            value={note}
+                                            onChange={(e) => setNote(e.target.value)}
+                                        />
+                                    </div>
                                 </div>
-                            )}
-                        </CardContent>
-                        {cartItems.length > 0 && (
-                            <CardFooter className="flex justify-between">
-                                <Button variant="outline" onClick={() => navigate("/collections")}>
-                                    Tiếp tục mua sắm
-                                </Button>
-                                <Button
-                                    onClick={handleSubmitRequest}
-                                    disabled={isSubmitting || cartItems.length === 0 || Object.keys(quantityErrors).length > 0}
-                                >
-                                    {isSubmitting ? (
-                                        <>
-                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                            Đang xử lý...
-                                        </>
-                                    ) : (
-                                        "Gửi yêu cầu"
-                                    )}
-                                </Button>
-                            </CardFooter>
+                            </div>
+                        ) : (
+                            <div className="text-center py-36 ">
+                                <ShoppingCart className="h-12 w-12 mx-auto text-gray-300 mb-2" />
+                                <p className="text-gray-500 mb-4">Chưa có sản phẩm nào trong giỏ hàng</p>
+                                <Button onClick={() => navigate("/collections")}>Tiếp tục mua sắm</Button>
+                            </div>
                         )}
-                    </Card>
-                </ResponsiveContainer>
+                    </CardContent>
+                    {cartItems.length > 0 && (
+                        <CardFooter className="flex justify-between">
+                            <Button variant="outline" onClick={() => navigate("/collections")}>
+                                Tiếp tục mua sắm
+                            </Button>
+                            <Button
+                                onClick={handleSubmitRequest}
+                                disabled={isSubmitting || cartItems.length === 0 || Object.keys(quantityErrors).length > 0}
+                            >
+                                {isSubmitting ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Đang xử lý...
+                                    </>
+                                ) : (
+                                    "Gửi yêu cầu"
+                                )}
+                            </Button>
+                        </CardFooter>
+                    )}
+                </Card>
             </div>
         </AgencyLayout>
     )
