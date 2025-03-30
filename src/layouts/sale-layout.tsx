@@ -1,7 +1,7 @@
 import type React from "react"
 import { type ReactNode, useState, useEffect } from "react"
 import { Link, useNavigate, useLocation } from "react-router-dom"
-import { getUserInfo, logout } from "@/utils/auth-utils"
+import { getUserInfo } from "@/utils/auth-utils"
 import { UserAvatar } from "@/components/user-avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
@@ -22,6 +22,7 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useMediaQuery } from "@/hooks/use-media-query"
+import { useAuth } from "@/contexts/AuthContext"
 
 interface SalesLayoutProps {
     children: ReactNode
@@ -39,7 +40,7 @@ export function SalesLayout({ children }: SalesLayoutProps) {
     const userInfo = getUserInfo()
     const [open, setOpen] = useState(false)
     const isDesktop = useMediaQuery("(min-width: 1024px)")
-
+    const { logout } = useAuth()
     useEffect(() => {
         if (isDesktop) {
             setOpen(false)
@@ -47,6 +48,7 @@ export function SalesLayout({ children }: SalesLayoutProps) {
     }, [isDesktop])
 
     const handleLogout = () => {
+
         logout()
         navigate("/login")
     }
@@ -101,7 +103,7 @@ export function SalesLayout({ children }: SalesLayoutProps) {
         <div className="min-h-screen bg-gray-100">
             {/* Header */}
             <header className="bg-white shadow-sm sticky top-0 z-40">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between h-16">
                         <div className="flex items-center">
                             {!isDesktop && (
@@ -164,13 +166,13 @@ export function SalesLayout({ children }: SalesLayoutProps) {
                         </div>
 
                         <div className="flex items-center">
-                            <Link to="/" className="text-sm text-gray-500 hover:text-gray-700 mr-4 flex items-center gap-1">
+                            <Link to="/" className="text-sm text-black hover:text-gray-700 mr-4 flex items-center gap-1">
                                 <Home className="h-4 w-4" />
                                 <span className="hidden sm:inline">Trang chủ</span>
                             </Link>
                             <div className="flex items-center space-x-2">
                                 <span className="text-sm text-gray-700 hidden md:inline-block">
-                                    Xin chào, <span className="font-medium">{userInfo?.username || "Quản lý"}</span>
+                                    Xin chào, <span className="font-medium">Quản lý {userInfo?.username || "Quản lý"}</span>
                                 </span>
                                 <UserAvatar size="sm" />
                             </div>

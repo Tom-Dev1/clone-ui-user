@@ -530,7 +530,7 @@ export default function SalesOrders() {
 
     return (
         <SalesLayout>
-            <div className="p-6">
+            <div className="m-4">
                 <div className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl font-bold">Quản lý đơn hàng</h1>
 
@@ -613,7 +613,7 @@ export default function SalesOrders() {
                         <p>Không tìm thấy đơn hàng nào.</p>
                     </div>
                 ) : (
-                    <div className="bg-white shadow-sm rounded-lg overflow-hidden">
+                    <div className="bg-white  rounded-lg overflow-hidden">
                         <div className="overflow-x-auto">
                             <table className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-gray-50">

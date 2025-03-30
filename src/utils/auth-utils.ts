@@ -165,7 +165,7 @@ export function getUserDisplayName(): string {
     if (!userInfo) return "Người dùng"
 
     // Try to get the most appropriate name field
-    return userInfo.roleName || userInfo.username || userInfo.role || "Người dùng"
+    return userInfo.username || "Người dùng"
 }
 
 /**

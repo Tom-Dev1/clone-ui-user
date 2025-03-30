@@ -1,14 +1,13 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Dialog } from "@/components/ui/dialog"
-import { Plus, Edit, Trash } from "lucide-react"
+import { Plus, Edit, Trash, ArrowUpDown, ArrowDown, ArrowUp } from "lucide-react"
 import DeleteConfirmDialog from "./dialogs/DeleteConfirmDialog"
 import {
     Pagination,
@@ -23,7 +22,9 @@ import {
 import AddProductDialog from "./dialogs/AddProductDialog"
 import ViewProductDialog from "./dialogs/ViewProductDialog"
 import EditProductDialog from "./dialogs/EditProductDialog"
+// import { formatCurrencyVND } from "@/utils/format-price"
 
+// Cập nhật interface Product để phù hợp với cấu trúc dữ liệu mới
 interface Product {
     productId: number
     productCode: string
@@ -35,11 +36,13 @@ interface Product {
     taxId: number
     createdBy: string
     createdDate: string
-    updatedBy: string
-    updatedDate: string
+    createdByName?: string
+    updatedBy?: string
+    updatedByName: string
+    updatedDate?: string
     availableStock: number
     images: string[]
-    price?: number
+    price: number
     status?: string
 }
 
@@ -63,6 +66,8 @@ interface ProductData {
     taxId: number
 }
 
+type SortDirection = "asc" | "desc"
+
 const ProductList = () => {
     const [products, setProducts] = useState<Product[]>([])
     const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
@@ -75,15 +80,17 @@ const ProductList = () => {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [categories, setCategories] = useState<Category[]>([])
     const [currentPage, setCurrentPage] = useState(1)
-    const [itemsPerPage,] = useState(15)
-    const [totalItems, setTotalItems] = useState(0)
+    const [itemsPerPage] = useState(15)
+    const [, setTotalItems] = useState(0)
     const [totalPages, setTotalPages] = useState(1)
+    const [sortField, setSortField] = useState<string>("createdDate")
+    const [sortDirection, setSortDirection] = useState<SortDirection>("desc") // Mặc định sắp xếp giảm dần (mới nhất trước)
 
     const [newProduct, setNewProduct] = useState<ProductData>({
         productCode: "",
         productName: "",
         unit: "Bao", // Default to "Bao"
-        defaultExpiration: 30,
+        defaultExpiration: 720,
         categoryId: 0,
         description: "",
         taxId: 1,
@@ -107,39 +114,80 @@ const ProductList = () => {
     const [isDeleting, setIsDeleting] = useState(false)
     const [productToDelete, setProductToDelete] = useState<Product | null>(null)
 
+    // Khi component mount hoặc khi trang, số lượng mỗi trang thay đổi
     useEffect(() => {
-        fetchProducts(currentPage, itemsPerPage)
+        fetchProducts()
         fetchCategories()
     }, [currentPage, itemsPerPage])
 
-
-    console.log(totalItems);
-
-
+    // Khi search term thay đổi, reset về trang 1
     useEffect(() => {
-        if (products.length > 0) {
-            if (searchTerm) {
-                // When searching, show all matching results without pagination
-                const filtered = products.filter(
-                    (product) =>
-                        product.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        product.productCode.toLowerCase().includes(searchTerm.toLowerCase()),
-                )
-                setFilteredProducts(filtered)
-                setTotalItems(filtered.length)
-                setTotalPages(Math.ceil(filtered.length / itemsPerPage))
-            } else {
-                // When not searching, apply pagination
-                const startIndex = (currentPage - 1) * itemsPerPage
-                const paginatedProducts = products.slice(startIndex, startIndex + itemsPerPage)
-                setFilteredProducts(paginatedProducts)
-                setTotalItems(products.length)
-                setTotalPages(Math.ceil(products.length / itemsPerPage))
-            }
+        if (searchTerm) {
+            setCurrentPage(1)
         }
-    }, [searchTerm, products, currentPage, itemsPerPage])
+        applyFiltersAndSort()
+    }, [searchTerm, products, sortField, sortDirection])
 
-    const fetchProducts = async (page = currentPage, pageSize = itemsPerPage) => {
+    // Hàm áp dụng bộ lọc và sắp xếp
+    const applyFiltersAndSort = () => {
+        if (products.length === 0) return
+
+        // Lọc sản phẩm theo search term
+        let result = [...products]
+        if (searchTerm) {
+            result = result.filter(
+                (product) =>
+                    product.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    product.productCode.toLowerCase().includes(searchTerm.toLowerCase()),
+            )
+        }
+
+        // Sắp xếp sản phẩm
+        result = sortProducts(result)
+
+        // Cập nhật tổng số mục và tổng số trang
+        setTotalItems(result.length)
+        setTotalPages(Math.ceil(result.length / itemsPerPage))
+
+        // Áp dụng phân trang
+        const startIndex = (currentPage - 1) * itemsPerPage
+        const paginatedResult = result.slice(startIndex, Math.min(startIndex + itemsPerPage, result.length))
+
+        setFilteredProducts(paginatedResult)
+    }
+
+    // Hàm sắp xếp sản phẩm
+    const sortProducts = (productsToSort: Product[]) => {
+        return [...productsToSort].sort((a, b) => {
+            let valueA, valueB
+
+            switch (sortField) {
+                case "createdDate":
+                    valueA = new Date(a.createdDate).getTime()
+                    valueB = new Date(b.createdDate).getTime()
+                    break
+                case "price":
+                    valueA = a.price
+                    valueB = b.price
+                    break
+                case "availableStock":
+                    valueA = a.availableStock
+                    valueB = b.availableStock
+                    break
+                case "productName":
+                    valueA = a.productName.toLowerCase()
+                    valueB = b.productName.toLowerCase()
+                    break
+                default:
+                    valueA = new Date(a.createdDate).getTime()
+                    valueB = new Date(b.createdDate).getTime()
+            }
+
+            return sortDirection === "asc" ? (valueA > valueB ? 1 : -1) : valueA < valueB ? 1 : -1
+        })
+    }
+
+    const fetchProducts = async () => {
         setIsLoading(true)
         const token = localStorage.getItem("auth_token")
 
@@ -150,11 +198,15 @@ const ProductList = () => {
         }
 
         try {
-            const response = await fetch(`https://minhlong.mlhr.org/api/product?page=${page}&pageSize=${pageSize}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
+            // Sử dụng API hiện có, không thêm tham số sắp xếp vào URL vì API không hỗ trợ
+            const response = await fetch(
+                `https://minhlong.mlhr.org/api/product?page=${currentPage}&pageSize=${itemsPerPage}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
                 },
-            })
+            )
 
             if (!response.ok) {
                 throw new Error(`Failed to fetch products: ${response.status} ${response.statusText}`)
@@ -162,38 +214,36 @@ const ProductList = () => {
 
             const responseData = await response.json()
 
-            // Check if the response has pagination metadata
+            // Kiểm tra định dạng phản hồi
             if (responseData.items && Array.isArray(responseData.items)) {
-                // API returns paginated data structure
-                setTotalItems(responseData.totalItems || responseData.items.length)
-                setTotalPages(responseData.totalPages || Math.ceil(responseData.items.length / pageSize))
-
+                // API trả về cấu trúc phân trang
                 const validProducts = responseData.items.filter(
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     (item: any) => item && typeof item === "object" && "productId" in item && "productName" in item,
                 )
 
                 setProducts(validProducts)
-                setFilteredProducts(validProducts)
+                setTotalItems(responseData.totalItems || validProducts.length)
+                setTotalPages(responseData.totalPages || Math.ceil(validProducts.length / itemsPerPage))
+
+                // Sắp xếp và lọc sẽ được áp dụng trong useEffect
             } else if (Array.isArray(responseData)) {
-                // API returns array directly (old format)
+                // API trả về mảng trực tiếp (định dạng cũ)
                 const validProducts = responseData.filter(
                     (item) => item && typeof item === "object" && "productId" in item && "productName" in item,
                 )
 
+                setProducts(validProducts)
                 setTotalItems(validProducts.length)
-                setTotalPages(Math.ceil(validProducts.length / pageSize))
+                setTotalPages(Math.ceil(validProducts.length / itemsPerPage))
 
-                // Manual pagination if API doesn't support it
-                const startIndex = (page - 1) * pageSize
-                const paginatedProducts = validProducts.slice(startIndex, startIndex + pageSize)
-
-                setProducts(validProducts) // Keep all products for filtering
-                setFilteredProducts(paginatedProducts)
+                // Sắp xếp và lọc sẽ được áp dụng trong useEffect
             } else {
                 console.error("API response format is not recognized:", responseData)
                 setProducts([])
                 setFilteredProducts([])
+                setTotalItems(0)
+                setTotalPages(1)
                 alert("Lỗi: Định dạng dữ liệu không hợp lệ. Vui lòng thử lại sau.")
             }
         } catch (error) {
@@ -201,6 +251,8 @@ const ProductList = () => {
             alert("Lỗi: Có lỗi xảy ra khi tải sản phẩm. Vui lòng thử lại sau.")
             setProducts([])
             setFilteredProducts([])
+            setTotalItems(0)
+            setTotalPages(1)
         } finally {
             setIsLoading(false)
         }
@@ -252,14 +304,18 @@ const ProductList = () => {
 
     const formatDate = (dateString: string) => {
         if (!dateString) return "N/A"
-        const date = new Date(dateString)
-        return date.toLocaleDateString("vi-VN", {
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit",
-        })
+        try {
+            const date = new Date(dateString)
+            return date.toLocaleDateString("vi-VN", {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+            })
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (error) {
+            console.error("Invalid date format:", dateString)
+            return "N/A"
+        }
     }
 
     const handleNewProductInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -483,8 +539,33 @@ const ProductList = () => {
     }
 
     const handlePageChange = (page: number) => {
+        if (page < 1 || page > totalPages) return
         setCurrentPage(page)
         window.scrollTo({ top: 0, behavior: "smooth" })
+    }
+
+    // Hàm xử lý thay đổi trường sắp xếp
+    const handleSortChange = (field: string) => {
+        if (field === sortField) {
+            // Nếu đã sắp xếp theo trường này, đảo ngược hướng sắp xếp
+            setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+        } else {
+            // Nếu sắp xếp theo trường mới, mặc định sắp xếp giảm dần
+            setSortField(field)
+            setSortDirection("desc")
+        }
+    }
+
+    // Hàm hiển thị biểu tượng sắp xếp
+    const renderSortIcon = (field: string) => {
+        if (field !== sortField) {
+            return <ArrowUpDown className="h-4 w-4 ml-1 inline" />
+        }
+        return sortDirection === "asc" ? (
+            <ArrowUp className="h-4 w-4 ml-1 inline" />
+        ) : (
+            <ArrowDown className="h-4 w-4 ml-1 inline" />
+        )
     }
 
     return (
@@ -522,7 +603,7 @@ const ProductList = () => {
                     <Button
                         onClick={() => {
                             setCurrentPage(1)
-                            fetchProducts(1, itemsPerPage)
+                            fetchProducts()
                         }}
                         variant="outline"
                     >
@@ -541,11 +622,27 @@ const ProductList = () => {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Mã sản phẩm</TableHead>
-                                    <TableHead>Tên sản phẩm</TableHead>
-                                    <TableHead>Đơn vị</TableHead>
-                                    <TableHead>Tồn kho</TableHead>
-                                    <TableHead>Ngày cập nhật</TableHead>
+                                    <TableHead className="w-[120px] text-center">Mã sản phẩm</TableHead>
+                                    <TableHead className="cursor-pointer" onClick={() => handleSortChange("productName")}>
+                                        Tên sản phẩm {renderSortIcon("productName")}
+                                    </TableHead>
+                                    <TableHead className="w-[120px] text-center">Đơn vị</TableHead>
+                                    <TableHead className="text-right cursor-pointer" onClick={() => handleSortChange("price")}>
+                                        Giá {renderSortIcon("price")}
+                                    </TableHead>
+                                    <TableHead
+                                        className="w-[120px] text-right cursor-pointer"
+                                        onClick={() => handleSortChange("availableStock")}
+                                    >
+                                        Tồn kho {renderSortIcon("availableStock")}
+                                    </TableHead>
+                                    <TableHead
+                                        className="w-[180px] text-center cursor-pointer"
+                                        onClick={() => handleSortChange("createdDate")}
+                                    >
+                                        Ngày Tạo {renderSortIcon("createdDate")}
+                                    </TableHead>
+                                    <TableHead className="w-[180px] text-center">Người tạo</TableHead>
                                     <TableHead className="text-right">Thao tác</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -553,11 +650,15 @@ const ProductList = () => {
                                 {filteredProducts.length > 0 ? (
                                     filteredProducts.map((product) => (
                                         <TableRow key={product.productId}>
-                                            <TableCell>{product.productCode || "N/A"}</TableCell>
+                                            <TableCell className="w-[180px] text-center">{product.productCode || "N/A"}</TableCell>
                                             <TableCell>{product.productName || "N/A"}</TableCell>
-                                            <TableCell>{product.unit || "N/A"}</TableCell>
-                                            <TableCell>{product.availableStock}</TableCell>
-                                            <TableCell>{formatDate(product.updatedDate)}</TableCell>
+                                            <TableCell className="w-[120px] text-center">{product.unit || "N/A"}</TableCell>
+                                            <TableCell className="text-right">{product.price || "0"}</TableCell>
+
+                                            <TableCell className="w-[120px] text-right">{product.availableStock}</TableCell>
+                                            <TableCell className="w-[180px] text-center">{formatDate(product.createdDate)}</TableCell>
+                                            <TableCell className="w-[180px] text-center">{product.createdByName || "N/A"}</TableCell>
+
                                             <TableCell className="text-right">
                                                 <div className="flex justify-end gap-2">
                                                     <Button variant="outline" size="sm" onClick={() => handleViewProductDetail(product)}>
@@ -582,7 +683,7 @@ const ProductList = () => {
                                     ))
                                 ) : (
                                     <TableRow>
-                                        <TableCell colSpan={6} className="text-center py-8">
+                                        <TableCell colSpan={8} className="text-center py-8">
                                             Không tìm thấy sản phẩm nào
                                         </TableCell>
                                     </TableRow>

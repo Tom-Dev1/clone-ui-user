@@ -15,11 +15,13 @@ interface Product {
     taxId: number
     createdBy: string
     createdDate: string
-    updatedBy: string
-    updatedDate: string
+    createdByName?: string
+    updatedBy?: string
+    updatedByName: string
+    updatedDate?: string
     availableStock: number
     images: string[]
-    price?: number
+    price: number
     status?: string
 }
 
@@ -38,9 +40,9 @@ const ViewProductDialog: React.FC<ViewProductDialogProps> = ({ product, onClose,
             </DialogHeader>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                <div>
+                <div className="">
                     {product.images && product.images.length > 0 ? (
-                        <Carousel className="w-full">
+                        <Carousel className="w-full ml-8">
                             <CarouselContent>
                                 {product.images.map((image, index) => (
                                     <CarouselItem key={index}>
@@ -70,7 +72,7 @@ const ViewProductDialog: React.FC<ViewProductDialogProps> = ({ product, onClose,
                     )}
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-4 ml-16">
                     <div>
                         <h3 className="text-sm font-medium text-gray-500">Mã sản phẩm</h3>
                         <p>{product.productCode}</p>
@@ -110,8 +112,8 @@ const ViewProductDialog: React.FC<ViewProductDialogProps> = ({ product, onClose,
                         <p className="text-sm">{formatDate(product.createdDate)}</p>
                     </div>
                     <div>
-                        <h3 className="text-sm font-medium text-gray-500">Ngày cập nhật</h3>
-                        <p className="text-sm">{formatDate(product.updatedDate)}</p>
+                        <h3 className="text-sm font-medium text-gray-500">Người  tạo</h3>
+                        <p className="text-sm">{product.createdByName}</p>
                     </div>
                 </div>
             </div>

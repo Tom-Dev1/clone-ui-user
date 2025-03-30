@@ -10,7 +10,7 @@ const SalesProducts = () => {
     return (
         <SalesLayout>
             <div className="m-4">
-                <div className="ml-4 flex justify-between items-center">
+                <div className="flex justify-between items-center">
                     <h1 className="text-2xl font-bold">Quản Lý Sản Phẩm</h1>
                 </div>
                 <Tabs defaultValue="products" value={activeTab} onValueChange={setActiveTab} className="w-full">
