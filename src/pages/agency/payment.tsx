@@ -1,451 +1,426 @@
 "use client"
 
+import type React from "react"
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { AgencyLayout } from "@/layouts/agency-layout"
-import { ResponsiveContainer } from "@/components/responsive-container"
-import { isAuthenticated, isAgency } from "@/utils/auth-utils"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { CreditCard, BanknoteIcon, QrCode } from "lucide-react"
+import { Badge } from "../../components/ui/badge"
+import { Button } from "../../components/ui/button"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table"
+import { Input } from "../../components/ui/input"
+import { Skeleton } from "../../components/ui/skeleton"
+import { AgencyLayout } from "../../layouts/agency-layout"
+import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react"
 
-// Định nghĩa kiểu dữ liệu cho công nợ
-interface DebtItem {
-    id: string
-    orderNumber: string
-    createdDate: string
-    dueDate: string
-    amount: number
-    status: "unpaid" | "partially_paid" | "paid"
-    paidAmount: number
+// Định nghĩa interface cho dữ liệu lịch sử thanh toán
+interface PaymentHistory {
+    paymentHistoryId: string
+    orderId: string
+    orderCode: string
+    agencyId: number
+    agencyName: string
+    paymentMethod: string
+    paymentDate: string
+    serieNumber: string
+    status: string
+    totalAmountPayment: number
+    remainingDebtAmount: number
+    paymentAmount: number
+    createdAt: string
+    updatedAt: string
 }
 
-export default function AgencyPayment() {
-    const navigate = useNavigate()
-    const [debts, setDebts] = useState<DebtItem[]>([])
-    const [isLoading, setIsLoading] = useState(true)
+// Định nghĩa kiểu cho hướng sắp xếp
+type SortDirection = "asc" | "desc"
+
+const AgencyPaymentHistoryPage: React.FC = () => {
+    const [paymentHistory, setPaymentHistory] = useState<PaymentHistory[]>([])
+    const [filteredPaymentHistory, setFilteredPaymentHistory] = useState<PaymentHistory[]>([])
+    const [loading, setLoading] = useState<boolean>(true)
     const [error, setError] = useState<string | null>(null)
-    const [selectedDebt, setSelectedDebt] = useState<DebtItem | null>(null)
-    const [paymentAmount, setPaymentAmount] = useState<string>("")
-    // const [paymentMethod, setPaymentMethod] = useState<string>("bank")
-    const [showPaymentForm, setShowPaymentForm] = useState(false)
+    const [searchTerm, setSearchTerm] = useState<string>("")
 
-    // Kiểm tra xác thực và quyền truy cập
-    useEffect(() => {
-        if (!isAuthenticated()) {
-            navigate("/login")
-            return
-        }
+    // State cho sắp xếp
+    const [sortField, setSortField] = useState<string>("paymentDate")
+    const [sortDirection, setSortDirection] = useState<SortDirection>("desc")
 
-        if (!isAgency()) {
-            navigate("/unauthorized")
-            return
-        }
-    }, [navigate])
+    // State cho phân trang
+    const [currentPage, setCurrentPage] = useState<number>(1)
+    const [itemsPerPage] = useState<number>(15)
 
-    // Dữ liệu mẫu
-    useEffect(() => {
-        const fetchDebts = async () => {
-            setIsLoading(true)
-            setError(null)
+    const token = localStorage.getItem("auth_token") || ""
+    const navigate = useNavigate()
 
-            try {
-                // Trong thực tế, bạn sẽ gọi API để lấy dữ liệu
-                // const response = await get<DebtItem[]>("/api/agency/debts")
+    // Hàm để lấy lịch sử thanh toán
+    const fetchPaymentHistory = async () => {
+        setLoading(true)
+        setError(null)
 
-                // Dữ liệu mẫu
-                const sampleDebts: DebtItem[] = [
-                    {
-                        id: "DEBT001",
-                        orderNumber: "DH-2023001",
-                        createdDate: "2023-11-15T10:30:00",
-                        dueDate: "2023-12-15T00:00:00",
-                        amount: 1250000,
-                        status: "unpaid",
-                        paidAmount: 0,
-                    },
-                    {
-                        id: "DEBT002",
-                        orderNumber: "DH-2023002",
-                        createdDate: "2023-11-20T14:15:00",
-                        dueDate: "2023-12-20T00:00:00",
-                        amount: 650000,
-                        status: "partially_paid",
-                        paidAmount: 300000,
-                    },
-                    {
-                        id: "DEBT003",
-                        orderNumber: "DH-2023003",
-                        createdDate: "2023-10-25T09:45:00",
-                        dueDate: "2023-11-25T00:00:00",
-                        amount: 350000,
-                        status: "paid",
-                        paidAmount: 350000,
-                    },
-                    {
-                        id: "DEBT004",
-                        orderNumber: "DH-2023005",
-                        createdDate: "2023-11-05T16:20:00",
-                        dueDate: "2023-12-05T00:00:00",
-                        amount: 825000,
-                        status: "unpaid",
-                        paidAmount: 0,
-                    },
-                ]
+        try {
+            const response = await fetch("https://minhlong.mlhr.org/api/PaymentHistory/all", {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+            })
 
-                setDebts(sampleDebts)
-            } catch (err) {
-                console.error("Error fetching debts:", err)
-                setError("Đã xảy ra lỗi khi tải dữ liệu công nợ")
-            } finally {
-                setIsLoading(false)
+            if (!response.ok) {
+                if (response.status === 401) {
+                    navigate("/login")
+                    return
+                }
+                throw new Error(`Error: ${response.status}`)
             }
-        }
 
-        fetchDebts()
-    }, [])
-
-    // Hiển thị form thanh toán
-    const handleShowPaymentForm = (debt: DebtItem) => {
-        setSelectedDebt(debt)
-        setPaymentAmount((debt.amount - debt.paidAmount).toString())
-        setShowPaymentForm(true)
-    }
-
-    // Xử lý thanh toán
-    const handlePayment = () => {
-        if (!selectedDebt || !paymentAmount || Number(paymentAmount) <= 0) {
-            return
-        }
-
-        // const amount = Number(paymentAmount)
-
-        // Trong thực tế, bạn sẽ gọi API để xử lý thanh toán
-        // await post("/api/agency/payments", {
-        //   debtId: selectedDebt.id,
-        //   amount,
-        //   method: paymentMethod
-        // })
-
-        // Cập nhật trạng thái công nợ
-        // const updatedDebts = debts.map((debt) => {
-        //     if (debt.id === selectedDebt.id) {
-        //         const newPaidAmount = debt.paidAmount + amount
-        //         const newStatus = newPaidAmount >= debt.amount ? "paid" : "partially_paid"
-
-        //         return {
-        //             ...debt,
-        //             paidAmount: newPaidAmount,
-        //             status: newStatus,
-        //         }
-        //     }
-        //     return debt
-        // })
-
-        // setDebts(updatedDebts)
-        setShowPaymentForm(false)
-        setSelectedDebt(null)
-        setPaymentAmount("")
-
-        alert("Thanh toán thành công!")
-    }
-
-    // Hiển thị trạng thái công nợ
-    const renderStatusBadge = (status: string) => {
-        switch (status) {
-            case "unpaid":
-                return (
-                    <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-                        Chưa thanh toán
-                    </Badge>
-                )
-            case "partially_paid":
-                return (
-                    <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-                        Thanh toán một phần
-                    </Badge>
-                )
-            case "paid":
-                return (
-                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                        Đã thanh toán
-                    </Badge>
-                )
-            default:
-                return <Badge variant="outline">{status}</Badge>
+            const data = await response.json()
+            setPaymentHistory(data)
+            setFilteredPaymentHistory(data)
+        } catch (err) {
+            console.error("Failed to fetch payment history:", err)
+            setError("Không thể tải lịch sử thanh toán. Vui lòng thử lại sau.")
+        } finally {
+            setLoading(false)
         }
     }
 
-    // Format ngày giờ
-    const formatDateTime = (dateString: string) => {
-        const date = new Date(dateString)
-        return date.toLocaleString("vi-VN", {
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
+    // Gọi API khi component được mount
+    useEffect(() => {
+        if (token) {
+            fetchPaymentHistory()
+        } else {
+            navigate("/login")
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [token])
+
+    // Hàm sắp xếp lịch sử thanh toán
+    const sortPaymentHistory = (data: PaymentHistory[], field: string, direction: SortDirection): PaymentHistory[] => {
+        return [...data].sort((a, b) => {
+            let compareResult = 0
+
+            switch (field) {
+                case "orderCode":
+                    compareResult = a.orderCode.localeCompare(b.orderCode)
+                    break
+                case "agencyName":
+                    compareResult = a.agencyName.localeCompare(b.agencyName)
+                    break
+                case "paymentDate":
+                    compareResult = new Date(a.paymentDate).getTime() - new Date(b.paymentDate).getTime()
+                    break
+                case "paymentMethod":
+                    compareResult = a.paymentMethod.localeCompare(b.paymentMethod)
+                    break
+                case "status":
+                    compareResult = a.status.localeCompare(b.status)
+                    break
+                case "paymentAmount":
+                    compareResult = a.paymentAmount - b.paymentAmount
+                    break
+                case "remainingDebtAmount":
+                    compareResult = a.remainingDebtAmount - b.remainingDebtAmount
+                    break
+                default:
+                    compareResult = 0
+            }
+
+            return direction === "asc" ? compareResult : -compareResult
         })
     }
 
-    // Format số tiền
-    const formatCurrency = (amount: number) => {
-        return amount.toLocaleString("vi-VN") + " đ"
+    // Hàm xử lý khi thay đổi trường sắp xếp
+    const handleSortChange = (field: string) => {
+        if (field === sortField) {
+            // Nếu click vào cùng một trường, đảo ngược hướng sắp xếp
+            setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+        } else {
+            // Nếu click vào trường khác, đặt trường mới và hướng mặc định là desc
+            setSortField(field)
+            setSortDirection("desc")
+        }
+        // Reset về trang đầu tiên khi thay đổi sắp xếp
+        setCurrentPage(1)
     }
 
-    // Tính tổng công nợ
-    const calculateTotalDebt = () => {
-        return debts
-            .filter((debt) => debt.status !== "paid")
-            .reduce((total, debt) => total + (debt.amount - debt.paidAmount), 0)
+    // Hàm hiển thị biểu tượng sắp xếp
+    const renderSortIcon = (field: string) => {
+        if (field !== sortField) {
+            return <ArrowUpDown className="ml-2 h-4 w-4" />
+        }
+
+        return sortDirection === "asc" ? <ArrowUp className="ml-2 h-4 w-4" /> : <ArrowDown className="ml-2 h-4 w-4" />
     }
 
-    // Tính số công nợ sắp đến hạn (trong vòng 7 ngày)
-    const calculateUpcomingDebt = () => {
-        const today = new Date()
-        const nextWeek = new Date(today)
-        nextWeek.setDate(today.getDate() + 7)
+    // Lọc và sắp xếp lịch sử thanh toán khi searchTerm, sortField hoặc sortDirection thay đổi
+    useEffect(() => {
+        if (paymentHistory.length > 0) {
+            let filtered = [...paymentHistory]
 
-        return debts
-            .filter((debt) => {
-                const dueDate = new Date(debt.dueDate)
-                return debt.status !== "paid" && dueDate <= nextWeek && dueDate >= today
-            })
-            .reduce((total, debt) => total + (debt.amount - debt.paidAmount), 0)
+            // Lọc theo từ khóa tìm kiếm
+            if (searchTerm.trim() !== "") {
+                const searchTermLower = searchTerm.toLowerCase()
+                filtered = filtered.filter(
+                    (payment) =>
+                        payment.orderCode.toLowerCase().includes(searchTermLower) ||
+                        payment.agencyName.toLowerCase().includes(searchTermLower) ||
+                        payment.serieNumber.toLowerCase().includes(searchTermLower) ||
+                        payment.paymentMethod.toLowerCase().includes(searchTermLower),
+                )
+            }
+
+            // Sắp xếp dữ liệu
+            filtered = sortPaymentHistory(filtered, sortField, sortDirection)
+
+            setFilteredPaymentHistory(filtered)
+            // Reset về trang đầu tiên khi thay đổi bộ lọc
+            setCurrentPage(1)
+        }
+    }, [searchTerm, paymentHistory, sortField, sortDirection])
+
+    // Tính toán các giá trị cho phân trang
+    const totalPages = Math.ceil(filteredPaymentHistory.length / itemsPerPage)
+    const indexOfLastItem = currentPage * itemsPerPage
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage
+    const currentItems = filteredPaymentHistory.slice(indexOfFirstItem, indexOfLastItem)
+
+    // Hàm để thay đổi trang
+    const paginate = (pageNumber: number) => {
+        if (pageNumber > 0 && pageNumber <= totalPages) {
+            setCurrentPage(pageNumber)
+        }
+    }
+
+    // Hàm để hiển thị trạng thái thanh toán
+    const renderStatusBadge = (status: string) => {
+        let variant: "default" | "secondary" | "destructive" | "outline" = "default"
+
+        switch (status) {
+            case "PAID":
+                variant = "default"
+                return <Badge variant={variant}>Đã thanh toán</Badge>
+            case "PARTIALLY_PAID":
+                variant = "secondary"
+                return <Badge variant={variant}>Thanh toán một phần</Badge>
+            case "UNPAID":
+                variant = "destructive"
+                return <Badge variant={variant}>Chưa thanh toán</Badge>
+            default:
+                return <Badge variant={variant}>{status}</Badge>
+        }
+    }
+
+    // Hàm để định dạng ngày tháng đơn giản
+    const formatDate = (dateString: string) => {
+        try {
+            const date = new Date(dateString)
+            return date.toLocaleDateString("vi-VN") + " " + date.toLocaleTimeString("vi-VN")
+        } catch (error) {
+            console.log("Error formatting date:", error)
+            return dateString
+        }
+    }
+
+    // Render loading state
+    if (loading) {
+        return (
+            <AgencyLayout>
+                <div className="container mx-auto py-6">
+                    <div className="space-y-4">
+                        {Array.from({ length: 5 }).map((_, index) => (
+                            <div key={index} className="flex items-center space-x-4">
+                                <Skeleton className="h-12 w-full" />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </AgencyLayout>
+        )
+    }
+
+    // Render error state
+    if (error) {
+        return (
+            <AgencyLayout>
+                <div className="container mx-auto py-6">
+                    <div className="flex flex-col items-center justify-center py-12">
+                        <p className="text-red-500 mb-4">{error}</p>
+                        <Button onClick={fetchPaymentHistory}>Thử lại</Button>
+                    </div>
+                </div>
+            </AgencyLayout>
+        )
     }
 
     return (
         <AgencyLayout>
-            <div className="py-8">
-                <ResponsiveContainer>
+            <div className="m-4">
+                <div className="mb-4">
+                    <h1 className="text-2xl font-bold">Lịch sử thanh toán đại lý</h1>
+                    <p className="text-gray-500 mt-1">Xem lại lịch sử thanh toán của các đơn hàng</p>
+                </div>
+
+                <div className="bg-white p-4 rounded-md shadow-sm">
                     <div className="mb-6">
-                        <h1 className="text-2xl font-bold">Thanh toán</h1>
-                        <p className="text-gray-500 mt-1">Quản lý và thanh toán công nợ</p>
+                        <Input
+                            placeholder="Tìm kiếm theo mã đơn hàng, đại lý, số serie, phương thức thanh toán..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full"
+                        />
                     </div>
 
-                    {/* Thống kê công nợ */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                        <Card>
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-base">Tổng công nợ</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-3xl font-bold">{formatCurrency(calculateTotalDebt())}</p>
-                                <p className="text-sm text-gray-500 mt-1">Cần thanh toán</p>
-                            </CardContent>
-                        </Card>
+                    {filteredPaymentHistory.length === 0 ? (
+                        <div className="text-center py-12">
+                            <p className="text-gray-500">Không tìm thấy lịch sử thanh toán nào</p>
+                        </div>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead className="cursor-pointer" onClick={() => handleSortChange("orderCode")}>
+                                            <div className="flex items-center">
+                                                Mã đơn hàng
+                                                {renderSortIcon("orderCode")}
+                                            </div>
+                                        </TableHead>
+                                        <TableHead className="cursor-pointer" onClick={() => handleSortChange("agencyName")}>
+                                            <div className="flex items-center">
+                                                Đại lý
+                                                {renderSortIcon("agencyName")}
+                                            </div>
+                                        </TableHead>
+                                        <TableHead className="cursor-pointer" onClick={() => handleSortChange("paymentMethod")}>
+                                            <div className="flex items-center">
+                                                Phương thức
+                                                {renderSortIcon("paymentMethod")}
+                                            </div>
+                                        </TableHead>
+                                        <TableHead className="cursor-pointer" onClick={() => handleSortChange("paymentDate")}>
+                                            <div className="flex items-center">
+                                                Ngày thanh toán
+                                                {renderSortIcon("paymentDate")}
+                                            </div>
+                                        </TableHead>
+                                        <TableHead>Số serie</TableHead>
+                                        <TableHead className="cursor-pointer" onClick={() => handleSortChange("status")}>
+                                            <div className="flex items-center">
+                                                Trạng thái
+                                                {renderSortIcon("status")}
+                                            </div>
+                                        </TableHead>
+                                        <TableHead className="text-right cursor-pointer" onClick={() => handleSortChange("paymentAmount")}>
+                                            <div className="flex items-center justify-end">
+                                                Số tiền thanh toán
+                                                {renderSortIcon("paymentAmount")}
+                                            </div>
+                                        </TableHead>
+                                        <TableHead
+                                            className="text-right cursor-pointer"
+                                            onClick={() => handleSortChange("remainingDebtAmount")}
+                                        >
+                                            <div className="flex items-center justify-end">
+                                                Số tiền còn nợ
+                                                {renderSortIcon("remainingDebtAmount")}
+                                            </div>
+                                        </TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {currentItems.map((payment) => (
+                                        <TableRow key={payment.paymentHistoryId}>
+                                            <TableCell className="font-medium">{payment.orderCode}</TableCell>
+                                            <TableCell>{payment.agencyName}</TableCell>
+                                            <TableCell>{payment.paymentMethod}</TableCell>
+                                            <TableCell>{formatDate(payment.paymentDate)}</TableCell>
+                                            <TableCell>{payment.serieNumber}</TableCell>
+                                            <TableCell>{renderStatusBadge(payment.status)}</TableCell>
+                                            <TableCell className="text-right">{payment.paymentAmount.toLocaleString("vi-VN")} đ</TableCell>
+                                            <TableCell className="text-right">
+                                                {payment.remainingDebtAmount.toLocaleString("vi-VN")} đ
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
 
-                        <Card>
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-base">Sắp đến hạn</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-3xl font-bold">{formatCurrency(calculateUpcomingDebt())}</p>
-                                <p className="text-sm text-gray-500 mt-1">Trong 7 ngày tới</p>
-                            </CardContent>
-                        </Card>
-
-                        <Card>
-                            <CardHeader className="pb-2">
-                                <CardTitle className="text-base">Đã thanh toán</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-3xl font-bold">
-                                    {formatCurrency(debts.reduce((total, debt) => total + debt.paidAmount, 0))}
-                                </p>
-                                <p className="text-sm text-gray-500 mt-1">Tổng đã thanh toán</p>
-                            </CardContent>
-                        </Card>
-                    </div>
-
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Danh sách công nợ</CardTitle>
-                            <CardDescription>Quản lý và thanh toán các khoản công nợ</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            {isLoading ? (
-                                <div className="text-center py-8">
-                                    <p>Đang tải dữ liệu...</p>
-                                </div>
-                            ) : error ? (
-                                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">{error}</div>
-                            ) : debts.length === 0 ? (
-                                <div className="text-center py-8">
-                                    <p>Không có khoản công nợ nào.</p>
-                                </div>
-                            ) : (
-                                <div className="overflow-x-auto">
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead>Mã đơn hàng</TableHead>
-                                                <TableHead>Ngày tạo</TableHead>
-                                                <TableHead>Hạn thanh toán</TableHead>
-                                                <TableHead>Tổng tiền</TableHead>
-                                                <TableHead>Đã thanh toán</TableHead>
-                                                <TableHead>Còn lại</TableHead>
-                                                <TableHead>Trạng thái</TableHead>
-                                                <TableHead>Thao tác</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {debts.map((debt) => (
-                                                <TableRow key={debt.id}>
-                                                    <TableCell className="font-medium">{debt.orderNumber}</TableCell>
-                                                    <TableCell>{formatDateTime(debt.createdDate)}</TableCell>
-                                                    <TableCell>{formatDateTime(debt.dueDate)}</TableCell>
-                                                    <TableCell>{formatCurrency(debt.amount)}</TableCell>
-                                                    <TableCell>{formatCurrency(debt.paidAmount)}</TableCell>
-                                                    <TableCell>{formatCurrency(debt.amount - debt.paidAmount)}</TableCell>
-                                                    <TableCell>{renderStatusBadge(debt.status)}</TableCell>
-                                                    <TableCell>
-                                                        {debt.status !== "paid" && (
-                                                            <Button variant="outline" size="sm" onClick={() => handleShowPaymentForm(debt)}>
-                                                                Thanh toán
-                                                            </Button>
-                                                        )}
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
-
-                    {/* Payment Form Modal */}
-                    {selectedDebt && showPaymentForm && (
-                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                            <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-                                <div className="p-6">
-                                    <div className="flex justify-between items-center mb-4">
-                                        <h2 className="text-xl font-bold">Thanh toán công nợ</h2>
-                                        <button onClick={() => setShowPaymentForm(false)} className="text-gray-500 hover:text-gray-700">
-                                            ✕
-                                        </button>
+                            {/* Phân trang */}
+                            {totalPages > 1 && (
+                                <div className="flex items-center justify-between mt-4">
+                                    <div className="text-sm text-gray-500">
+                                        Hiển thị {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, filteredPaymentHistory.length)} của{" "}
+                                        {filteredPaymentHistory.length} giao dịch
                                     </div>
-
-                                    <div className="space-y-4">
-                                        <div>
-                                            <p className="text-sm text-gray-500">Đơn hàng</p>
-                                            <p className="font-medium">{selectedDebt.orderNumber}</p>
-                                        </div>
-
-                                        <div>
-                                            <p className="text-sm text-gray-500">Tổng công nợ</p>
-                                            <p className="font-medium">{formatCurrency(selectedDebt.amount)}</p>
-                                        </div>
-
-                                        <div>
-                                            <p className="text-sm text-gray-500">Đã thanh toán</p>
-                                            <p className="font-medium">{formatCurrency(selectedDebt.paidAmount)}</p>
-                                        </div>
-
-                                        <div>
-                                            <p className="text-sm text-gray-500">Còn lại</p>
-                                            <p className="font-bold text-lg">
-                                                {formatCurrency(selectedDebt.amount - selectedDebt.paidAmount)}
-                                            </p>
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <Label htmlFor="payment-amount">Số tiền thanh toán</Label>
-                                            <Input
-                                                id="payment-amount"
-                                                type="number"
-                                                value={paymentAmount}
-                                                onChange={(e) => setPaymentAmount(e.target.value)}
-                                                min="1"
-                                                max={selectedDebt.amount - selectedDebt.paidAmount}
-                                            />
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <Label>Phương thức thanh toán</Label>
-                                            <Tabs defaultValue="bank">
-                                                <TabsList className="grid grid-cols-3 w-full">
-                                                    <TabsTrigger value="bank" className="flex items-center gap-2">
-                                                        <BanknoteIcon className="h-4 w-4" />
-                                                        <span>Chuyển khoản</span>
-                                                    </TabsTrigger>
-                                                    <TabsTrigger value="card" className="flex items-center gap-2">
-                                                        <CreditCard className="h-4 w-4" />
-                                                        <span>Thẻ tín dụng</span>
-                                                    </TabsTrigger>
-                                                    <TabsTrigger value="qr" className="flex items-center gap-2">
-                                                        <QrCode className="h-4 w-4" />
-                                                        <span>QR Code</span>
-                                                    </TabsTrigger>
-                                                </TabsList>
-                                                <TabsContent value="bank" className="p-4 border rounded-md mt-2">
-                                                    <p className="font-medium">Thông tin chuyển khoản</p>
-                                                    <p className="text-sm mt-2">
-                                                        Ngân hàng: <span className="font-medium">Vietcombank</span>
-                                                    </p>
-                                                    <p className="text-sm">
-                                                        Số tài khoản: <span className="font-medium">1234567890</span>
-                                                    </p>
-                                                    <p className="text-sm">
-                                                        Chủ tài khoản: <span className="font-medium">CÔNG TY TNHH ABC</span>
-                                                    </p>
-                                                    <p className="text-sm">
-                                                        Nội dung: <span className="font-medium">{selectedDebt.orderNumber}</span>
-                                                    </p>
-                                                </TabsContent>
-                                                <TabsContent value="card" className="p-4 border rounded-md mt-2">
-                                                    <p className="font-medium">Thanh toán bằng thẻ tín dụng</p>
-                                                    <div className="space-y-2 mt-2">
-                                                        <Label htmlFor="card-number">Số thẻ</Label>
-                                                        <Input id="card-number" placeholder="1234 5678 9012 3456" />
-                                                    </div>
-                                                    <div className="grid grid-cols-2 gap-2 mt-2">
-                                                        <div className="space-y-2">
-                                                            <Label htmlFor="expiry">Ngày hết hạn</Label>
-                                                            <Input id="expiry" placeholder="MM/YY" />
-                                                        </div>
-                                                        <div className="space-y-2">
-                                                            <Label htmlFor="cvv">CVV</Label>
-                                                            <Input id="cvv" placeholder="123" />
-                                                        </div>
-                                                    </div>
-                                                </TabsContent>
-                                                <TabsContent value="qr" className="p-4 border rounded-md mt-2 text-center">
-                                                    <p className="font-medium mb-2">Quét mã QR để thanh toán</p>
-                                                    <div className="bg-gray-100 w-48 h-48 mx-auto flex items-center justify-center">
-                                                        <QrCode className="h-24 w-24 text-gray-400" />
-                                                    </div>
-                                                </TabsContent>
-                                            </Tabs>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex justify-end space-x-2 mt-6">
-                                        <Button variant="outline" onClick={() => setShowPaymentForm(false)}>
-                                            Hủy
+                                    <div className="flex items-center space-x-2">
+                                        <Button variant="outline" size="sm" onClick={() => paginate(1)} disabled={currentPage === 1}>
+                                            <ChevronsLeft className="h-4 w-4" />
                                         </Button>
                                         <Button
-                                            onClick={handlePayment}
-                                            disabled={
-                                                !paymentAmount ||
-                                                Number(paymentAmount) <= 0 ||
-                                                Number(paymentAmount) > selectedDebt.amount - selectedDebt.paidAmount
-                                            }
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => paginate(currentPage - 1)}
+                                            disabled={currentPage === 1}
                                         >
-                                            Xác nhận thanh toán
+                                            <ChevronLeft className="h-4 w-4" />
+                                        </Button>
+
+                                        <div className="flex items-center space-x-1">
+                                            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                                // Hiển thị 5 trang xung quanh trang hiện tại
+                                                let pageToShow
+                                                if (totalPages <= 5) {
+                                                    // Nếu tổng số trang <= 5, hiển thị tất cả các trang
+                                                    pageToShow = i + 1
+                                                } else if (currentPage <= 3) {
+                                                    // Nếu đang ở gần đầu, hiển thị 5 trang đầu tiên
+                                                    pageToShow = i + 1
+                                                } else if (currentPage >= totalPages - 2) {
+                                                    // Nếu đang ở gần cuối, hiển thị 5 trang cuối cùng
+                                                    pageToShow = totalPages - 4 + i
+                                                } else {
+                                                    // Nếu đang ở giữa, hiển thị 2 trang trước và 2 trang sau
+                                                    pageToShow = currentPage - 2 + i
+                                                }
+
+                                                return (
+                                                    <Button
+                                                        key={pageToShow}
+                                                        variant={currentPage === pageToShow ? "default" : "outline"}
+                                                        size="sm"
+                                                        onClick={() => paginate(pageToShow)}
+                                                        className="w-8 h-8 p-0"
+                                                    >
+                                                        {pageToShow}
+                                                    </Button>
+                                                )
+                                            })}
+                                        </div>
+
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => paginate(currentPage + 1)}
+                                            disabled={currentPage === totalPages}
+                                        >
+                                            <ChevronRight className="h-4 w-4" />
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => paginate(totalPages)}
+                                            disabled={currentPage === totalPages}
+                                        >
+                                            <ChevronsRight className="h-4 w-4" />
                                         </Button>
                                     </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
                     )}
-                </ResponsiveContainer>
+                </div>
             </div>
         </AgencyLayout>
     )
 }
+
+export default AgencyPaymentHistoryPage
 

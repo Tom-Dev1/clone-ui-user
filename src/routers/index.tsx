@@ -14,6 +14,8 @@ import { LoginPage } from "@/pages/auth/login"
 import { ProtectedRoute } from "./ProtectedRoute"
 import { VerifyEmail } from "@/pages/VerifyEmail"
 import { DashboardRouter } from "@/components/DashboardRouter"
+import PaymentSuccess from "@/pages/agency/payment-success"
+import PaymentFailure from "@/pages/agency/payment-failrue"
 
 
 // Lazy load pages for better performance
@@ -172,6 +174,8 @@ export const AppRouter = () => {
                     <Route path="/agency/orders" element={<ProtectedRoute requiredRole={UserRole.AGENCY}><AgencyOrders /></ProtectedRoute>} />
                     <Route path="/agency/profile" element={<ProtectedRoute requiredRole={UserRole.AGENCY}><AgencyProfile /></ProtectedRoute>} />
                     <Route path="/agency/payment" element={<ProtectedRoute requiredRole={UserRole.AGENCY}><AgencyPayment /></ProtectedRoute>} />
+                    <Route path="/agency/payment-success" element={<ProtectedRoute requiredRole={UserRole.AGENCY}><PaymentSuccess /></ProtectedRoute>} />
+                    <Route path="/agency/payment-failure" element={<ProtectedRoute requiredRole={UserRole.AGENCY}><PaymentFailure /></ProtectedRoute>} />
 
 
 
