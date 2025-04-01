@@ -56,9 +56,6 @@ interface PaymentHistory {
   updatedAt: string;
 }
 
-// Định nghĩa kiểu cho hướng sắp xếp
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-// type SortDirection = "asc" | "desc"
 
 const AgencyPaymentHistoryPage: React.FC = () => {
   const navigate = useNavigate();
