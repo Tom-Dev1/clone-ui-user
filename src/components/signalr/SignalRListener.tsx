@@ -20,11 +20,21 @@ export default function SignalRListener() {
         });
     }
 
-    connection.on("ReceiveNotification", (message: string) => {
-      toast(message, {
+    connection.on("ReceiveNotification", (noti) => {
+      console.log(noti);
+
+      let navigatePath = "/";
+
+      if (noti.title === "Sales") {
+        navigatePath = "/sales/orders";
+      } else if (noti.title === "Agency") {
+        navigatePath = "/agency/orders";
+      }
+
+      toast(noti.message, {
         action: {
           label: "Xem ngay",
-          onClick: () => navigate("/sales/orders/"),
+          onClick: () => navigate(navigatePath),
         },
         className: "text-lg px-6 py-5 min-w-[380px]",
         style: {
