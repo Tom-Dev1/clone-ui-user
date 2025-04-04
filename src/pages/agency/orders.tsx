@@ -277,7 +277,11 @@ const AgencyOrders: React.FC = () => {
         return <Badge variant={variant}>Chờ thanh toán</Badge>;
       case "Paid":
         variant = "default";
-        return <Badge variant={variant}>Đã thanh toán</Badge>;
+        return (
+          <Badge className="bg-green-500 hover:bg-green-600 text-white">
+            Đã thanh toán
+          </Badge>
+        );
       case "Processing":
         variant = "secondary";
         return <Badge variant={variant}>Đang xử lý</Badge>;
