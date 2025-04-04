@@ -24,7 +24,7 @@ export default function SignalRListener() {
       toast(message, {
         action: {
           label: "Xem ngay",
-          onClick: () => navigate("/warehouse/view-export/"),
+          onClick: () => navigate("/sales/orders/"),
         },
         className: "text-lg px-6 py-5 min-w-[380px]",
         style: {

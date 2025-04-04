@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { get, put } from "@/api/axiosUtils";
@@ -18,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Package, ShoppingCart } from "lucide-react";
 import { toast } from "sonner";
+import { connection } from "@/lib/signalr-client";
 
 // Định nghĩa các kiểu dữ liệu mới phù hợp với API response
 interface RequestProductDetail {
@@ -93,64 +92,75 @@ export default function SalesOrders() {
     }
   }, [navigate]);
 
+  const fetchOrders = async () => {
+    setIsLoading(true);
+    setError(null);
+    setCurrentPage(1); // Reset to first page when fetching new data
+
+    try {
+      // Lấy token từ auth-service
+      const token = getToken();
+
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      const response = await get<RequestProduct[]>("/request-products");
+
+      if (response.success && Array.isArray(response.result)) {
+        // Dữ liệu đã có đầy đủ thông tin từ API
+        const ordersWithLoadingState = response.result.map((order) => ({
+          ...order,
+          isLoading: false,
+        }));
+
+        setOrders(ordersWithLoadingState);
+        setFilteredOrders(ordersWithLoadingState);
+
+        // Cập nhật tổng số sản phẩm và số lượng
+        updateTotals(ordersWithLoadingState);
+
+        // Đánh dấu tất cả đơn hàng đã được tải chi tiết
+        const loadedDetails: Record<string, boolean> = {};
+        ordersWithLoadingState.forEach((order) => {
+          loadedDetails[order.requestProductId] = true;
+        });
+        setDetailsLoaded(loadedDetails);
+      } else {
+        setError("Không thể tải dữ liệu đơn hàng");
+      }
+    } catch (err) {
+      console.error("Error fetching orders:", err);
+
+      // Kiểm tra lỗi xác thực
+      if (err instanceof Error && err.message.includes("401")) {
+        navigate("/login");
+        return;
+      }
+
+      setError("Đã xảy ra lỗi khi tải dữ liệu đơn hàng");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Fetch đơn hàng từ API với token
   useEffect(() => {
-    const fetchOrders = async () => {
-      setIsLoading(true);
-      setError(null);
-      setCurrentPage(1); // Reset to first page when fetching new data
-
-      try {
-        // Lấy token từ auth-service
-        const token = getToken();
-
-        if (!token) {
-          navigate("/login");
-          return;
-        }
-
-        const response = await get<RequestProduct[]>("/request-products");
-
-        if (response.success && Array.isArray(response.result)) {
-          // Dữ liệu đã có đầy đủ thông tin từ API
-          const ordersWithLoadingState = response.result.map((order) => ({
-            ...order,
-            isLoading: false,
-          }));
-
-          setOrders(ordersWithLoadingState);
-          setFilteredOrders(ordersWithLoadingState);
-
-          // Cập nhật tổng số sản phẩm và số lượng
-          updateTotals(ordersWithLoadingState);
-
-          // Đánh dấu tất cả đơn hàng đã được tải chi tiết
-          const loadedDetails: Record<string, boolean> = {};
-          ordersWithLoadingState.forEach((order) => {
-            loadedDetails[order.requestProductId] = true;
-          });
-          setDetailsLoaded(loadedDetails);
-        } else {
-          setError("Không thể tải dữ liệu đơn hàng");
-        }
-      } catch (err) {
-        console.error("Error fetching orders:", err);
-
-        // Kiểm tra lỗi xác thực
-        if (err instanceof Error && err.message.includes("401")) {
-          navigate("/login");
-          return;
-        }
-
-        setError("Đã xảy ra lỗi khi tải dữ liệu đơn hàng");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchOrders();
   }, [navigate]);
 
+  // Hàm cập nhật khi signalR
+  useEffect(() => {
+    const handleNewOrder = () => {
+      // Gọi API để lấy danh sách đơn hàng mới nhất
+      fetchOrders();
+    };
+    connection.on("ReceiveNotification", handleNewOrder);
+    return () => {
+      connection.off("ReceiveNotification", handleNewOrder);
+    };
+  }, []);
   // Hàm cập nhật tổng số sản phẩm và số lượng
   const updateTotals = (ordersList: RequestProduct[]) => {
     let totalProductCount = 0;
