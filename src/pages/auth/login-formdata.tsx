@@ -4,7 +4,11 @@ import { useAuth } from "@/contexts/AuthContext"
 import type React from "react"
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-
+import { Eye, EyeOff, AlertCircle } from 'lucide-react'
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 
 export function LoginForm() {
     const baseURL = `https://minhlong.mlhr.org`
@@ -103,16 +107,27 @@ export function LoginForm() {
     }
 
     return (
-        <div className="grid gap-6">
-            <form onSubmit={onSubmit}>
-                <div className="grid gap-4">
-                    {error && <div className="bg-red-50 text-red-500 p-3 rounded-md text-sm">{error}</div>}
+        <Card className="w-full max-w-md mx-auto">
+            <CardHeader>
+                <CardTitle className="text-center text-2xl font-bold">Đăng nhập</CardTitle>
+                <CardDescription className="text-center">
+                    Đăng nhập để truy cập vào hệ thống quản lý nông nghiệp
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <form onSubmit={onSubmit} className="space-y-4">
+                    {error && (
+                        <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm flex items-start">
+                            <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
+                            <span>{error}</span>
+                        </div>
+                    )}
 
-                    <div className="grid gap-2">
-                        <label htmlFor="userName" className="block text-sm font-medium">
+                    <div className="space-y-2">
+                        <label htmlFor="userName" className="text-sm font-medium">
                             Tên đăng nhập
                         </label>
-                        <input
+                        <Input
                             id="userName"
                             name="userName"
                             placeholder="Tên đăng nhập"
@@ -124,25 +139,24 @@ export function LoginForm() {
                             onChange={(e) => setUserName(e.target.value)}
                             disabled={isLoading}
                             required
-                            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                         />
                     </div>
 
-                    <div className="grid gap-2">
+                    <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                            <label htmlFor="password" className="block text-sm font-medium">
+                            <label htmlFor="password" className="text-sm font-medium">
                                 Mật khẩu
                             </label>
                             <button
                                 type="button"
-                                className="text-sm font-medium text-blue-600 hover:text-blue-500"
+                                className="text-sm font-medium text-green-600 hover:text-green-700"
                                 onClick={() => navigate("/forgot-password")}
                             >
                                 Quên mật khẩu?
                             </button>
                         </div>
                         <div className="relative">
-                            <input
+                            <Input
                                 id="password"
                                 name="password"
                                 type={showPassword ? "text" : "password"}
@@ -152,45 +166,16 @@ export function LoginForm() {
                                 onChange={(e) => setPassword(e.target.value)}
                                 disabled={isLoading}
                                 required
-                                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                             />
                             <button
                                 type="button"
-                                className="absolute right-0 top-0 h-full px-3 py-2"
+                                className="absolute right-0 top-0 h-full px-3 py-2 text-gray-500"
                                 onClick={() => setShowPassword(!showPassword)}
                             >
                                 {showPassword ? (
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="16"
-                                        height="16"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                    >
-                                        <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path>
-                                        <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path>
-                                        <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path>
-                                        <line x1="2" x2="22" y1="2" y2="22"></line>
-                                    </svg>
+                                    <EyeOff className="h-4 w-4" />
                                 ) : (
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="16"
-                                        height="16"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                    >
-                                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
-                                        <circle cx="12" cy="12" r="3"></circle>
-                                    </svg>
+                                    <Eye className="h-4 w-4" />
                                 )}
                                 <span className="sr-only">{showPassword ? "Hide password" : "Show password"}</span>
                             </button>
@@ -198,29 +183,33 @@ export function LoginForm() {
                     </div>
 
                     <div className="flex items-center space-x-2">
-                        <input
+                        <Checkbox
                             id="remember-me"
-                            name="remember-me"
-                            type="checkbox"
                             checked={rememberMe}
-                            onChange={(e) => setRememberMe(e.target.checked)}
-                            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            onCheckedChange={(checked) => setRememberMe(checked === true)}
                         />
-                        <label htmlFor="remember-me" className="text-sm font-medium text-gray-700">
+                        <label htmlFor="remember-me" className="text-sm font-medium text-gray-700 cursor-pointer">
                             Ghi nhớ đăng nhập
                         </label>
                     </div>
 
-                    <button
+                    <Button
                         type="submit"
                         disabled={isLoading}
-                        className="group relative flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-500 focus:outline-none disabled:opacity-70"
+                        className="w-full bg-green-600 hover:bg-green-700"
                     >
                         {isLoading ? "Đang xử lý..." : "Đăng nhập"}
-                    </button>
-                </div>
-            </form>
-        </div>
+                    </Button>
+                </form>
+            </CardContent>
+            <CardFooter className="flex justify-center">
+                <p className="text-sm text-gray-600">
+                    Chưa có tài khoản?{" "}
+                    <a href="/register" className="font-medium text-green-600 hover:text-green-700">
+                        Đăng ký ngay
+                    </a>
+                </p>
+            </CardFooter>
+        </Card>
     )
 }
-

@@ -21,6 +21,8 @@ import {
   ArrowUpDown,
   ArrowDown,
   ArrowUp,
+  MoreHorizontal,
+  Eye,
 } from "lucide-react";
 import DeleteConfirmDialog from "./dialogs/DeleteConfirmDialog";
 import {
@@ -38,6 +40,7 @@ import ViewProductDialog from "./dialogs/ViewProductDialog";
 import EditProductDialog from "./dialogs/EditProductDialog";
 import { formatCurrency } from "@/utils/utils";
 import { toast } from "sonner";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 // import { formatCurrencyVND } from "@/utils/format-price"
 
 // Cập nhật interface Product để phù hợp với cấu trúc dữ liệu mới
@@ -209,8 +212,8 @@ const ProductList = () => {
           ? 1
           : -1
         : valueA < valueB
-        ? 1
-        : -1;
+          ? 1
+          : -1;
     });
   };
 
@@ -259,7 +262,7 @@ const ProductList = () => {
         setTotalItems(responseData.totalItems || validProducts.length);
         setTotalPages(
           responseData.totalPages ||
-            Math.ceil(validProducts.length / itemsPerPage)
+          Math.ceil(validProducts.length / itemsPerPage)
         );
 
         // Sắp xếp và lọc sẽ được áp dụng trong useEffect
@@ -727,7 +730,7 @@ const ProductList = () => {
                   <TableHead className="w-[180px] text-center">
                     Người tạo
                   </TableHead>
-                  <TableHead className="text-right">Thao tác</TableHead>
+                  <TableHead className="text-center">Thao tác</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -755,33 +758,35 @@ const ProductList = () => {
                         {product.createdByName || "N/A"}
                       </TableCell>
 
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleViewProductDetail(product)}
-                          >
-                            Chi tiết
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEditProduct(product)}
-                          >
-                            <Edit className="h-4 w-4 mr-1" />
-                            Sửa
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-red-500 hover:bg-red-50"
-                            onClick={() => handleDeleteProduct(product)}
-                          >
-                            <Trash className="h-4 w-4 mr-1" />
-                            Xóa
-                          </Button>
-                        </div>
+                      <TableCell className="text-center">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
+                              <span className="sr-only">Mở menu</span>
+                              <MoreHorizontal className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleViewProductDetail(product)}>
+                              <Eye className="w-4 h-4 mr-2" />
+                              <span>Chi tiết</span>
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem onClick={() => handleEditProduct(product)}>
+                              <Edit className="w-4 h-4 mr-2" />
+                              <span>Sửa</span>
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem
+                              onClick={() => handleDeleteProduct(product)}
+                              className="text-red-500 focus:text-red-600"
+                            >
+                              <Trash className="w-4 h-4 mr-2" />
+                              <span>Xóa</span>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))

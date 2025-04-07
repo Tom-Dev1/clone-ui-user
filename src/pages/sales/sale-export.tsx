@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +33,7 @@ import {
   Eye,
   Filter,
   Search,
+  MoreHorizontal,
 } from "lucide-react";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
@@ -64,6 +65,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { connection } from "@/lib/signalr-client";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 // Cập nhật interface để phù hợp với cấu trúc API mới
 interface RequestExportDetail {
@@ -350,8 +352,8 @@ const SalesExports = () => {
             ? 1
             : -1
           : valueA < valueB
-          ? 1
-          : -1;
+            ? 1
+            : -1;
       }
     });
   };
@@ -583,29 +585,7 @@ const SalesExports = () => {
         </div>
         <Tabs defaultValue="all" className="space-y-6 ">
           <div className=" mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <TabsList>
-              <TabsTrigger value="all" onClick={() => setStatusFilter("all")}>
-                Tất cả
-              </TabsTrigger>
-              <TabsTrigger
-                value="Requested"
-                onClick={() => setStatusFilter("Requested")}
-              >
-                Chờ duyệt
-              </TabsTrigger>
-              <TabsTrigger
-                value="Approved"
-                onClick={() => setStatusFilter("Approved")}
-              >
-                Đã duyệt
-              </TabsTrigger>
-              <TabsTrigger
-                value="Processing"
-                onClick={() => setStatusFilter("Processing")}
-              >
-                Đang xử lý
-              </TabsTrigger>
-            </TabsList>
+
 
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <div className="relative flex-1 sm:flex-none">
@@ -712,31 +692,7 @@ const SalesExports = () => {
             </div>
           </div>
 
-          {/* Add page size selector and export button */}
-          <div className="flex justify-between items-center gap-2  mb-4">
-            <div className="text-sm text-muted-foreground ">
-              Hiển thị {filteredRequests.length} / {totalItems} yêu cầu
-            </div>
-            <div className="flex items-center gap-2">
-              <Select
-                value={pageSize.toString()}
-                onValueChange={(value) => {
-                  setPageSize(Number(value));
-                  setCurrentPage(1);
-                }}
-              >
-                <SelectTrigger className="w-[120px]">
-                  <SelectValue placeholder="Hiển thị" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="15">15 hàng</SelectItem>
-                  <SelectItem value="30">30 hàng</SelectItem>
-                  <SelectItem value="50">50 hàng</SelectItem>
-                  <SelectItem value="100">100 hàng</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+
 
           <TabsContent value="all" className="space-y-4">
             {filteredRequests.length === 0 ? (
@@ -842,32 +798,31 @@ const SalesExports = () => {
                           <TableCell className="w-[120px] text-center">
                             {renderStatusBadge(request.status)}
                           </TableCell>
-                          <TableCell>
-                            <div className="flex justify-around">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleViewDetails(request)}
-                                title="Xem chi tiết"
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              {request.status !== "Approved" &&
-                                request.status !== "Requested" && (
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() =>
-                                      handleCreateBasedOn(
-                                        request.requestExportId
-                                      )
-                                    }
-                                    title="Tạo yêu cầu dựa trên yêu cầu này"
+                          <TableCell className="w-[120px] text-center">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <MoreHorizontal className="w-4 h-4" />
+                                  <span className="sr-only">Mở menu</span>
+                                </Button>
+                              </DropdownMenuTrigger>
+
+                              <DropdownMenuContent align="end" className="w-64">
+                                <DropdownMenuItem onClick={() => handleViewDetails(request)}>
+                                  <Eye className="w-4 h-4 mr-2" />
+                                  <span>Xem chi tiết</span>
+                                </DropdownMenuItem>
+
+                                {request.status !== "Approved" && request.status !== "Requested" && (
+                                  <DropdownMenuItem
+                                    onClick={() => handleCreateBasedOn(request.requestExportId)}
                                   >
-                                    <CirclePlus className="h-4 w-4" />
-                                  </Button>
+                                    <CirclePlus className="w-4 h-4 mr-2" />
+                                    <span>Tạo yêu cầu dựa trên yêu cầu này</span>
+                                  </DropdownMenuItem>
                                 )}
-                            </div>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -957,6 +912,31 @@ const SalesExports = () => {
             {/* Content is filtered by the useEffect */}
           </TabsContent>
         </Tabs>
+        {/* Add page size selector and export button */}
+        <div className="flex justify-between items-center gap-2  mt-4">
+          <div className="text-sm text-muted-foreground ">
+            Hiển thị {filteredRequests.length} / {totalItems} yêu cầu
+          </div>
+          <div className="flex items-center gap-2">
+            <Select
+              value={pageSize.toString()}
+              onValueChange={(value) => {
+                setPageSize(Number(value));
+                setCurrentPage(1);
+              }}
+            >
+              <SelectTrigger className="w-[120px]">
+                <SelectValue placeholder="Hiển thị" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="15">15 hàng</SelectItem>
+                <SelectItem value="30">30 hàng</SelectItem>
+                <SelectItem value="50">50 hàng</SelectItem>
+                <SelectItem value="100">100 hàng</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
       </div>
 
       {/* Dialog for viewing export request details */}
@@ -1107,6 +1087,7 @@ const SalesExports = () => {
                   </CardContent>
                 </Card>
               </div>
+
             </ScrollArea>
           )}
 

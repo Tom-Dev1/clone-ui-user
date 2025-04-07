@@ -13,10 +13,9 @@ import {
   LayoutDashboard,
   ShoppingBag,
   Package,
-  ShoppingCart,
   Receipt,
   FileText,
-  CreditCard,
+
   User,
   LogOut,
 } from "lucide-react";
@@ -74,11 +73,7 @@ export function SalesLayout({ children }: SalesLayoutProps) {
       href: "/sales/product",
       icon: <Package className="h-5 w-5" />,
     },
-    {
-      title: "Giỏ hàng",
-      href: "/sales/cart",
-      icon: <ShoppingCart className="h-5 w-5" />,
-    },
+
     {
       title: "Thuế",
       href: "/sales/tax",
@@ -89,11 +84,11 @@ export function SalesLayout({ children }: SalesLayoutProps) {
       href: "/sales/export",
       icon: <FileText className="h-5 w-5" />,
     },
-    {
-      title: "Quản lý công nợ",
-      href: "/sales/debt",
-      icon: <CreditCard className="h-5 w-5" />,
-    },
+    // {
+    //   title: "Quản lý công nợ",
+    //   href: "/sales/debt",
+    //   icon: <CreditCard className="h-5 w-5" />,
+    // },
     {
       title: "Hồ sơ cá nhân",
       href: "/sales/profile",
@@ -166,21 +161,16 @@ export function SalesLayout({ children }: SalesLayoutProps) {
                 </Sheet>
               )}
               <Link
-                to="/sales/dashboard"
+                to="/"
                 className="text-xl font-bold flex items-center"
               >
-                Trang chủ
+                <Home className="h-5 w-5" />
+                <span className="ml-5 ">Trang chủ</span>
               </Link>
             </div>
 
             <div className="flex items-center">
-              <Link
-                to="/"
-                className="text-sm text-black hover:text-gray-700 mr-4 flex items-center gap-1"
-              >
-                <Home className="h-4 w-4" />
-                <span className="hidden sm:inline">Trang chủ</span>
-              </Link>
+
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-gray-700 hidden md:inline-block">
                   Xin chào,{" "}

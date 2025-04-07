@@ -109,11 +109,11 @@ export function AgencyLayout({ children }: AgencyLayoutProps) {
                                     <SheetContent side="left" className="p-0 w-[280px]">
                                         <div className="p-6 border-b">
                                             <Link
-                                                to="/agency/dashboard"
+                                                to="/"
                                                 className="text-xl font-bold flex items-center"
                                                 onClick={() => setOpen(false)}
                                             >
-                                                Đại lý Dashboard
+                                                Trang chủ
                                             </Link>
                                         </div>
                                         <ScrollArea className="h-[calc(100vh-81px)]">
@@ -152,16 +152,14 @@ export function AgencyLayout({ children }: AgencyLayoutProps) {
                                     </SheetContent>
                                 </Sheet>
                             )}
-                            <Link to="/agency/dashboard" className="text-xl font-bold flex items-center">
-                                Đại lý Dashboard
+                            <Link to="/" className="text-xl font-bold flex items-center">
+                                <Home className="h-4 w-4" />
+                                <span>Trang chủ</span>
                             </Link>
                         </div>
 
                         <div className="flex items-center">
-                            <Link to="/" className="text-sm text-gray-500 hover:text-gray-700 mr-4 flex items-center gap-1">
-                                <Home className="h-4 w-4" />
-                                <span className="hidden sm:inline">Trang chủ</span>
-                            </Link>
+
                             <div className="flex items-center space-x-2">
                                 <span className="text-sm text-gray-700 hidden md:inline-block">
                                     Xin chào, <span className="font-medium">{userInfo?.username || "Đại lý"}</span>

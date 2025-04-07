@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsContent, } from "@/components/ui/tabs"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -59,7 +59,7 @@ interface RequestProduct {
     agencyName: string
     approvedName: string | null
     approvedBy: number | null
-    requestStatus: "Pending" | "Approved" | "Rejected"
+    requestStatus: "Pending" | "Approved" | "Canceled"
     createdAt: string
     requestProductDetails: RequestProductDetail[]
 }
@@ -248,6 +248,7 @@ const AgencyRequests = () => {
 
         // Reset về trang đầu tiên khi thay đổi bộ lọc
         setCurrentPage(1)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [requests, statusFilter, searchQuery, dateRange, sortField, sortDirection])
 
     // Cập nhật phân trang khi filteredRequests hoặc currentPage thay đổi
@@ -320,20 +321,20 @@ const AgencyRequests = () => {
         switch (status) {
             case "Pending":
                 return (
-                    <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-                        Chờ duyệt
+                    <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 p-1 w-[80px]">
+                        <span className="text-center w-[80px]">Chờ duyệt</span>
                     </Badge>
                 )
             case "Approved":
                 return (
-                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                        Đã duyệt
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 p-1 w-[80px]">
+                        <span className="text-center w-[80px]">Đã duyệt</span>
                     </Badge>
                 )
-            case "Rejected":
+            case "Canceled":
                 return (
-                    <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-                        Từ chối
+                    <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 p-1 w-[80px]">
+                        <span className="text-center w-[80px]">Từ chối</span>
                     </Badge>
                 )
             default:
@@ -434,20 +435,6 @@ const AgencyRequests = () => {
                 </div>
                 <Tabs defaultValue="all" className="space-y-6">
                     <div className="mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                        <TabsList>
-                            <TabsTrigger value="all" onClick={() => setStatusFilter("all")}>
-                                Tất cả
-                            </TabsTrigger>
-                            <TabsTrigger value="Pending" onClick={() => setStatusFilter("Pending")}>
-                                Chờ duyệt
-                            </TabsTrigger>
-                            <TabsTrigger value="Approved" onClick={() => setStatusFilter("Approved")}>
-                                Đã duyệt
-                            </TabsTrigger>
-                            <TabsTrigger value="Rejected" onClick={() => setStatusFilter("Canceled")}>
-                                Từ chối
-                            </TabsTrigger>
-                        </TabsList>
 
                         <div className="flex items-center gap-2 w-full sm:w-auto">
                             <div className="relative flex-1 sm:flex-none">
@@ -605,7 +592,7 @@ const AgencyRequests = () => {
                                         <TableBody>
                                             {paginatedRequests.map((request) => (
                                                 <TableRow key={request.requestProductId}>
-                                                    <TableCell className="font-medium">{request.requestCode}</TableCell>
+                                                    <TableCell className="w-[160px] text-center cursor-pointer font-medium">{request.requestCode}</TableCell>
                                                     <TableCell className="text-center"> {formatDate(request.createdAt)}</TableCell>
                                                     <TableCell className="text-center">{request.agencyName}</TableCell>
                                                     <TableCell className="text-center">{request.approvedName}</TableCell>
@@ -718,7 +705,7 @@ const AgencyRequests = () => {
                         {/* Nội dung được lọc bởi useEffect */}
                     </TabsContent>
 
-                    <TabsContent value="Rejected" className="space-y-4">
+                    <TabsContent value="Canceled" className="space-y-4">
                         {/* Nội dung được lọc bởi useEffect */}
                     </TabsContent>
                 </Tabs>
