@@ -41,7 +41,7 @@ export const OrderTable = ({
     }
 
     return (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto rounded-md border bg-white ">
             <Table>
                 <TableHeader>
                     <TableRow>

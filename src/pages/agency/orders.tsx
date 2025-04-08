@@ -281,7 +281,7 @@ const AgencyOrders = () => {
           <p className="text-gray-500 mt-1">Xem lại đơn hàng mà bạn đã yêu cầu</p>
         </div>
 
-        <div className="bg-white p-4 rounded-md shadow-sm">
+        <div className="bg-white rounded-md shadow-sm">
           {/* Search and filter */}
           <OrderSearchFilter
             searchTerm={searchTerm}

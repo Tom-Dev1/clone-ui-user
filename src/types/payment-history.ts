@@ -12,6 +12,8 @@ export interface PaymentHistory {
     totalAmountPayment: number
     remainingDebtAmount: number
     paymentAmount: number
+    dueDate: string
+    debtStatus: string
     createdAt: string
     updatedAt: string
 }

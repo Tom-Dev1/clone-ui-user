@@ -55,14 +55,14 @@ export const PaymentTable = ({
                     </TableHead>
                     <TableHead className="cursor-pointer w-[120px] text-center" onClick={() => onSortChange("paymentMethod")}>
                         <div className="flex items-center">
-                            Phương thức
-                            {renderSortIndicator("paymentMethod")}
+                            Hạn thanh toán
+                            {renderSortIndicator("debtStatus")}
                         </div>
                     </TableHead>
                     <TableHead className="cursor-pointer" onClick={() => onSortChange("paymentDate")}>
                         <div className="flex items-center">
-                            Ngày thanh toán
-                            {renderSortIndicator("paymentDate")}
+                            Ngày đến hạn
+                            {renderSortIndicator("dueDate")}
                         </div>
                     </TableHead>
                     <TableHead className="cursor-pointer " onClick={() => onSortChange("serieNumber")}>
@@ -110,9 +110,9 @@ export const PaymentTable = ({
                         <TableRow key={payment.paymentHistoryId}>
                             <TableCell>{payment.orderCode}</TableCell>
                             <TableCell>{payment.agencyName}</TableCell>
-                            <TableCell className=" w-[120px] text-center">{payment.paymentMethod}</TableCell>
+                            <TableCell className=" w-[120px] text-center">{payment.debtStatus}</TableCell>
                             <TableCell>
-                                {format(new Date(payment.paymentDate), "dd/MM/yyyy HH:mm", {
+                                {format(new Date(payment.dueDate), "dd/MM/yyyy", {
                                     locale: vi,
                                 })}
                             </TableCell>

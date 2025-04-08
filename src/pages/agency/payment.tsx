@@ -236,7 +236,7 @@ const AgencyPaymentHistoryPage: React.FC = () => {
 
   return (
     <AgencyLayout>
-      <div className="container mx-auto py-6">
+      <div className="m-4 py-6">
         <h1 className="text-2xl font-bold mb-6">Lịch sử thanh toán đại lý</h1>
 
         {/* Search */}
