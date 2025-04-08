@@ -162,6 +162,7 @@ export const PaymentTable = ({
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                 )}
+
                             </TableCell>
                         </TableRow>
                     ))

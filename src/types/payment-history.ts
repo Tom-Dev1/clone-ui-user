@@ -8,7 +8,7 @@ export interface PaymentHistory {
     paymentMethod: string
     paymentDate: string
     serieNumber: string
-    status: string
+    status: Status
     totalAmountPayment: number
     remainingDebtAmount: number
     paymentAmount: number
@@ -22,5 +22,10 @@ export enum DebtStatus {
     NearDue = "NearDue",
     Overdue = "Overdue",
 }
+export enum Status {
+    PAID = "PAID",
+    PARTIALLY_PAID = "PARTIALLY_PAID"
+}
+
 export type SortDirection = "asc" | "desc"
 

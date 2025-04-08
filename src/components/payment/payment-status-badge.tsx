@@ -8,7 +8,7 @@ export const PaymentStatusBadge = ({ status }: PaymentStatusBadgeProps) => {
     switch (status) {
         case "PAID":
             return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 p-1 w-[130px]">
-                <span className="text-center w-[130px]">Thanh toán một phần</span>
+                <span className="text-center w-[130px]">Đã thanh toán</span>
             </Badge>
 
 
