@@ -321,20 +321,20 @@ const AgencyRequests = () => {
         switch (status) {
             case "Pending":
                 return (
-                    <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 p-1 w-[80px]">
-                        <span className="text-center w-[80px]">Chờ duyệt</span>
+                    <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 p-1 w-[100px]">
+                        <span className="text-center w-[100px]">Chờ duyệt</span>
                     </Badge>
                 )
             case "Approved":
                 return (
-                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 p-1 w-[80px]">
-                        <span className="text-center w-[80px]">Đã duyệt</span>
+                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 p-1 w-[100px]">
+                        <span className="text-center w-[100px]">Đã duyệt</span>
                     </Badge>
                 )
             case "Canceled":
                 return (
-                    <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 p-1 w-[80px]">
-                        <span className="text-center w-[80px]">Từ chối</span>
+                    <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 p-1 w-[100px]">
+                        <span className="text-center w-[100px]">Từ chối</span>
                     </Badge>
                 )
             default:

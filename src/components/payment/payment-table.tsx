@@ -53,13 +53,13 @@ export const PaymentTable = ({
                             {renderSortIndicator("agencyName")}
                         </div>
                     </TableHead>
-                    <TableHead className="cursor-pointer w-[120px] text-center" onClick={() => onSortChange("paymentMethod")}>
+                    <TableHead className="cursor-pointer w-[120px] text-center truncate" onClick={() => onSortChange("paymentMethod")}>
                         <div className="flex items-center">
                             Hạn thanh toán
                             {renderSortIndicator("debtStatus")}
                         </div>
                     </TableHead>
-                    <TableHead className="cursor-pointer" onClick={() => onSortChange("paymentDate")}>
+                    <TableHead className="cursor-pointer truncate" onClick={() => onSortChange("paymentDate")}>
                         <div className="flex items-center">
                             Ngày đến hạn
                             {renderSortIndicator("dueDate")}
@@ -77,13 +77,13 @@ export const PaymentTable = ({
                             {renderSortIndicator("status")}
                         </div>
                     </TableHead>
-                    <TableHead className="cursor-pointer text-right" onClick={() => onSortChange("totalAmountPayment")}>
+                    <TableHead className="cursor-pointer text-right truncate" onClick={() => onSortChange("totalAmountPayment")}>
                         <div className="flex items-center justify-end">
                             Tổng tiền
                             {renderSortIndicator("totalAmountPayment")}
                         </div>
                     </TableHead>
-                    <TableHead className="cursor-pointer text-right" onClick={() => onSortChange("paymentAmount")}>
+                    <TableHead className="cursor-pointer text-right truncate" onClick={() => onSortChange("paymentAmount")}>
                         <div className="flex items-center justify-end">
                             Đã thanh toán
                             {renderSortIndicator("paymentAmount")}
@@ -108,20 +108,20 @@ export const PaymentTable = ({
                 ) : (
                     payments.map((payment) => (
                         <TableRow key={payment.paymentHistoryId}>
-                            <TableCell>{payment.orderCode}</TableCell>
-                            <TableCell>{payment.agencyName}</TableCell>
-                            <TableCell className=" w-[120px] text-center">{payment.debtStatus}</TableCell>
+                            <TableCell className="truncate">{payment.orderCode}</TableCell>
+                            <TableCell className="truncate">{payment.agencyName}</TableCell>
+                            <TableCell className=" truncate text-center">{payment.debtStatus}</TableCell>
                             <TableCell>
                                 {format(new Date(payment.dueDate), "dd/MM/yyyy", {
                                     locale: vi,
                                 })}
                             </TableCell>
-                            <TableCell>{payment.serieNumber}</TableCell>
-                            <TableCell>
+                            <TableCell className="truncate">{payment.serieNumber}</TableCell>
+                            <TableCell className="truncate">
                                 <PaymentStatusBadge status={payment.status} />
                             </TableCell>
-                            <TableCell className="text-right">{formatCurrency(payment.totalAmountPayment)}</TableCell>
-                            <TableCell className="text-right">{formatCurrency(payment.paymentAmount)}</TableCell>
+                            <TableCell className=" truncate text-right">{formatCurrency(payment.totalAmountPayment)}</TableCell>
+                            <TableCell className=" text-right">{formatCurrency(payment.paymentAmount)}</TableCell>
                             <TableCell className="text-right">{formatCurrency(payment.remainingDebtAmount)}</TableCell>
                             <TableCell className="w-[100px] text-center">
                                 {payment.status === "PARTIALLY_PAID" && (
