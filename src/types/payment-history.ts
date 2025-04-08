@@ -13,10 +13,14 @@ export interface PaymentHistory {
     remainingDebtAmount: number
     paymentAmount: number
     dueDate: string
-    debtStatus: string
+    debtStatus: DebtStatus
     createdAt: string
     updatedAt: string
 }
-
+export enum DebtStatus {
+    StillValid = "StillValid",
+    NearDue = "NearDue",
+    Overdue = "Overdue",
+}
 export type SortDirection = "asc" | "desc"
 

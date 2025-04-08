@@ -44,6 +44,7 @@ const AuthContext = createContext<AuthContextType>({
 })
 
 // Custom hook to use the auth context
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => useContext(AuthContext)
 
 interface AuthProviderProps {

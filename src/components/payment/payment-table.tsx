@@ -14,6 +14,7 @@ import {
 import { PaymentStatusBadge } from "./payment-status-badge"
 import { formatCurrency } from "../../utils/format-utils"
 import type { PaymentHistory } from "../../types/payment-history"
+import { DebtStatusBadge } from "./debt-status-badge"
 
 interface PaymentTableProps {
     payments: PaymentHistory[]
@@ -56,12 +57,6 @@ export const PaymentTable = ({
                             {renderSortIndicator("agencyName")}
                         </div>
                     </TableHead>
-                    <TableHead className="cursor-pointer truncate" onClick={() => onSortChange("paymentMethod")}>
-                        <div className="flex items-center">
-                            Phương thức
-                            {renderSortIndicator("paymentMethod")}
-                        </div>
-                    </TableHead>
                     <TableHead className="cursor-pointer truncate" onClick={() => onSortChange("paymentDate")}>
                         <div className="flex items-center">
                             Ngày thanh toán
@@ -70,7 +65,7 @@ export const PaymentTable = ({
                     </TableHead>
                     <TableHead className="cursor-pointer truncate " onClick={() => onSortChange("serieNumber")}>
                         <div className="flex items-center justify-center">
-                            Số serie
+                            Số series
                             {renderSortIndicator("serieNumber")}
                         </div>
                     </TableHead>
@@ -98,6 +93,18 @@ export const PaymentTable = ({
                             {renderSortIndicator("remainingDebtAmount")}
                         </div>
                     </TableHead>
+                    <TableHead className="cursor-pointer text-right truncate" onClick={() => onSortChange("remainingDebtAmount")}>
+                        <div className="flex items-center justify-end">
+                            Hạn thanh toán
+                            {renderSortIndicator("dueDate")}
+                        </div>
+                    </TableHead>
+                    <TableHead className="cursor-pointer text-right truncate" onClick={() => onSortChange("remainingDebtAmount")}>
+                        <div className="flex items-center justify-end">
+                            Trạng thái nợ
+                            {renderSortIndicator("debtStatus")}
+                        </div>
+                    </TableHead>
                     <TableHead>Thao tác</TableHead>
                 </TableRow>
             </TableHeader>
@@ -113,9 +120,8 @@ export const PaymentTable = ({
                         <TableRow key={payment.paymentHistoryId}>
                             <TableCell>{payment.orderCode}</TableCell>
                             <TableCell>{payment.agencyName}</TableCell>
-                            <TableCell className="text-center">{payment.paymentMethod}</TableCell>
-                            <TableCell>
-                                {format(new Date(payment.paymentDate), "dd/MM/yyyy HH:mm", {
+                            <TableCell className="text-center">
+                                {format(new Date(payment.paymentDate), "dd/MM/yyyy", {
                                     locale: vi,
                                 })}
                             </TableCell>
@@ -126,6 +132,12 @@ export const PaymentTable = ({
                             <TableCell className="text-right">{formatCurrency(payment.totalAmountPayment)}</TableCell>
                             <TableCell className="text-right">{formatCurrency(payment.paymentAmount)}</TableCell>
                             <TableCell className="text-right">{formatCurrency(payment.remainingDebtAmount)}</TableCell>
+                            <TableCell className="text-right">
+                                {format(new Date(payment.dueDate), "dd/MM/yyyy", {
+                                    locale: vi,
+                                })}</TableCell>
+                            <TableCell className="text-right"> <DebtStatusBadge status={payment.debtStatus} /></TableCell>
+
                             <TableCell className="text-center">
                                 {payment.status === "PARTIALLY_PAID" && (
                                     <DropdownMenu>

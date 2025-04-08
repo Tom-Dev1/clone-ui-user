@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client"
 
 import {
@@ -12,10 +11,11 @@ import {
 import { Button } from "@/components/ui/button"
 import { format } from "date-fns"
 import { vi } from "date-fns/locale"
+import { PaymentStatusBadge } from "./payment-status-badge"
 import { formatCurrency } from "@/utils/format-utils"
 import type { PaymentHistory } from "@/types/payment-history"
-import { Receipt, Calendar, CreditCard, User, Hash, Banknote, ArrowRight } from "lucide-react"
-import { PaymentStatusBadge } from "./payment-status-badge"
+import { Receipt, Calendar, CreditCard, User, Hash, Banknote, ArrowRight, Clock } from "lucide-react"
+import { DebtStatusBadge } from "./debt-status-badge"
 
 interface PaymentDetailDialogProps {
     isOpen: boolean
@@ -29,6 +29,7 @@ export const PaymentDetailDialog = ({ isOpen, onOpenChange, payment }: PaymentDe
     const formatDate = (dateString: string) => {
         try {
             return format(new Date(dateString), "dd/MM/yyyy HH:mm", { locale: vi })
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {
             return dateString
         }
@@ -92,6 +93,17 @@ export const PaymentDetailDialog = ({ isOpen, onOpenChange, payment }: PaymentDe
                                 <div>
                                     <p className="text-sm font-medium text-gray-500">Mã đơn hàng</p>
                                     <p className="font-medium">{payment.orderCode}</p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-start">
+                                <Clock className="h-5 w-5 text-gray-500 mt-0.5 mr-2" />
+                                <div>
+                                    <p className="text-sm font-medium text-gray-500">Hạn thanh toán</p>
+                                    <div className="flex items-center gap-2">
+                                        <p className="font-medium">{formatDate(payment.dueDate)}</p>
+                                        <DebtStatusBadge status={payment.debtStatus} />
+                                    </div>
                                 </div>
                             </div>
                         </div>
