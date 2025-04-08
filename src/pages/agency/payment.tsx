@@ -18,6 +18,7 @@ import { PaymentPagination } from "@/components/payment/payment-pagination"
 import { PaymentDialog } from "@/components/payment/payment-dialog"
 import { LoadingState } from "@/components/payment/loading-state"
 import { ErrorState } from "@/components/payment/error-state"
+import { PaymentDetailDialog } from "@/components/payment/payment-detail-dialog"
 
 const AgencyPaymentHistoryPage: React.FC = () => {
   const navigate = useNavigate()
@@ -32,6 +33,10 @@ const AgencyPaymentHistoryPage: React.FC = () => {
   const [paymentAmount, setPaymentAmount] = useState<string>("")
   const [selectedPayment, setSelectedPayment] = useState<PaymentHistory | null>(null)
   const [actionLoading, setActionLoading] = useState<boolean>(false)
+
+  // State for payment detail dialog
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState<boolean>(false)
+  const [selectedPaymentForDetail, setSelectedPaymentForDetail] = useState<PaymentHistory | null>(null)
 
   // Sorting state
   const [sortField, setSortField] = useState<keyof PaymentHistory>("paymentDate")
@@ -143,6 +148,12 @@ const AgencyPaymentHistoryPage: React.FC = () => {
     setIsPaymentDialogOpen(true)
   }
 
+  // Open payment detail dialog
+  const openDetailDialog = (payment: PaymentHistory) => {
+    setSelectedPaymentForDetail(payment)
+    setIsDetailDialogOpen(true)
+  }
+
   // Handle payment
   const handlePayment = async () => {
     if (!selectedPayment || !paymentAmount || Number.parseFloat(paymentAmount) <= 0) {
@@ -165,7 +176,7 @@ const AgencyPaymentHistoryPage: React.FC = () => {
       }
       console.log(paymentData)
 
-      const response = await fetch(`https://minhlong.mlhr.org/api/Payment/debt-pay/${userId}`, {
+      const response = await fetch(`https://minhlong.mlhr.org/api/Payment/${userId}`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -236,7 +247,7 @@ const AgencyPaymentHistoryPage: React.FC = () => {
 
   return (
     <AgencyLayout>
-      <div className="m-4 py-6">
+      <div className="m-4">
         <h1 className="text-2xl font-bold mb-6">Lịch sử thanh toán đại lý</h1>
 
         {/* Search */}
@@ -250,6 +261,7 @@ const AgencyPaymentHistoryPage: React.FC = () => {
             sortDirection={sortDirection}
             onSortChange={handleSortChange}
             onPaymentClick={openPaymentDialog}
+            onViewDetails={openDetailDialog}
           />
 
           {/* Pagination */}
@@ -272,10 +284,16 @@ const AgencyPaymentHistoryPage: React.FC = () => {
           onPaymentSubmit={handlePayment}
           isLoading={actionLoading}
         />
+
+        {/* Payment Detail Dialog */}
+        <PaymentDetailDialog
+          isOpen={isDetailDialogOpen}
+          onOpenChange={setIsDetailDialogOpen}
+          payment={selectedPaymentForDetail}
+        />
       </div>
     </AgencyLayout>
   )
 }
 
 export default AgencyPaymentHistoryPage
-

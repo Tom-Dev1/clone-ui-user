@@ -1,7 +1,8 @@
+"use client"
 
 import { format } from "date-fns"
 import { vi } from "date-fns/locale"
-import { ChevronDown, ChevronUp, ArrowUpDown, MoreHorizontal, CreditCard } from "lucide-react"
+import { ChevronDown, ChevronUp, ArrowUpDown, MoreHorizontal, CreditCard, Eye } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table"
 import { Button } from "../../components/ui/button"
 import {
@@ -20,6 +21,7 @@ interface PaymentTableProps {
     sortDirection: "asc" | "desc"
     onSortChange: (field: keyof PaymentHistory) => void
     onPaymentClick: (payment: PaymentHistory) => void
+    onViewDetails: (payment: PaymentHistory) => void
 }
 
 export const PaymentTable = ({
@@ -28,6 +30,7 @@ export const PaymentTable = ({
     sortDirection,
     onSortChange,
     onPaymentClick,
+    onViewDetails,
 }: PaymentTableProps) => {
     // Render sort indicator
     const renderSortIndicator = (field: keyof PaymentHistory) => {
@@ -41,7 +44,7 @@ export const PaymentTable = ({
         <Table>
             <TableHeader>
                 <TableRow>
-                    <TableHead className="cursor-pointer" onClick={() => onSortChange("orderCode")}>
+                    <TableHead className="cursor-pointer truncate" onClick={() => onSortChange("orderCode")}>
                         <div className="flex items-center">
                             Mã đơn hàng
                             {renderSortIndicator("orderCode")}
@@ -53,25 +56,25 @@ export const PaymentTable = ({
                             {renderSortIndicator("agencyName")}
                         </div>
                     </TableHead>
-                    <TableHead className="cursor-pointer w-[120px] text-center truncate" onClick={() => onSortChange("paymentMethod")}>
+                    <TableHead className="cursor-pointer truncate" onClick={() => onSortChange("paymentMethod")}>
                         <div className="flex items-center">
-                            Hạn thanh toán
-                            {renderSortIndicator("debtStatus")}
+                            Phương thức
+                            {renderSortIndicator("paymentMethod")}
                         </div>
                     </TableHead>
                     <TableHead className="cursor-pointer truncate" onClick={() => onSortChange("paymentDate")}>
                         <div className="flex items-center">
-                            Ngày đến hạn
-                            {renderSortIndicator("dueDate")}
+                            Ngày thanh toán
+                            {renderSortIndicator("paymentDate")}
                         </div>
                     </TableHead>
-                    <TableHead className="cursor-pointer " onClick={() => onSortChange("serieNumber")}>
+                    <TableHead className="cursor-pointer truncate " onClick={() => onSortChange("serieNumber")}>
                         <div className="flex items-center justify-center">
                             Số serie
                             {renderSortIndicator("serieNumber")}
                         </div>
                     </TableHead>
-                    <TableHead className="cursor-pointer" onClick={() => onSortChange("status")}>
+                    <TableHead className="cursor-pointer truncate" onClick={() => onSortChange("status")}>
                         <div className="flex items-center">
                             Trạng thái
                             {renderSortIndicator("status")}
@@ -89,13 +92,13 @@ export const PaymentTable = ({
                             {renderSortIndicator("paymentAmount")}
                         </div>
                     </TableHead>
-                    <TableHead className="cursor-pointer text-right" onClick={() => onSortChange("remainingDebtAmount")}>
+                    <TableHead className="cursor-pointer text-right truncate" onClick={() => onSortChange("remainingDebtAmount")}>
                         <div className="flex items-center justify-end">
                             Còn nợ
                             {renderSortIndicator("remainingDebtAmount")}
                         </div>
                     </TableHead>
-                    <TableHead className="w-[100px] text-center">Thao tác</TableHead>
+                    <TableHead>Thao tác</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
@@ -108,22 +111,22 @@ export const PaymentTable = ({
                 ) : (
                     payments.map((payment) => (
                         <TableRow key={payment.paymentHistoryId}>
-                            <TableCell className="truncate">{payment.orderCode}</TableCell>
-                            <TableCell className="truncate">{payment.agencyName}</TableCell>
-                            <TableCell className=" truncate text-center">{payment.debtStatus}</TableCell>
+                            <TableCell>{payment.orderCode}</TableCell>
+                            <TableCell>{payment.agencyName}</TableCell>
+                            <TableCell className="text-center">{payment.paymentMethod}</TableCell>
                             <TableCell>
-                                {format(new Date(payment.dueDate), "dd/MM/yyyy", {
+                                {format(new Date(payment.paymentDate), "dd/MM/yyyy HH:mm", {
                                     locale: vi,
                                 })}
                             </TableCell>
-                            <TableCell className="truncate">{payment.serieNumber}</TableCell>
-                            <TableCell className="truncate">
+                            <TableCell >{payment.serieNumber}</TableCell>
+                            <TableCell>
                                 <PaymentStatusBadge status={payment.status} />
                             </TableCell>
-                            <TableCell className=" truncate text-right">{formatCurrency(payment.totalAmountPayment)}</TableCell>
-                            <TableCell className=" text-right">{formatCurrency(payment.paymentAmount)}</TableCell>
+                            <TableCell className="text-right">{formatCurrency(payment.totalAmountPayment)}</TableCell>
+                            <TableCell className="text-right">{formatCurrency(payment.paymentAmount)}</TableCell>
                             <TableCell className="text-right">{formatCurrency(payment.remainingDebtAmount)}</TableCell>
-                            <TableCell className="w-[100px] text-center">
+                            <TableCell className="text-center">
                                 {payment.status === "PARTIALLY_PAID" && (
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
@@ -133,10 +136,17 @@ export const PaymentTable = ({
                                             </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end">
-                                            <DropdownMenuItem onClick={() => onPaymentClick(payment)}>
-                                                <CreditCard className="mr-2 h-4 w-4" />
-                                                <span>Thanh toán</span>
+                                            <DropdownMenuItem onClick={() => onViewDetails(payment)}>
+                                                <Eye className="mr-2 h-4 w-4" />
+                                                <span>Xem chi tiết</span>
                                             </DropdownMenuItem>
+
+                                            {payment.status === "PARTIALLY_PAID" && (
+                                                <DropdownMenuItem onClick={() => onPaymentClick(payment)}>
+                                                    <CreditCard className="mr-2 h-4 w-4" />
+                                                    <span>Thanh toán</span>
+                                                </DropdownMenuItem>
+                                            )}
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                 )}
@@ -148,4 +158,3 @@ export const PaymentTable = ({
         </Table>
     )
 }
-
