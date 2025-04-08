@@ -1,7 +1,7 @@
 import { SalesLayout } from "@/layouts/sale-layout"
 import { useState } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
+import { CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import ProductList from "@/components/sales/ProductList"
 import CategoryList from "@/components/sales/CategoryList"
 const SalesProducts = () => {
@@ -23,11 +23,7 @@ const SalesProducts = () => {
                         </div>
                         <CardHeader>
                             <CardTitle>{activeTab === "products" ? "Danh sách sản phẩm" : "Danh sách danh mục"}</CardTitle>
-                            <CardDescription>
-                                {activeTab === "products"
-                                    ? "Xem và quản lý tất cả sản phẩm trong hệ thống"
-                                    : "Xem và quản lý các danh mục sản phẩm"}
-                            </CardDescription>
+
                         </CardHeader>
                         <CardContent>
                             <TabsContent value="products" className="mt-0">

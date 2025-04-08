@@ -75,12 +75,12 @@ export const PaymentDialog = ({
         }
 
         // Calculate minimum acceptable payment (10% of remaining debt)
-        const minimumAcceptable = selectedPayment.remainingDebtAmount * 0.1
+        const minimumAcceptable = 10000
 
         // Check if payment is 0 or less than minimum acceptable (10%)
         if (amount <= 0 || amount < minimumAcceptable) {
             setErrorMessage(
-                `Số tiền thanh toán không hợp lệ. Bạn cần thanh toán tối thiểu ${minimumAcceptable.toLocaleString("vi-VN")}đ (10% giá trị đơn hàng).`,
+                `Số tiền thanh toán không hợp lệ. Bạn cần thanh toán tối thiểu ${minimumAcceptable.toLocaleString("vi-VN")}đ.`,
             )
             return
         }
@@ -106,6 +106,12 @@ export const PaymentDialog = ({
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
+                    {errorMessage && (
+                        <Alert variant="destructive">
+                            <AlertCircle className="h-4 w-4 mr-2" />
+                            <AlertDescription>{errorMessage}</AlertDescription>
+                        </Alert>
+                    )}
                     <div className="grid grid-cols-4 items-center gap-4">
                         <label htmlFor="amount" className="text-left">
                             Số tiền
@@ -132,12 +138,7 @@ export const PaymentDialog = ({
                         </>
                     )}
 
-                    {errorMessage && (
-                        <Alert variant="destructive">
-                            <AlertCircle className="h-4 w-4 mr-2" />
-                            <AlertDescription>{errorMessage}</AlertDescription>
-                        </Alert>
-                    )}
+
                 </div>
                 <DialogFooter>
                     <Button variant="outline" onClick={() => onOpenChange(false)}>

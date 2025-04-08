@@ -179,8 +179,8 @@ export default function AgencyProductRequest() {
         // Nếu response không thành công, ném lỗi với thông báo từ server
         throw new Error(
           data?.message ||
-            data?.error ||
-            `Lỗi ${response.status}: ${response.statusText}`
+          data?.error ||
+          `Lỗi ${response.status}: ${response.statusText}`
         );
       }
 
@@ -211,9 +211,7 @@ export default function AgencyProductRequest() {
       <div className="m-4">
         <div className="mb-6">
           <h1 className="text-2xl font-bold">Yêu cầu sản phẩm</h1>
-          <p className="text-gray-500 mt-1">
-            Xem lại và gửi yêu cầu đặt hàng sản phẩm
-          </p>
+
         </div>
 
         <Card>
@@ -302,14 +300,13 @@ export default function AgencyProductRequest() {
                               </div>
                               <div className="mt-1 text-xs">
                                 <span
-                                  className={`${
-                                    item.quantity >= item.availableStock
+                                  className={`${item.quantity >= item.availableStock
                                       ? "text-red-500"
                                       : item.quantity >
                                         item.availableStock * 0.8
-                                      ? "text-orange-500"
-                                      : "text-green-500"
-                                  }`}
+                                        ? "text-orange-500"
+                                        : "text-green-500"
+                                    }`}
                                 >
                                   Có sẵn: {item.availableStock} {item.unit}
                                 </span>

@@ -51,6 +51,9 @@ const AgencyOrders = () => {
   const [orderToPayment, setOrderToPayment] = useState<Order | null>(null)
   const [paymentDescription, setPaymentDescription] = useState<string>("")
 
+  // Add a new state for payment error message
+  const [paymentError, setPaymentError] = useState<string | null>(null)
+
   const token = localStorage.getItem("auth_token") || ""
   const { user } = useAuth()
 
@@ -157,7 +160,7 @@ const AgencyOrders = () => {
     setIsPaymentDialogOpen(true)
   }
 
-  // Process payment
+  // Modify the handlePayment function to handle 404 errors
   const handlePayment = async () => {
     if (!orderToPayment || !paymentAmount || Number.parseFloat(paymentAmount) <= 0) {
       alert("Vui lòng nhập số tiền hợp lệ")
@@ -165,8 +168,10 @@ const AgencyOrders = () => {
     }
 
     setActionLoading(true)
+    setPaymentError(null) // Reset error message
+    const userId = user?.id
+    console.log("userID ", userId)
     try {
-      const userId = user?.id
       if (!userId) {
         throw new Error("Không tìm thấy thông tin người dùng")
       }
@@ -178,7 +183,7 @@ const AgencyOrders = () => {
         description: paymentDescription,
       }
 
-      const response = await fetch(`https://minhlong.mlhr.org/api/Payment/${userId}`, {
+      const response = await fetch(`https://minhlong.mlhr.org/api/Payment/${user?.id}`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -186,6 +191,13 @@ const AgencyOrders = () => {
         },
         body: JSON.stringify(paymentData),
       })
+
+      // Handle 404 error specifically
+      if (response.status === 404) {
+        const errorData = await response.json()
+        setPaymentError(errorData.message || "Không tìm thấy thông tin thanh toán")
+        return // Don't close the dialog, keep showing the error
+      }
 
       if (!response.ok) {
         throw new Error(`Error: ${response.status}`)
@@ -195,6 +207,7 @@ const AgencyOrders = () => {
 
       // Close payment dialog
       setIsPaymentDialogOpen(false)
+      setPaymentError(null) // Clear any errors
 
       // Check if there's a checkout URL and redirect
       if (paymentResponse && paymentResponse.checkoutUrl) {
@@ -208,7 +221,13 @@ const AgencyOrders = () => {
       }
     } catch (err) {
       console.error("Failed to pay for order:", err)
-      toast.error("Không thể thanh toán đơn hàng. Vui lòng thử lại sau.")
+
+      // Try to extract error message if it's a fetch error
+      if (err instanceof Error) {
+        setPaymentError(err.message)
+      } else {
+        setPaymentError("Không thể thanh toán đơn hàng. Vui lòng thử lại sau.")
+      }
     } finally {
       setActionLoading(false)
     }
@@ -278,7 +297,6 @@ const AgencyOrders = () => {
       <div className="m-4">
         <div className="mb-4">
           <h1 className="text-2xl font-bold">Quản Lý đơn hàng của tôi</h1>
-          <p className="text-gray-500 mt-1">Xem lại đơn hàng mà bạn đã yêu cầu</p>
         </div>
 
         <div className="bg-white rounded-md shadow-sm">
@@ -345,6 +363,7 @@ const AgencyOrders = () => {
           onPaymentDescriptionChange={setPaymentDescription}
           onPaymentSubmit={handlePayment}
           actionLoading={actionLoading}
+          errorMessage={paymentError} // Pass the error message to the dialog
         />
 
         {/* Cancel order dialog */}
@@ -360,4 +379,3 @@ const AgencyOrders = () => {
 }
 
 export default AgencyOrders
-

@@ -71,7 +71,6 @@ export default function AgencyProfile() {
             <div className="container mx-auto py-6 px-4 md:px-6">
                 <div className="mb-6">
                     <h1 className="text-2xl font-bold tracking-tight">Hồ sơ đại lý</h1>
-                    <p className="text-muted-foreground">Thông tin cá nhân của bạn</p>
                 </div>
 
                 <Card>

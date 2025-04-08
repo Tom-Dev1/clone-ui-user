@@ -25,6 +25,7 @@ interface PaymentDialogProps {
     onPaymentDescriptionChange: (value: string) => void
     onPaymentSubmit: () => void
     actionLoading: boolean
+    errorMessage?: string | null // Add this prop
 }
 
 export const PaymentDialog = ({
@@ -37,8 +38,9 @@ export const PaymentDialog = ({
     onPaymentDescriptionChange,
     onPaymentSubmit,
     actionLoading,
+    errorMessage, // Add this prop
 }: PaymentDialogProps) => {
-    const [errorMessage, setErrorMessage] = useState<string | null>(null)
+    const [validationError, setErrorMessage] = useState<string | null>(null)
     const [formattedAmount, setFormattedAmount] = useState<string>("")
 
     // Format the payment amount when it changes
@@ -101,16 +103,25 @@ export const PaymentDialog = ({
 
     if (!orderToPayment) return null
 
+    // Add this before the return statement to display the error message
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
                     <DialogTitle>Thanh toán đơn hàng</DialogTitle>
                     <DialogDescription>
-                        Nhập số tiền bạn muốn thanh toán cho đơn hàng {orderToPayment.orderCode}
+                        Nhập số tiền bạn muốn thanh toán cho đơn hàng {orderToPayment?.orderCode}
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
+                    {/* Display error message if it exists */}
+                    {errorMessage && (
+                        <Alert variant="destructive">
+                            <AlertCircle className="h-4 w-4 mr-2" />
+                            <AlertDescription>{errorMessage}</AlertDescription>
+                        </Alert>
+                    )}
+
                     <div className="grid grid-cols-4 items-center gap-4">
                         <label htmlFor="amount" className="text-right">
                             Số tiền
@@ -138,13 +149,14 @@ export const PaymentDialog = ({
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                         <span className="text-right">Tổng tiền</span>
-                        <span className="col-span-3 font-medium">{orderToPayment.finalPrice.toLocaleString("vi-VN")} đ</span>
+                        <span className="col-span-3 font-medium">{orderToPayment?.finalPrice.toLocaleString("vi-VN")} đ</span>
                     </div>
 
-                    {errorMessage && (
+                    {/* Keep existing validation error display */}
+                    {validationError && (
                         <Alert variant="destructive">
                             <AlertCircle className="h-4 w-4 mr-2" />
-                            <AlertDescription>{errorMessage}</AlertDescription>
+                            <AlertDescription>{validationError}</AlertDescription>
                         </Alert>
                     )}
                 </div>
@@ -152,7 +164,7 @@ export const PaymentDialog = ({
                     <Button variant="outline" onClick={() => onOpenChange(false)}>
                         Hủy
                     </Button>
-                    <Button onClick={onPaymentSubmit} disabled={actionLoading || !!errorMessage || !paymentAmount}>
+                    <Button onClick={onPaymentSubmit} disabled={actionLoading || !!validationError || !paymentAmount}>
                         {actionLoading ? "Đang xử lý..." : "Thanh toán"}
                     </Button>
                 </DialogFooter>
@@ -160,4 +172,3 @@ export const PaymentDialog = ({
         </Dialog>
     )
 }
-

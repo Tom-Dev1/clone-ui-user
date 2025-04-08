@@ -1,3 +1,5 @@
+"use client"
+
 import type React from "react"
 
 import { type ReactNode, useState, useEffect } from "react"
@@ -15,7 +17,6 @@ import {
     ClipboardList,
     ShoppingCart,
     CreditCard,
-
     Package,
     User,
     LogOut,
@@ -83,7 +84,6 @@ export function AgencyLayout({ children }: AgencyLayoutProps) {
             href: "/agency/payment",
             icon: <CreditCard className="h-5 w-5" />,
         },
-
         {
             title: "Hồ sơ cá nhân",
             href: "/agency/profile",
@@ -108,11 +108,7 @@ export function AgencyLayout({ children }: AgencyLayoutProps) {
                                     </SheetTrigger>
                                     <SheetContent side="left" className="p-0 w-[280px]">
                                         <div className="p-6 border-b">
-                                            <Link
-                                                to="/"
-                                                className="text-xl font-bold flex items-center"
-                                                onClick={() => setOpen(false)}
-                                            >
+                                            <Link to="/" className="text-xl font-bold flex items-center" onClick={() => setOpen(false)}>
                                                 Trang chủ
                                             </Link>
                                         </div>
@@ -153,13 +149,12 @@ export function AgencyLayout({ children }: AgencyLayoutProps) {
                                 </Sheet>
                             )}
                             <Link to="/" className="text-xl font-bold flex items-center">
-                                <Home className="h-4 w-4" />
+                                <Home className="h-4 w-4 mr-2" />
                                 <span>Trang chủ</span>
                             </Link>
                         </div>
 
                         <div className="flex items-center">
-
                             <div className="flex items-center space-x-2">
                                 <span className="text-sm text-gray-700 hidden md:inline-block">
                                     Xin chào, <span className="font-medium">{userInfo?.username || "Đại lý"}</span>
@@ -210,4 +205,3 @@ export function AgencyLayout({ children }: AgencyLayoutProps) {
         </div>
     )
 }
-
