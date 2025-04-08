@@ -12,7 +12,6 @@ import { connection } from "@/lib/signalr-client"
 import type { OrderDetail, RequestProduct, SortField, SortDirection } from "@/types/sales-orders"
 
 // Import components
-import { OrderSummaryCards } from "@/components/sales/order-summary-cards"
 import { OrderFilter } from "@/components/sales/order-filter"
 import { OrderTable } from "@/components/sales/order-table"
 import { OrderPagination } from "@/components/sales/order-pagination"
@@ -48,8 +47,8 @@ export default function SalesOrders() {
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(15)
   const [totalPages, setTotalPages] = useState(1)
-  const [totalProducts, setTotalProducts] = useState(0)
-  const [totalQuantity, setTotalQuantity] = useState(0)
+  const [, setTotalProducts] = useState(0)
+  const [, setTotalQuantity] = useState(0)
   const [detailsLoaded, setDetailsLoaded] = useState<Record<string, boolean>>({})
 
   const [sortField, setSortField] = useState<SortField>("none")
@@ -469,50 +468,55 @@ export default function SalesOrders() {
   return (
     <SalesLayout>
       <div className="m-4">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold mb-4">Quản Lý đơn hàng</h1>
+        </div>
+        <div className="space-y-6">
 
-
-        <OrderSummaryCards
+          {/* <OrderSummaryCards
           ordersCount={filteredOrders.length}
           totalProducts={totalProducts}
           totalQuantity={totalQuantity}
-        />
-        <OrderFilter
-          statusFilter={statusFilter}
-          onStatusFilterChange={setStatusFilter}
-          searchQuery={searchQuery}
-          onSearchQueryChange={setSearchQuery}
-        />
-        {isLoading ? (
-          <LoadingState />
-        ) : error ? (
-          <ErrorState message={error} />
-        ) : filteredOrders.length === 0 ? (
-          <EmptyState />
-        ) : (
-          <OrderTable
-            orders={sortedOrders}
-            detailsLoaded={detailsLoaded}
-            onViewDetail={handleViewOrderDetail}
-            onApprove={handleApproveOrder}
-            onCancel={handleCancelOrder}
-            sortField={sortField}
-            sortDirection={sortDirection}
-            onSort={handleSort}
+        /> */}
+          <OrderFilter
+            statusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
+            searchQuery={searchQuery}
+            onSearchQueryChange={setSearchQuery}
           />
-        )}
+          {isLoading ? (
+            <LoadingState />
+          ) : error ? (
+            <ErrorState message={error} />
+          ) : filteredOrders.length === 0 ? (
+            <EmptyState />
+          ) : (
+            <OrderTable
+              orders={sortedOrders}
+              detailsLoaded={detailsLoaded}
+              onViewDetail={handleViewOrderDetail}
+              onApprove={handleApproveOrder}
+              onCancel={handleCancelOrder}
+              sortField={sortField}
+              sortDirection={sortDirection}
+              onSort={handleSort}
+            />
+          )}
 
-        {!isLoading && !error && filteredOrders.length > 0 && (
-          <OrderPagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
-        )}
+          {!isLoading && !error && filteredOrders.length > 0 && (
+            <OrderPagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
+          )}
 
-        <OrderDetailModal
-          isOpen={showOrderDetail}
-          onClose={() => setShowOrderDetail(false)}
-          isLoading={isLoadingDetails}
-          selectedOrder={selectedOrder}
-          orderDetail={orderDetail}
-          onApprove={handleApproveOrder}
-        />
+          <OrderDetailModal
+            isOpen={showOrderDetail}
+            onClose={() => setShowOrderDetail(false)}
+            isLoading={isLoadingDetails}
+            selectedOrder={selectedOrder}
+            orderDetail={orderDetail}
+            onApprove={handleApproveOrder}
+          />
+
+        </div>
       </div>
     </SalesLayout>
   )

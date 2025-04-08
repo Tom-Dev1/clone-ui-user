@@ -11,7 +11,6 @@ interface OrderSummaryCardsProps {
 export const OrderSummaryCards = ({ ordersCount, totalProducts, totalQuantity }: OrderSummaryCardsProps) => {
     return (
         <>
-            <h1 className="text-2xl font-bold mb-5">Quản lý đơn hàng</h1>
 
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">

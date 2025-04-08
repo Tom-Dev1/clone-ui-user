@@ -2,7 +2,6 @@
 
 import type React from "react";
 import { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +14,7 @@ import {
 } from "@/components/ui/table";
 import { Dialog } from "@/components/ui/dialog";
 import {
-  Plus,
+
   Edit,
   Trash,
   ArrowUpDown,
@@ -137,6 +136,7 @@ const ProductList = () => {
   useEffect(() => {
     fetchProducts();
     fetchCategories();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, itemsPerPage]);
 
   // Khi search term thay đổi, reset về trang 1
@@ -145,6 +145,7 @@ const ProductList = () => {
       setCurrentPage(1);
     }
     applyFiltersAndSort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm, products, sortField, sortDirection]);
 
   // Hàm áp dụng bộ lọc và sắp xếp
@@ -646,17 +647,18 @@ const ProductList = () => {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <div className="w-1/3">
-          <Input
-            placeholder="Tìm kiếm sản phẩm..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <div className="flex gap-2">
+        <div className="flex w-full gap-2">
+          <div className="w-full">
+            <Input
+              placeholder="Tìm kiếm sản phẩm..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <Button onClick={() => setIsAddDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
+
               Thêm sản phẩm
             </Button>
             {isAddDialogOpen && (
@@ -687,121 +689,121 @@ const ProductList = () => {
         </div>
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          {isLoading ? (
-            <div className="flex justify-center items-center h-64">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[120px] text-center">
-                    Mã sản phẩm
-                  </TableHead>
-                  <TableHead
-                    className="cursor-pointer"
-                    onClick={() => handleSortChange("productName")}
-                  >
-                    Tên sản phẩm {renderSortIcon("productName")}
-                  </TableHead>
-                  <TableHead className="w-[120px] text-center">
-                    Đơn vị
-                  </TableHead>
-                  <TableHead
-                    className="text-right cursor-pointer"
-                    onClick={() => handleSortChange("price")}
-                  >
-                    Giá {renderSortIcon("price")}
-                  </TableHead>
-                  <TableHead
-                    className="w-[120px] text-right cursor-pointer"
-                    onClick={() => handleSortChange("availableStock")}
-                  >
-                    Tồn kho {renderSortIcon("availableStock")}
-                  </TableHead>
-                  <TableHead
-                    className="w-[180px] text-center cursor-pointer"
-                    onClick={() => handleSortChange("createdDate")}
-                  >
-                    Ngày Tạo {renderSortIcon("createdDate")}
-                  </TableHead>
-                  <TableHead className="w-[180px] text-center">
-                    Người tạo
-                  </TableHead>
-                  <TableHead className="text-center">Thao tác</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredProducts.length > 0 ? (
-                  filteredProducts.map((product) => (
-                    <TableRow key={product.productId}>
-                      <TableCell className="w-[180px] text-center">
-                        {product.productCode || "N/A"}
-                      </TableCell>
-                      <TableCell>{product.productName || "N/A"}</TableCell>
-                      <TableCell className="w-[120px] text-center">
-                        {product.unit || "N/A"}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {formatCurrency(product.price || 0)} đ
-                      </TableCell>
 
-                      <TableCell className="w-[120px] text-right">
-                        {product.availableStock}
-                      </TableCell>
-                      <TableCell className="w-[180px] text-center">
-                        {formatDate(product.createdDate)}
-                      </TableCell>
-                      <TableCell className="w-[180px] text-center">
-                        {product.createdByName || "N/A"}
-                      </TableCell>
+      <div className="bg-white rounded-lg border">
+        {isLoading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[120px] text-center">
+                  Mã sản phẩm
+                </TableHead>
+                <TableHead
+                  className="cursor-pointer"
+                  onClick={() => handleSortChange("productName")}
+                >
+                  Tên sản phẩm {renderSortIcon("productName")}
+                </TableHead>
+                <TableHead className="w-[120px] text-center">
+                  Đơn vị
+                </TableHead>
+                <TableHead
+                  className="text-right cursor-pointer"
+                  onClick={() => handleSortChange("price")}
+                >
+                  Giá {renderSortIcon("price")}
+                </TableHead>
+                <TableHead
+                  className="w-[120px] text-right cursor-pointer"
+                  onClick={() => handleSortChange("availableStock")}
+                >
+                  Tồn kho {renderSortIcon("availableStock")}
+                </TableHead>
+                <TableHead
+                  className="w-[180px] text-center cursor-pointer"
+                  onClick={() => handleSortChange("createdDate")}
+                >
+                  Ngày Tạo {renderSortIcon("createdDate")}
+                </TableHead>
+                <TableHead className="w-[180px] text-center">
+                  Người tạo
+                </TableHead>
+                <TableHead className="text-center">Thao tác</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredProducts.length > 0 ? (
+                filteredProducts.map((product) => (
+                  <TableRow key={product.productId}>
+                    <TableCell className="w-[180px] text-center">
+                      {product.productCode || "N/A"}
+                    </TableCell>
+                    <TableCell>{product.productName || "N/A"}</TableCell>
+                    <TableCell className="w-[120px] text-center">
+                      {product.unit || "N/A"}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {formatCurrency(product.price || 0)} đ
+                    </TableCell>
 
-                      <TableCell className="text-center">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
-                              <span className="sr-only">Mở menu</span>
-                              <MoreHorizontal className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
+                    <TableCell className="w-[120px] text-right">
+                      {product.availableStock}
+                    </TableCell>
+                    <TableCell className="w-[180px] text-center">
+                      {formatDate(product.createdDate)}
+                    </TableCell>
+                    <TableCell className="w-[180px] text-center">
+                      {product.createdByName || "N/A"}
+                    </TableCell>
 
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleViewProductDetail(product)}>
-                              <Eye className="w-4 h-4 mr-2" />
-                              <span>Chi tiết</span>
-                            </DropdownMenuItem>
+                    <TableCell className="text-center">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
+                            <span className="sr-only">Mở menu</span>
+                            <MoreHorizontal className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
 
-                            <DropdownMenuItem onClick={() => handleEditProduct(product)}>
-                              <Edit className="w-4 h-4 mr-2" />
-                              <span>Sửa</span>
-                            </DropdownMenuItem>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleViewProductDetail(product)}>
+                            <Eye className="w-4 h-4 mr-2" />
+                            <span>Chi tiết</span>
+                          </DropdownMenuItem>
 
-                            <DropdownMenuItem
-                              onClick={() => handleDeleteProduct(product)}
-                              className="text-red-500 focus:text-red-600"
-                            >
-                              <Trash className="w-4 h-4 mr-2" />
-                              <span>Xóa</span>
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8">
-                      Không tìm thấy sản phẩm nào
+                          <DropdownMenuItem onClick={() => handleEditProduct(product)}>
+                            <Edit className="w-4 h-4 mr-2" />
+                            <span>Sửa</span>
+                          </DropdownMenuItem>
+
+                          <DropdownMenuItem
+                            onClick={() => handleDeleteProduct(product)}
+                            className="text-red-500 focus:text-red-600"
+                          >
+                            <Trash className="w-4 h-4 mr-2" />
+                            <span>Xóa</span>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center py-8">
+                    Không tìm thấy sản phẩm nào
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        )}
+      </div>
+
 
       {!isLoading && filteredProducts.length > 0 && totalPages > 1 && (
         <div className="mt-4">

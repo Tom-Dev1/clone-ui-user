@@ -8,15 +8,14 @@ interface OrderFilterProps {
 }
 
 export const OrderFilter = ({
-    statusFilter,
-    onStatusFilterChange,
+    // statusFilter,
+    // onStatusFilterChange,
     searchQuery,
     onSearchQueryChange,
 }: OrderFilterProps) => {
     return (
         <>
-            <div className="flex justify-between items-center mb-6">
-
+            {/* 
                 <div className="flex items-center space-x-2">
                     <label htmlFor="status-filter" className="text-sm font-medium text-gray-700">
                         Lọc theo trạng thái:
@@ -32,8 +31,8 @@ export const OrderFilter = ({
                         <option value="Approved">Đã duyệt</option>
                         <option value="Canceled">Đã hủy</option>
                     </select>
-                </div>
-            </div>
+                </div> */}
+
 
             <div className="mb-4">
                 <input
@@ -41,7 +40,7 @@ export const OrderFilter = ({
                     placeholder="Tìm kiếm đơn hàng..."
                     value={searchQuery}
                     onChange={(e) => onSearchQueryChange(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 h-9 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                 />
             </div>
         </>

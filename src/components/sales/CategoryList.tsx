@@ -23,8 +23,9 @@ import {
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { Pencil, Trash2, Eye } from "lucide-react";
+import { Pencil, Trash2, Eye, MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
 
 interface Category {
   categoryId: number;
@@ -332,14 +333,15 @@ const CategoryList = () => {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <div className="w-1/3">
-          <Input
-            placeholder="Tìm kiếm danh mục..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-        <div className="flex gap-2">
+        <div className="flex w-full gap-2">
+          <div className="w-full">
+            <Input
+              placeholder="Tìm kiếm danh mục..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
               <Button>Thêm loại</Button>
@@ -449,7 +451,7 @@ const CategoryList = () => {
                   <TableHead>Tên danh mục</TableHead>
                   <TableHead>Thứ tự</TableHead>
                   <TableHead>Trạng thái</TableHead>
-                  <TableHead className="text-right">Thao tác</TableHead>
+                  <TableHead className=" w-[150px] text-center">Thao tác</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -461,43 +463,43 @@ const CategoryList = () => {
                       <TableCell>{category.sortOrder}</TableCell>
                       <TableCell>
                         <span
-                          className={`px-2 py-1 rounded-full text-xs ${
-                            category.isActive
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
+                          className={`px-2 py-1 rounded-full text-xs ${category.isActive
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                            }`}
                         >
                           {category.isActive ? "Hoạt động" : "Không hoạt động"}
                         </span>
                       </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleViewCategoryDetail(category)}
-                            title="Xem chi tiết"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleEditCategory(category)}
-                            title="Sửa"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleDeleteCategory(category)}
-                            className="text-red-500 hover:text-red-700"
-                            title="Xóa"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                      <TableCell className=" w-[150px] text-center">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="icon" className="h-8 w-8 p-0">
+                              <MoreHorizontal className="w-4 h-4" />
+                              <span className="sr-only">Mở menu</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+
+                          <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem onClick={() => handleViewCategoryDetail(category)}>
+                              <Eye className="w-4 h-4 mr-2" />
+                              <span>Xem chi tiết</span>
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem onClick={() => handleEditCategory(category)}>
+                              <Pencil className="w-4 h-4 mr-2" />
+                              <span>Sửa</span>
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem
+                              onClick={() => handleDeleteCategory(category)}
+                              className="text-red-500 focus:text-red-600"
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              <span>Xóa</span>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))
@@ -551,11 +553,10 @@ const CategoryList = () => {
                   Trạng thái
                 </h3>
                 <span
-                  className={`px-2 py-1 rounded-full text-xs ${
-                    selectedCategory.isActive
-                      ? "bg-green-100 text-green-800"
-                      : "bg-red-100 text-red-800"
-                  }`}
+                  className={`px-2 py-1 rounded-full text-xs ${selectedCategory.isActive
+                    ? "bg-green-100 text-green-800"
+                    : "bg-red-100 text-red-800"
+                    }`}
                 >
                   {selectedCategory.isActive ? "Hoạt động" : "Không hoạt động"}
                 </span>

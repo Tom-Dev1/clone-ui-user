@@ -39,7 +39,7 @@ export const OrderTable = ({
     return (
         <div className="bg-white rounded-lg overflow-hidden">
             <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
+                <table className="min-w-full divide-y divide-gray-200 border rounded-sm">
                     <thead className="bg-gray-50">
                         <tr>
                             <th

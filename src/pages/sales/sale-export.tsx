@@ -32,7 +32,7 @@ import {
   CirclePlus,
   Eye,
   Filter,
-  Search,
+
   MoreHorizontal,
 } from "lucide-react";
 import { format } from "date-fns";
@@ -57,13 +57,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
 import { connection } from "@/lib/signalr-client";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
@@ -173,7 +167,7 @@ const SalesExports = () => {
   const [sortField, setSortField] = useState<string>("approvedDate");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(15);
+  const [pageSize,] = useState<number>(15);
   const [totalItems, setTotalItems] = useState<number>(0);
   const [totalPages, setTotalPages] = useState<number>(1);
 
@@ -227,6 +221,7 @@ const SalesExports = () => {
     return () => {
       connection.off("ReceiveNotification", handleNewOrder);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   // Fetch products for displaying product details
   useEffect(() => {
@@ -584,17 +579,15 @@ const SalesExports = () => {
           <h1 className="text-2xl font-bold">Quản Lý Yêu Cầu Xuất Kho</h1>
         </div>
         <Tabs defaultValue="all" className="space-y-6 ">
-          <div className=" mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-
-
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <div className="relative flex-1 sm:flex-none">
-                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <div className="  flex w-full gap-4">
+            <div className="flex  gap-2 w-full ">
+              <div className="flex w-full gap-2">
                 <Input
                   placeholder="Tìm kiếm yêu cầu..."
-                  className="pl-8"
+                  className="w-full px-4 h-9 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+
                 />
               </div>
 
@@ -783,7 +776,7 @@ const SalesExports = () => {
                           <TableCell className="w-[160px] text-center">
                             {formatDate(request.approvedDate)}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className=" truncate">
                             {request.note || "Không có ghi chú"}
                           </TableCell>
                           <TableCell className="w-[120px] text-center">
@@ -835,8 +828,8 @@ const SalesExports = () => {
             {/* Cải thiện phân trang */}
             {filteredRequests.length > 0 && totalPages > 1 && (
               <div className="mt-4 flex items-center justify-between">
-                <div className="text-sm text-muted-foreground w-32">
-                  Trang {currentPage} / {totalPages}
+                <div className="text-sm text-muted-foreground w-[200px] ">
+                  Hiển thị {filteredRequests.length} / {totalItems} yêu cầu
                 </div>
                 <Pagination>
                   <PaginationContent>
@@ -913,30 +906,7 @@ const SalesExports = () => {
           </TabsContent>
         </Tabs>
         {/* Add page size selector and export button */}
-        <div className="flex justify-between items-center gap-2  mt-4">
-          <div className="text-sm text-muted-foreground ">
-            Hiển thị {filteredRequests.length} / {totalItems} yêu cầu
-          </div>
-          <div className="flex items-center gap-2">
-            <Select
-              value={pageSize.toString()}
-              onValueChange={(value) => {
-                setPageSize(Number(value));
-                setCurrentPage(1);
-              }}
-            >
-              <SelectTrigger className="w-[120px]">
-                <SelectValue placeholder="Hiển thị" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="15">15 hàng</SelectItem>
-                <SelectItem value="30">30 hàng</SelectItem>
-                <SelectItem value="50">50 hàng</SelectItem>
-                <SelectItem value="100">100 hàng</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+
       </div>
 
       {/* Dialog for viewing export request details */}
