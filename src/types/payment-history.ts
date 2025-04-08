@@ -20,7 +20,7 @@ export interface PaymentHistory {
 export enum DebtStatus {
     StillValid = "StillValid",
     NearDue = "NearDue",
-    Overdue = "Overdue",
+    OverDue = "OverDue",
 }
 export enum Status {
     PAID = "PAID",
