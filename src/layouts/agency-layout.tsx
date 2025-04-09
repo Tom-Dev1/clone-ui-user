@@ -114,8 +114,8 @@ export function AgencyLayout({ children }: AgencyLayoutProps) {
                                             </Link>
                                         </div>
                                         <ScrollArea className="h-[calc(100vh-81px)]">
-                                            <div className="py-4">
-                                                <nav className="px-2 space-y-1">
+                                            <div className="py-4 ">
+                                                <nav className="px-2 space-y-1 ">
                                                     {navItems.map((item) => (
                                                         <Link
                                                             key={item.href}
@@ -178,15 +178,15 @@ export function AgencyLayout({ children }: AgencyLayoutProps) {
 
             <div className="flex">
                 {/* Desktop Sidebar */}
-                <aside className="hidden lg:block w-64 bg-white shadow-sm h-[calc(100vh-4rem)] sticky top-16 border-r">
-                    <ScrollArea className="h-full">
-                        <nav className="p-4 space-y-1">
+                <aside className="hidden lg:block w-52 bg-white shadow-sm h-[calc(100vh-4rem)] sticky top-16 border-r">
+                    <ScrollArea className="h-full ">
+                        <nav className="p-4 space-y-1 w-[182px]">
                             {navItems.map((item) => (
                                 <Link
                                     key={item.href}
                                     to={item.href}
                                     className={cn(
-                                        "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                                        "flex items-center gap-3 rounded-md w-[182px] px-3 py-2 text-sm font-medium transition-colors",
                                         isActive(item.href)
                                             ? "bg-green-600 text-white"
                                             : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
