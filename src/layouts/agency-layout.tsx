@@ -65,15 +65,16 @@ export function AgencyLayout({ children }: AgencyLayoutProps) {
             icon: <LayoutDashboard className="h-5 w-5" />,
         },
         {
-            title: "Theo dõi yêu cầu",
-            href: "/agency/requests",
-            icon: <ClipboardList className="h-5 w-5" />,
-        },
-        {
             title: "Yêu cầu sản phẩm",
             href: "/agency/product-request",
             icon: <Package className="h-5 w-5" />,
         },
+        {
+            title: "Theo dõi yêu cầu",
+            href: "/agency/requests",
+            icon: <ClipboardList className="h-5 w-5" />,
+        },
+
         {
             title: "Theo dõi đơn hàng",
             href: "/agency/orders",
