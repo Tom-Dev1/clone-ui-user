@@ -87,7 +87,7 @@ const CollectionSlug = () => {
                             <ul className="space-y-2">
                                 <li>
                                     <Link to="/collections" className="text-muted-foreground hover:text-primary">
-                                        All Products
+                                        Tất cả
                                     </Link>
                                 </li>
                                 {allCategories
