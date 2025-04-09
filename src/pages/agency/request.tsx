@@ -145,7 +145,7 @@ const AgencyRequests = () => {
 
             try {
                 setLoading(true)
-                const data = await fetchWithAuth("https://minhlong.mlhr.org/api/request-products")
+                const data = await fetchWithAuth("https://minhlong.mlhr.org/api/request-products/my-request-product")
                 setRequests(data)
                 setFilteredRequests(data)
                 setError(null)

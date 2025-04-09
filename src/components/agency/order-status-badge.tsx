@@ -20,8 +20,6 @@ export const OrderStatusBadge = ({ status }: OrderStatusBadgeProps) => {
             return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 p-1 w-[100px]">
                 <span className="text-center w-[100px]">Đang xử lý</span>
             </Badge>
-
-
         case "Delivery":
             return <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 p-1 w-[100px]">
                 <span className="text-center w-[100px]">Đang giao hàng</span>

@@ -301,11 +301,11 @@ export default function AgencyProductRequest() {
                               <div className="mt-1 text-xs">
                                 <span
                                   className={`${item.quantity >= item.availableStock
-                                      ? "text-red-500"
-                                      : item.quantity >
-                                        item.availableStock * 0.8
-                                        ? "text-orange-500"
-                                        : "text-green-500"
+                                    ? "text-red-500"
+                                    : item.quantity >
+                                      item.availableStock * 0.8
+                                      ? "text-orange-500"
+                                      : "text-green-500"
                                     }`}
                                 >
                                   Có sẵn: {item.availableStock} {item.unit}
