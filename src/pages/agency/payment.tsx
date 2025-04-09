@@ -16,9 +16,9 @@ import { PaymentSearch } from "@/components/payment/payment-search"
 import { PaymentTable } from "@/components/payment/payment-table"
 import { PaymentPagination } from "@/components/payment/payment-pagination"
 import { PaymentDialog } from "@/components/payment/payment-dialog"
+import { PaymentDetailDialog } from "@/components/payment/payment-detail-dialog"
 import { LoadingState } from "@/components/payment/loading-state"
 import { ErrorState } from "@/components/payment/error-state"
-import { PaymentDetailDialog } from "@/components/payment/payment-detail-dialog"
 
 const AgencyPaymentHistoryPage: React.FC = () => {
   const navigate = useNavigate()
@@ -30,13 +30,10 @@ const AgencyPaymentHistoryPage: React.FC = () => {
 
   // State cho dialog thanh toán
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState<boolean>(false)
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState<boolean>(false)
   const [paymentAmount, setPaymentAmount] = useState<string>("")
   const [selectedPayment, setSelectedPayment] = useState<PaymentHistory | null>(null)
   const [actionLoading, setActionLoading] = useState<boolean>(false)
-
-  // State for payment detail dialog
-  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState<boolean>(false)
-  const [selectedPaymentForDetail, setSelectedPaymentForDetail] = useState<PaymentHistory | null>(null)
 
   // Sorting state
   const [sortField, setSortField] = useState<keyof PaymentHistory>("paymentDate")
@@ -61,7 +58,7 @@ const AgencyPaymentHistoryPage: React.FC = () => {
           return
         }
 
-        const response = await fetch("https://minhlong.mlhr.org/api/PaymentHistory/my-payment-history", {
+        const response = await fetch("https://minhlong.mlhr.org/api/PaymentHistory/all", {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
@@ -106,7 +103,12 @@ const AgencyPaymentHistoryPage: React.FC = () => {
       let bValue = b[sortField]
 
       // Handle date fields
-      if (sortField === "paymentDate" || sortField === "createdAt" || sortField === "updatedAt") {
+      if (
+        sortField === "paymentDate" ||
+        sortField === "createdAt" ||
+        sortField === "updatedAt" ||
+        sortField === "dueDate"
+      ) {
         aValue = new Date(a[sortField]).getTime()
         bValue = new Date(b[sortField]).getTime()
       }
@@ -138,20 +140,22 @@ const AgencyPaymentHistoryPage: React.FC = () => {
       setSortField(field)
       setSortDirection("asc")
     }
-    setCurrentPage(1)
+    if (searchTerm !== "") {
+      setCurrentPage(1)
+    }
   }
 
-  // Open payment dialog
+  // Open payment detail dialog
+  const openPaymentDetailDialog = (payment: PaymentHistory) => {
+    setSelectedPayment(payment)
+    setIsDetailDialogOpen(true)
+  }
+
+  // Open payment dialog directly
   const openPaymentDialog = (payment: PaymentHistory) => {
     setSelectedPayment(payment)
     setPaymentAmount("")
     setIsPaymentDialogOpen(true)
-  }
-
-  // Open payment detail dialog
-  const openDetailDialog = (payment: PaymentHistory) => {
-    setSelectedPaymentForDetail(payment)
-    setIsDetailDialogOpen(true)
   }
 
   // Handle payment
@@ -193,6 +197,7 @@ const AgencyPaymentHistoryPage: React.FC = () => {
 
       // Đóng dialog thanh toán
       setIsPaymentDialogOpen(false)
+      setIsDetailDialogOpen(false)
 
       // Kiểm tra xem có checkoutUrl không và chuyển hướng
       if (paymentResponse && paymentResponse.checkoutUrl) {
@@ -261,7 +266,7 @@ const AgencyPaymentHistoryPage: React.FC = () => {
             sortDirection={sortDirection}
             onSortChange={handleSortChange}
             onPaymentClick={openPaymentDialog}
-            onViewDetails={openDetailDialog}
+            onViewDetail={openPaymentDetailDialog}
           />
 
           {/* Pagination */}
@@ -274,6 +279,15 @@ const AgencyPaymentHistoryPage: React.FC = () => {
           />
         </div>
 
+        {/* Payment Detail Dialog */}
+        <PaymentDetailDialog
+          isOpen={isDetailDialogOpen}
+          onOpenChange={setIsDetailDialogOpen}
+          selectedPayment={selectedPayment}
+          onPaymentSubmit={handlePayment}
+          isLoading={actionLoading}
+        />
+
         {/* Payment Dialog */}
         <PaymentDialog
           isOpen={isPaymentDialogOpen}
@@ -283,13 +297,6 @@ const AgencyPaymentHistoryPage: React.FC = () => {
           onPaymentAmountChange={setPaymentAmount}
           onPaymentSubmit={handlePayment}
           isLoading={actionLoading}
-        />
-
-        {/* Payment Detail Dialog */}
-        <PaymentDetailDialog
-          isOpen={isDetailDialogOpen}
-          onOpenChange={setIsDetailDialogOpen}
-          payment={selectedPaymentForDetail}
         />
       </div>
     </AgencyLayout>

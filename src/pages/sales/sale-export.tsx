@@ -490,6 +490,15 @@ const SalesExports = () => {
             Đang xử lý
           </Badge>
         );
+      case "Partially_Exported":
+        return (
+          <Badge
+            variant="outline"
+            className="bg-red-50 text-red-700 border-red-200"
+          >
+            Trả một phần
+          </Badge>
+        );
       default:
         return <Badge variant="outline">{status}</Badge>;
     }

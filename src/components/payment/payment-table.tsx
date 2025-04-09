@@ -22,7 +22,7 @@ interface PaymentTableProps {
     sortDirection: "asc" | "desc"
     onSortChange: (field: keyof PaymentHistory) => void
     onPaymentClick: (payment: PaymentHistory) => void
-    onViewDetails: (payment: PaymentHistory) => void
+    onViewDetail: (payment: PaymentHistory) => void
 }
 
 export const PaymentTable = ({
@@ -31,7 +31,7 @@ export const PaymentTable = ({
     sortDirection,
     onSortChange,
     onPaymentClick,
-    onViewDetails,
+    onViewDetail,
 }: PaymentTableProps) => {
     // Render sort indicator
     const renderSortIndicator = (field: keyof PaymentHistory) => {
@@ -51,7 +51,7 @@ export const PaymentTable = ({
                             {renderSortIndicator("orderCode")}
                         </div>
                     </TableHead>
-                    <TableHead className="cursor-pointer" onClick={() => onSortChange("agencyName")}>
+                    <TableHead className="cursor-pointer truncate" onClick={() => onSortChange("agencyName")}>
                         <div className="flex items-center">
                             Đại lý
                             {renderSortIndicator("agencyName")}
@@ -105,27 +105,27 @@ export const PaymentTable = ({
                             {renderSortIndicator("debtStatus")}
                         </div>
                     </TableHead>
-                    <TableHead>Thao tác</TableHead>
+                    <TableHead className="truncate">Thao tác</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
                 {payments.length === 0 ? (
                     <TableRow>
-                        <TableCell colSpan={10} className="text-center py-8">
+                        <TableCell colSpan={11} className="text-center py-8">
                             Không có dữ liệu thanh toán
                         </TableCell>
                     </TableRow>
                 ) : (
                     payments.map((payment) => (
                         <TableRow key={payment.paymentHistoryId}>
-                            <TableCell>{payment.orderCode}</TableCell>
-                            <TableCell>{payment.agencyName}</TableCell>
+                            <TableCell className="">{payment.orderCode}</TableCell>
+                            <TableCell className="">{payment.agencyName}</TableCell>
                             <TableCell className="text-center">
                                 {format(new Date(payment.paymentDate), "dd/MM/yyyy", {
                                     locale: vi,
                                 })}
                             </TableCell>
-                            <TableCell >{payment.serieNumber}</TableCell>
+                            <TableCell>{payment.serieNumber}</TableCell>
                             <TableCell>
                                 <PaymentStatusBadge status={payment.status} />
                             </TableCell>
@@ -135,33 +135,35 @@ export const PaymentTable = ({
                             <TableCell className="text-right">
                                 {format(new Date(payment.dueDate), "dd/MM/yyyy", {
                                     locale: vi,
-                                })}</TableCell>
-                            <TableCell className="text-right"> <DebtStatusBadge status={payment.debtStatus} /></TableCell>
-
+                                })}
+                            </TableCell>
+                            <TableCell className="text-right">
+                                <DebtStatusBadge status={payment.debtStatus} />
+                            </TableCell>
                             <TableCell className="text-center">
-                                {payment.status === "PARTIALLY_PAID" && (
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" className="h-8 w-8 p-0">
-                                                <span className="sr-only">Mở menu</span>
-                                                <MoreHorizontal className="h-4 w-4" />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                            <DropdownMenuItem onClick={() => onViewDetails(payment)}>
-                                                <Eye className="mr-2 h-4 w-4" />
-                                                <span>Xem chi tiết</span>
-                                            </DropdownMenuItem>
 
-                                            {payment.status === "PARTIALLY_PAID" && (
-                                                <DropdownMenuItem onClick={() => onPaymentClick(payment)}>
-                                                    <CreditCard className="mr-2 h-4 w-4" />
-                                                    <span>Thanh toán</span>
-                                                </DropdownMenuItem>
-                                            )}
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                )}
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" className="h-8 w-8 p-0">
+                                            <span className="sr-only">Mở menu</span>
+                                            <MoreHorizontal className="h-4 w-4" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuItem onClick={() => onViewDetail(payment)}>
+                                            <Eye className="mr-2 h-4 w-4" />
+                                            <span>Xem chi tiết</span>
+                                        </DropdownMenuItem>
+                                        {payment.status === "PARTIALLY_PAID" && (
+                                            <DropdownMenuItem onClick={() => onPaymentClick(payment)}>
+                                                <CreditCard className="mr-2 h-4 w-4" />
+                                                <span>Thanh toán</span>
+                                            </DropdownMenuItem>
+                                        )}
+
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+
 
                             </TableCell>
                         </TableRow>

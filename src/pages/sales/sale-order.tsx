@@ -51,8 +51,9 @@ export default function SalesOrders() {
   const [, setTotalQuantity] = useState(0)
   const [detailsLoaded, setDetailsLoaded] = useState<Record<string, boolean>>({})
 
-  const [sortField, setSortField] = useState<SortField>("none")
-  const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
+  const [sortField, setSortField] = useState<SortField>("createdAt")
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc")
+
 
   // Kiểm tra xác thực và quyền truy cập
   useEffect(() => {
@@ -231,14 +232,9 @@ export default function SalesOrders() {
         return sortDirection === "asc" ? dateA - dateB : dateB - dateA
       } else {
         // Default sort by status if no sort field is selected
-        const statusOrder = {
-          Pending: 0,
-          Approved: 1,
-          Completed: 2,
-          Canceled: 3,
-        }
-
-        return statusOrder[a.requestStatus] - statusOrder[b.requestStatus]
+        const dateA = new Date(a.createdAt).getTime()
+        const dateB = new Date(b.createdAt).getTime()
+        return dateB - dateA // Default to newest first
       }
     })
     // Paginate the results

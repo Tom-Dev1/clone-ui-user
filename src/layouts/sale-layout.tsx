@@ -13,7 +13,6 @@ import {
   LayoutDashboard,
   ShoppingBag,
   Package,
-  Receipt,
   FileText,
 
   User,
@@ -60,14 +59,14 @@ export function SalesLayout({ children }: SalesLayoutProps) {
 
   const navItems: NavItem[] = [
     {
-      title: "Tổng quan",
-      href: "/sales/dashboard",
-      icon: <LayoutDashboard className="h-5 w-5" />,
+      title: "Hồ sơ cá nhân",
+      href: "/sales/profile",
+      icon: <User className="h-5 w-5" />,
     },
     {
-      title: "Đơn hàng",
-      href: "/sales/orders",
-      icon: <ShoppingBag className="h-5 w-5" />,
+      title: "Cấp đại lý",
+      href: "/sales/level",
+      icon: <CreditCard className="h-5 w-5" />,
     },
     {
       title: "Sản phẩm",
@@ -76,25 +75,29 @@ export function SalesLayout({ children }: SalesLayoutProps) {
     },
 
     {
-      title: "Thuế",
-      href: "/sales/tax",
-      icon: <Receipt className="h-5 w-5" />,
-    },
-    {
       title: "Yêu cầu xuất kho",
       href: "/sales/export",
       icon: <FileText className="h-5 w-5" />,
     },
     {
-      title: "Cấp đại lý",
-      href: "/sales/level",
-      icon: <CreditCard className="h-5 w-5" />,
+      title: "Đơn hàng",
+      href: "/sales/orders",
+      icon: <ShoppingBag className="h-5 w-5" />,
     },
     {
-      title: "Hồ sơ cá nhân",
-      href: "/sales/profile",
-      icon: <User className="h-5 w-5" />,
+      title: "Tổng quan",
+      href: "/sales/dashboard",
+      icon: <LayoutDashboard className="h-5 w-5" />,
     },
+
+    // {
+    //   title: "Thuế",
+    //   href: "/sales/tax",
+    //   icon: <Receipt className="h-5 w-5" />,
+    // },
+
+
+
   ];
   return (
     <div className="min-h-screen bg-gray-100">
