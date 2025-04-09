@@ -150,7 +150,7 @@ export default function ProductDetail() {
 
       addItem(product, quantity);
       toast.success(
-        `Added ${quantity} ${product.unit} of ${product.productName} to cart`
+        `Đã thêm ${quantity} ${product.unit} của ${product.productName} vào giỏ hàng`
       );
     }
   };
@@ -259,11 +259,10 @@ export default function ProductDetail() {
                   <button
                     key={index}
                     onClick={() => setActiveImageIndex(index)}
-                    className={`w-20 h-20 rounded-md border overflow-hidden flex-shrink-0 transition-all duration-200 ${
-                      activeImageIndex === index
+                    className={`w-20 h-20 rounded-md border overflow-hidden flex-shrink-0 transition-all duration-200 ${activeImageIndex === index
                         ? "ring-2 ring-primary scale-105"
                         : "hover:ring-1 hover:ring-primary/50 hover:scale-[1.02]"
-                    }`}
+                      }`}
                     aria-label={`View image ${index + 1}`}
                     aria-current={activeImageIndex === index ? "true" : "false"}
                   >
