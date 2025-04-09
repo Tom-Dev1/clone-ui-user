@@ -18,6 +18,7 @@ import {
 
   User,
   LogOut,
+  CreditCard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/hooks/use-media-query";
@@ -84,11 +85,11 @@ export function SalesLayout({ children }: SalesLayoutProps) {
       href: "/sales/export",
       icon: <FileText className="h-5 w-5" />,
     },
-    // {
-    //   title: "Quản lý công nợ",
-    //   href: "/sales/debt",
-    //   icon: <CreditCard className="h-5 w-5" />,
-    // },
+    {
+      title: "Cấp đại lý",
+      href: "/sales/level",
+      icon: <CreditCard className="h-5 w-5" />,
+    },
     {
       title: "Hồ sơ cá nhân",
       href: "/sales/profile",

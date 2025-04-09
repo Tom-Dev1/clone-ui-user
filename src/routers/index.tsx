@@ -16,6 +16,7 @@ import { VerifyEmail } from "@/pages/VerifyEmail"
 import { DashboardRouter } from "@/components/DashboardRouter"
 import PaymentSuccess from "@/pages/agency/payment-success"
 import PaymentFailure from "@/pages/agency/payment-failrue"
+import SaleAgencyLevel from "@/pages/sales/sale-agency-level"
 
 
 // Lazy load pages for better performance
@@ -167,6 +168,7 @@ export const AppRouter = () => {
                     <Route path="/sales/export" element={<ProtectedRoute requiredRole={UserRole.SALES_MANAGER}><SalesExports /></ProtectedRoute>} />
                     <Route path="/sales/tax" element={<ProtectedRoute requiredRole={UserRole.SALES_MANAGER}><SalesTax /></ProtectedRoute>} />
                     <Route path="/sales/product" element={<ProtectedRoute requiredRole={UserRole.SALES_MANAGER}><SalesProducts /></ProtectedRoute>} />
+                    <Route path="/sales/level" element={<ProtectedRoute requiredRole={UserRole.SALES_MANAGER}><SaleAgencyLevel /></ProtectedRoute>} />
 
                     <Route path="/agency/dashboard" element={<ProtectedRoute requiredRole={UserRole.AGENCY}><AgencyDashboard /></ProtectedRoute>} />
                     <Route path="/agency/requests" element={<ProtectedRoute requiredRole={UserRole.AGENCY}><AgencyRequests /></ProtectedRoute>} />
