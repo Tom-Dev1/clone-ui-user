@@ -17,6 +17,8 @@ import { DashboardRouter } from "@/components/DashboardRouter"
 import PaymentSuccess from "@/pages/agency/payment-success"
 import PaymentFailure from "@/pages/agency/payment-failrue"
 import SaleAgencyLevel from "@/pages/sales/sale-agency-level"
+import SaleReviewOrder from "@/pages/sales/sale-review-order"
+import ReturnOrder from "@/pages/agency/return-order"
 
 
 // Lazy load pages for better performance
@@ -169,6 +171,10 @@ export const AppRouter = () => {
                     <Route path="/sales/tax" element={<ProtectedRoute requiredRole={UserRole.SALES_MANAGER}><SalesTax /></ProtectedRoute>} />
                     <Route path="/sales/product" element={<ProtectedRoute requiredRole={UserRole.SALES_MANAGER}><SalesProducts /></ProtectedRoute>} />
                     <Route path="/sales/level" element={<ProtectedRoute requiredRole={UserRole.SALES_MANAGER}><SaleAgencyLevel /></ProtectedRoute>} />
+                    <Route path="/sales/review-order" element={<ProtectedRoute requiredRole={UserRole.SALES_MANAGER}><SaleReviewOrder /></ProtectedRoute>} />
+                    <Route path="/sales/customer" element={<ProtectedRoute requiredRole={UserRole.SALES_MANAGER}><SaleReviewOrder /></ProtectedRoute>} />
+
+
 
                     <Route path="/agency/dashboard" element={<ProtectedRoute requiredRole={UserRole.AGENCY}><AgencyDashboard /></ProtectedRoute>} />
                     <Route path="/agency/requests" element={<ProtectedRoute requiredRole={UserRole.AGENCY}><AgencyRequests /></ProtectedRoute>} />
@@ -178,10 +184,7 @@ export const AppRouter = () => {
                     <Route path="/agency/payment" element={<ProtectedRoute requiredRole={UserRole.AGENCY}><AgencyPayment /></ProtectedRoute>} />
                     <Route path="/agency/payment-success" element={<ProtectedRoute requiredRole={UserRole.AGENCY}><PaymentSuccess /></ProtectedRoute>} />
                     <Route path="/agency/payment-failure" element={<ProtectedRoute requiredRole={UserRole.AGENCY}><PaymentFailure /></ProtectedRoute>} />
-
-
-
-
+                    <Route path="/agency/return-order" element={<ProtectedRoute requiredRole={UserRole.AGENCY}><ReturnOrder /></ProtectedRoute>} />
 
                     {/* Catch all route for 404 */}
                     <Route path="/404" element={<NotFound />} />

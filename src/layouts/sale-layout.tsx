@@ -11,13 +11,14 @@ import {
   Menu,
   Home,
   LayoutDashboard,
-  ShoppingBag,
+
   Package,
   FileText,
 
   User,
   LogOut,
   CreditCard,
+  CheckCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/hooks/use-media-query";
@@ -63,15 +64,25 @@ export function SalesLayout({ children }: SalesLayoutProps) {
       href: "/sales/dashboard",
       icon: <LayoutDashboard className="h-5 w-5" />,
     },
-    {
-      title: "Đơn hàng",
-      href: "/sales/orders",
-      icon: <ShoppingBag className="h-5 w-5" />,
-    },
+
     {
       title: "Yêu cầu xuất kho",
       href: "/sales/export",
       icon: <FileText className="h-5 w-5" />,
+    },
+
+
+
+
+    {
+      title: "Duyệt trả hàng",
+      href: "/sales/review-order",
+      icon: <CheckCheck className="h-5 w-5" />,
+    },
+    {
+      title: "Khách hàng",
+      href: "/sales/customer",
+      icon: <User className="h-5 w-5" />,
     },
     {
       title: "Sản phẩm",

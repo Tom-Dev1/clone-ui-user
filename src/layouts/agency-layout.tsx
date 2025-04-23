@@ -14,12 +14,12 @@ import {
     Menu,
     Home,
     LayoutDashboard,
-    ClipboardList,
     ShoppingCart,
     CreditCard,
     Package,
     User,
     LogOut,
+    PackageCheck,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useMediaQuery } from "@/hooks/use-media-query"
@@ -69,16 +69,16 @@ export function AgencyLayout({ children }: AgencyLayoutProps) {
             href: "/agency/product-request",
             icon: <Package className="h-5 w-5" />,
         },
-        {
-            title: "Theo dõi yêu cầu",
-            href: "/agency/requests",
-            icon: <ClipboardList className="h-5 w-5" />,
-        },
 
         {
             title: "Theo dõi đơn hàng",
             href: "/agency/orders",
             icon: <ShoppingCart className="h-5 w-5" />,
+        },
+        {
+            title: "Trả đơn hàng",
+            href: "/agency/return-order",
+            icon: <PackageCheck className="h-5 w-5" />,
         },
         {
             title: "Thanh toán",
