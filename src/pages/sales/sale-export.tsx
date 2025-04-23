@@ -348,14 +348,16 @@ const SalesExports = () => {
         </Tabs>
       </div>
 
-      {/* Dialog for viewing export request details */}
       <ExportRequestDetailDialog
         detailsOpen={detailsOpen}
         setDetailsOpen={setDetailsOpen}
         selectedRequest={selectedRequest}
-
+        onConfirm={handleConfirmCreateForMainWarehouse}
+        openConfirmDialog={(requestId) => {
+          setSelectedRequestForMainWarehouse(requestId)
+          setConfirmDialogOpen(true)
+        }}
       />
-
 
       {/* Add the new dialog component */}
       <ExportRequestConfirmDialog

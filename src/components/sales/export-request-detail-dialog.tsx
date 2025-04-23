@@ -20,15 +20,19 @@ import { useEffect, useState } from "react"
 import { fetchWithAuth } from "@/utils/api-utils"
 import type { ApiProduct } from "@/types/export-request"
 import { formatDate, getTotalRequestedQuantity, getTotalValue } from "@/utils/format-export"
+import { CirclePlus } from "lucide-react"
 
 interface ExportRequestDetailDialogProps {
     detailsOpen: boolean
     setDetailsOpen: (open: boolean) => void
     selectedRequest: RequestExport | null
+    onConfirm?: () => void
+    openConfirmDialog: (requestId: number) => void
 
 }
 
 export const ExportRequestDetailDialog = ({
+    openConfirmDialog,
     detailsOpen,
     setDetailsOpen,
     selectedRequest,
@@ -219,6 +223,18 @@ export const ExportRequestDetailDialog = ({
                 )}
 
                 <DialogFooter className="pt-4">
+
+                    {selectedRequest?.status !== "Requested" && (
+                        <Button
+                            variant="destructive"
+                            onClick={() => {
+                                setDetailsOpen(false)
+                                openConfirmDialog(selectedRequest?.requestExportId || 0)
+                            }}
+                        >
+                            <CirclePlus className="w-4 h-4 mr-2" />
+                            <span>Yêu cầu xuất kho</span>
+                        </Button>)}
                     <Button variant="outline" onClick={() => setDetailsOpen(false)}>
                         Đóng
                     </Button>
