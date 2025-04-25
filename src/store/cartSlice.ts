@@ -16,8 +16,17 @@ interface CartState {
   items: CartItem[]
 }
 
+// Hàm helper để lưu cart vào localStorage
+const saveCartToLocalStorage = (items: CartItem[]) => {
+  localStorage.setItem('cart_items', JSON.stringify(items));
+}
+
+// Lấy initial state từ localStorage nếu có
 const initialState: CartState = {
-  items: [],
+  items: (() => {
+    const savedCart = localStorage.getItem('cart_items');
+    return savedCart ? JSON.parse(savedCart) : [];
+  })(),
 }
 
 export const cartSlice = createSlice({
@@ -45,9 +54,13 @@ export const cartSlice = createSlice({
           images: product.images,
         })
       }
+      // Lưu vào localStorage sau khi thêm
+      saveCartToLocalStorage(state.items)
     },
     removeItem: (state, action: PayloadAction<number>) => {
       state.items = state.items.filter((item) => item.productId !== action.payload)
+      // Lưu vào localStorage sau khi xóa
+      saveCartToLocalStorage(state.items)
     },
     updateItemQuantity: (state, action: PayloadAction<{ productId: number; quantity: number }>) => {
       const { productId, quantity } = action.payload
@@ -57,9 +70,13 @@ export const cartSlice = createSlice({
         // Đảm bảo số lượng không vượt quá availableStock
         item.quantity = Math.min(quantity, item.availableStock)
       }
+      // Lưu vào localStorage sau khi cập nhật
+      saveCartToLocalStorage(state.items)
     },
     clearAllItems: (state) => {
       state.items = []
+      // Xóa cart khỏi localStorage
+      localStorage.removeItem('cart_items')
     },
   },
 })

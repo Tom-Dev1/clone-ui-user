@@ -80,7 +80,7 @@ export function SalesLayout({ children }: SalesLayoutProps) {
       icon: <CheckCheck className="h-5 w-5" />,
     },
     {
-      title: "Khách hàng",
+      title: "Quản lý đại lý",
       href: "/sales/customer",
       icon: <User className="h-5 w-5" />,
     },

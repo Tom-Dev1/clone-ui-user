@@ -19,6 +19,7 @@ import PaymentFailure from "@/pages/agency/payment-failrue"
 import SaleAgencyLevel from "@/pages/sales/sale-agency-level"
 import SaleReviewOrder from "@/pages/sales/sale-review-order"
 import ReturnOrder from "@/pages/agency/return-order"
+import SaleCustomer from "@/pages/sales/sale-customer"
 
 
 // Lazy load pages for better performance
@@ -172,7 +173,7 @@ export const AppRouter = () => {
                     <Route path="/sales/product" element={<ProtectedRoute requiredRole={UserRole.SALES_MANAGER}><SalesProducts /></ProtectedRoute>} />
                     <Route path="/sales/level" element={<ProtectedRoute requiredRole={UserRole.SALES_MANAGER}><SaleAgencyLevel /></ProtectedRoute>} />
                     <Route path="/sales/review-order" element={<ProtectedRoute requiredRole={UserRole.SALES_MANAGER}><SaleReviewOrder /></ProtectedRoute>} />
-                    <Route path="/sales/customer" element={<ProtectedRoute requiredRole={UserRole.SALES_MANAGER}><SaleReviewOrder /></ProtectedRoute>} />
+                    <Route path="/sales/customer" element={<ProtectedRoute requiredRole={UserRole.SALES_MANAGER}><SaleCustomer /></ProtectedRoute>} />
 
 
 

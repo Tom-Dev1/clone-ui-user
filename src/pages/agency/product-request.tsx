@@ -187,7 +187,7 @@ export default function AgencyProductRequest() {
       // Hiển thị thông báo thành công
       toast.success("Yêu cầu đã được gửi thành công!");
 
-      // Xóa giỏ hàng
+      // Xóa giỏ hàng và localStorage
       clearCart();
 
       // Reset form
