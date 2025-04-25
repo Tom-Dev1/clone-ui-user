@@ -21,7 +21,7 @@ export const OrderStatusBadge = ({ status }: OrderStatusBadgeProps) => {
             </Badge>
 
         case "Exported":
-            return <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200 p-1 w-[100px]">
+            return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 p-1 w-[100px]">
                 <span className="text-center w-[100px]">Đang giao hàng</span>
             </Badge>
 

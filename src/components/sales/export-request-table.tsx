@@ -39,7 +39,7 @@ export const ExportRequestTable = ({
             case "Requested":
                 return (
                     <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">
-                        Chờ xử lý
+                        Chờ xuất kho
                     </Badge>
                 )
             case "Approved":
@@ -50,13 +50,13 @@ export const ExportRequestTable = ({
                 )
             case "Processing":
                 return (
-                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                    <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
                         Chờ duyệt
                     </Badge>
                 )
             case "Partially_Exported":
                 return (
-                    <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
                         Trả một phần
                     </Badge>
                 )
