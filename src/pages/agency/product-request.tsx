@@ -194,7 +194,7 @@ export default function AgencyProductRequest() {
       setNote("");
 
       // Chuyển hướng đến trang danh sách yêu cầu
-      navigate("/agency/requests");
+      navigate("/agency/orders");
     } catch (error) {
       // Xử lý lỗi
       console.error("Error submitting request:", error);
