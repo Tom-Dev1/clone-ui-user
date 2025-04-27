@@ -6,7 +6,16 @@ import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react"
 import { OrderStatusBadge } from "./order-status-badge"
 import type { Order, SortDirection } from "@/types/agency-orders"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Eye, CreditCard, X } from "lucide-react"
+import { MoreHorizontal, Eye, CreditCard, X, RotateCcw } from "lucide-react"
+
+// Add this function to check if the order date is within 20 days
+const isWithin20Days = (dateString: string): boolean => {
+    const orderDate = new Date(dateString)
+    const currentDate = new Date()
+    const diffTime = currentDate.getTime() - orderDate.getTime()
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    return diffDays <= 20
+}
 
 interface OrderTableProps {
     orders: Order[]
@@ -16,6 +25,7 @@ interface OrderTableProps {
     onViewDetails: (order: Order) => void
     onPayment: (order: Order) => void
     onCancel: (orderId: string) => void
+    onReturnRequest: (order: Order) => void
     actionLoading: boolean
     formatDate: (dateString: string) => string
 }
@@ -30,6 +40,7 @@ export const OrderTable = ({
     onCancel,
 
     formatDate,
+    onReturnRequest,
 }: OrderTableProps) => {
     // Render sort icon
     const renderSortIcon = (field: string) => {
@@ -41,7 +52,7 @@ export const OrderTable = ({
     }
 
     return (
-        <div className="overflow-x-auto rounded-md border bg-white ">
+        <div className="overflow-x-auto">
             <Table>
                 <TableHeader>
                     <TableRow>
@@ -92,7 +103,7 @@ export const OrderTable = ({
                                     <OrderStatusBadge status={order.status} />
                                 </TableCell>
                                 <TableCell className="text-center">{order.finalPrice.toLocaleString("vi-VN")} đ</TableCell>
-                                <TableCell className="text-center">
+                                <TableCell>
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
                                             <Button variant="ghost" className="h-8 w-8 p-0">
@@ -122,6 +133,13 @@ export const OrderTable = ({
                                                     </DropdownMenuItem>
                                                 </>
                                             )}
+
+                                            {order.status === "Exported" && isWithin20Days(order.orderDate) && (
+                                                <DropdownMenuItem onClick={() => onReturnRequest(order)}>
+                                                    <RotateCcw className="mr-2 h-4 w-4" />
+                                                    <span>Yêu cầu trả hàng</span>
+                                                </DropdownMenuItem>
+                                            )}
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                 </TableCell>
@@ -133,4 +151,3 @@ export const OrderTable = ({
         </div>
     )
 }
-

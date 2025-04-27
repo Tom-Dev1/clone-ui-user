@@ -1,10 +1,8 @@
-"use client"
 
 import { useState, useEffect } from "react"
 import { AgencyLayout } from "@/layouts/agency-layout"
 import { useAuth } from "@/contexts/AuthContext"
 import { connection } from "@/lib/signalr-client"
-
 // Import types
 import type { Order } from "@/types/agency-orders"
 import type { SortDirection } from "@/types/agency-orders"
@@ -16,13 +14,14 @@ import { OrderPagination } from "@/components/agency/order-pagination"
 import { OrderDetailDialog } from "@/components/agency/order-detail-dialog"
 import { PaymentDialog } from "@/components/agency/payment-dialog"
 import { CancelOrderDialog } from "@/components/agency/cancel-order-dialog"
+import { ReturnRequestDialog } from "@/components/agency/return-request-dialog"
 import { LoadingState } from "@/components/agency/loading-state"
 import { ErrorState } from "@/components/agency/error-state"
 
 // Import utilities
 import { formatDate } from "@/utils/date-utils"
-import { sortOrders, filterOrders } from "@/utils/orderAgency-utils"
 import { toast } from "sonner"
+import { filterOrders, sortOrders } from "@/utils/orderAgency-utils"
 
 const AgencyOrders = () => {
   const [orders, setOrders] = useState<Order[]>([])
@@ -51,8 +50,10 @@ const AgencyOrders = () => {
   const [orderToPayment, setOrderToPayment] = useState<Order | null>(null)
   const [paymentDescription, setPaymentDescription] = useState<string>("")
 
-  // Add a new state for payment error message
-  const [paymentError, setPaymentError] = useState<string | null>(null)
+  // State for return request dialog
+  const [isReturnRequestDialogOpen, setIsReturnRequestDialogOpen] = useState<boolean>(false)
+  const [isSubmittingReturn, setIsSubmittingReturn] = useState<boolean>(false)
+  const [orderForReturn, setOrderForReturn] = useState<Order | null>(null)
 
   const token = localStorage.getItem("auth_token") || ""
   const { user } = useAuth()
@@ -95,7 +96,6 @@ const AgencyOrders = () => {
     return () => {
       connection.off("ReceiveNotification", handleNewOrder)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Fetch orders on component mount
@@ -103,7 +103,6 @@ const AgencyOrders = () => {
     if (token) {
       fetchOrders()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token])
 
   // Filter and sort orders when dependencies change
@@ -160,7 +159,7 @@ const AgencyOrders = () => {
     setIsPaymentDialogOpen(true)
   }
 
-  // Modify the handlePayment function to handle 404 errors
+  // Process payment
   const handlePayment = async () => {
     if (!orderToPayment || !paymentAmount || Number.parseFloat(paymentAmount) <= 0) {
       alert("Vui lòng nhập số tiền hợp lệ")
@@ -168,10 +167,8 @@ const AgencyOrders = () => {
     }
 
     setActionLoading(true)
-    setPaymentError(null) // Reset error message
-    const userId = user?.id
-    console.log("userID ", userId)
     try {
+      const userId = user?.id
       if (!userId) {
         throw new Error("Không tìm thấy thông tin người dùng")
       }
@@ -183,7 +180,7 @@ const AgencyOrders = () => {
         description: paymentDescription,
       }
 
-      const response = await fetch(`https://minhlong.mlhr.org/api/Payment/${user?.id}`, {
+      const response = await fetch(`https://minhlong.mlhr.org/api/Payment/${userId}`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -191,13 +188,6 @@ const AgencyOrders = () => {
         },
         body: JSON.stringify(paymentData),
       })
-
-      // Handle 404 error specifically
-      if (response.status === 404) {
-        const errorData = await response.json()
-        setPaymentError(errorData.message || "Không tìm thấy thông tin thanh toán")
-        return // Don't close the dialog, keep showing the error
-      }
 
       if (!response.ok) {
         throw new Error(`Error: ${response.status}`)
@@ -207,27 +197,19 @@ const AgencyOrders = () => {
 
       // Close payment dialog
       setIsPaymentDialogOpen(false)
-      setPaymentError(null) // Clear any errors
 
       // Check if there's a checkout URL and redirect
       if (paymentResponse && paymentResponse.checkoutUrl) {
         window.location.href = paymentResponse.checkoutUrl
       } else {
         console.error("Không tìm thấy URL thanh toán trong phản hồi:", paymentResponse)
-        toast.error("Không thể tạo liên kết thanh toán. Vui lòng thử lại sau.")
-
+        alert("Không thể tạo liên kết thanh toán. Vui lòng thử lại sau.")
         // Refresh orders
         fetchOrders()
       }
     } catch (err) {
       console.error("Failed to pay for order:", err)
-
-      // Try to extract error message if it's a fetch error
-      if (err instanceof Error) {
-        setPaymentError(err.message)
-      } else {
-        setPaymentError("Không thể thanh toán đơn hàng. Vui lòng thử lại sau.")
-      }
+      alert("Không thể thanh toán đơn hàng. Vui lòng thử lại sau.")
     } finally {
       setActionLoading(false)
     }
@@ -259,16 +241,54 @@ const AgencyOrders = () => {
 
       // Refresh orders after successful cancellation
       fetchOrders()
-      toast.success("Hủy đơn hàng thành công!")
+      alert("Hủy đơn hàng thành công!")
     } catch (err) {
       console.error("Failed to cancel order:", err)
-      toast.error("Không thể hủy đơn hàng. Vui lòng thử lại sau.")
+      alert("Không thể hủy đơn hàng. Vui lòng thử lại sau.")
     } finally {
       setActionLoading(false)
       setIsAlertDialogOpen(false)
       setOrderToCancel(null)
     }
   }
+
+  // Open return request dialog
+  const handleReturnRequestClick = (order: Order) => {
+    setOrderForReturn(order)
+    setIsReturnRequestDialogOpen(true)
+  }
+
+  // Handle return request submission
+  const handleSubmitReturn = async (formData: FormData) => {
+    try {
+      setIsSubmittingReturn(true)
+
+      const response = await fetch("https://minhlong.mlhr.org/api/returns/create", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`)
+      }
+
+      // Close dialog and show success message
+      setIsReturnRequestDialogOpen(false)
+      toast.success("Yêu cầu trả hàng đã được gửi thành công!")
+
+      // Refresh orders after successful submission
+      fetchOrders()
+    } catch (err) {
+      console.error("Failed to submit return request:", err)
+      toast.error("Không thể gửi yêu cầu trả hàng. Vui lòng thử lại sau.")
+    } finally {
+      setIsSubmittingReturn(false)
+    }
+  }
+
 
   // Render loading state
   if (loading) {
@@ -297,9 +317,10 @@ const AgencyOrders = () => {
       <div className="m-4">
         <div className="mb-4">
           <h1 className="text-2xl font-bold">Quản Lý đơn hàng của tôi</h1>
+          <p className="text-gray-500 mt-1">Xem lại đơn hàng mà bạn đã yêu cầu</p>
         </div>
 
-        <div className="bg-white rounded-md shadow-sm">
+        <div className="bg-white p-4 rounded-md shadow-sm">
           {/* Search and filter */}
           <OrderSearchFilter
             searchTerm={searchTerm}
@@ -323,6 +344,7 @@ const AgencyOrders = () => {
                 onViewDetails={handleViewOrderDetails}
                 onPayment={handlePaymentClick}
                 onCancel={handleCancelClick}
+                onReturnRequest={handleReturnRequestClick}
                 actionLoading={actionLoading}
                 formatDate={formatDate}
               />
@@ -363,7 +385,6 @@ const AgencyOrders = () => {
           onPaymentDescriptionChange={setPaymentDescription}
           onPaymentSubmit={handlePayment}
           actionLoading={actionLoading}
-          errorMessage={paymentError} // Pass the error message to the dialog
         />
 
         {/* Cancel order dialog */}
@@ -372,6 +393,15 @@ const AgencyOrders = () => {
           onOpenChange={setIsAlertDialogOpen}
           onConfirm={handleCancelOrder}
           actionLoading={actionLoading}
+        />
+
+        {/* Return request dialog */}
+        <ReturnRequestDialog
+          isOpen={isReturnRequestDialogOpen}
+          onOpenChange={setIsReturnRequestDialogOpen}
+          selectedOrder={orderForReturn}
+          onSubmitReturn={handleSubmitReturn}
+          isSubmitting={isSubmittingReturn}
         />
       </div>
     </AgencyLayout>
