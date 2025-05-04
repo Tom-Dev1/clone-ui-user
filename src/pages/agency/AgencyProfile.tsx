@@ -1,13 +1,14 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { AgencyLayout } from "@/layouts/agency-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getUserInfo, getToken } from "@/utils/auth-utils"
 import { User, Mail, Phone, CheckCircle, CreditCard, Award, ShieldCheck, InfoIcon } from "lucide-react"
 import { toast } from "sonner"
+import { AgencyLayout } from "@/layouts/agency-layout"
 
+// Update the UserData interface to include contracts
 interface UserData {
     userId: string
     username: string
@@ -19,6 +20,13 @@ interface UserData {
     verifyEmail: boolean
     agencyLevelName?: string
     creditLimit?: number
+    contracts?: {
+        contractId: number
+        fileName: string
+        filePath: string
+        fileType: string
+        createdAt: string
+    }[]
 }
 
 export default function AgencyProfile() {
@@ -29,7 +37,6 @@ export default function AgencyProfile() {
     // Fetch user data from API
     useEffect(() => {
         const fetchUserData = async () => {
-
             try {
                 if (!userInfo?.id) {
                     toast.error("Không tìm thấy thông tin người dùng")
@@ -64,7 +71,7 @@ export default function AgencyProfile() {
         fetchUserData()
     }, [userInfo?.id])
 
-
+    // Replace the return statement with the updated UI that includes contracts
     return (
         <AgencyLayout>
             <div className="container mx-auto py-6 px-4 md:px-6">
@@ -83,7 +90,7 @@ export default function AgencyProfile() {
                         <CardContent className="flex flex-col items-center text-center">
                             <div className="relative">
                                 <Avatar className="h-24 w-24 border-4 border-white shadow-md">
-                                    <AvatarImage src={profileImage} alt="Avatar" />
+                                    <AvatarImage src={profileImage || "/placeholder.svg"} alt="Avatar" />
                                     <AvatarFallback className="bg-green-100 text-green-800 text-xl">
                                         {userData?.username?.charAt(0).toUpperCase() || "U"}
                                     </AvatarFallback>
@@ -209,7 +216,84 @@ export default function AgencyProfile() {
                         </CardContent>
                     </Card>
 
-                    {/* Recent Activity Card */}
+                    {/* Contracts Card */}
+                    {userData?.contracts && userData.contracts.length > 0 && (
+                        <Card className="lg:col-span-3">
+                            <CardHeader>
+                                <CardTitle>Hợp đồng đại lý</CardTitle>
+                                <CardDescription>Các hợp đồng đã ký kết với đại lý</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {userData.contracts.map((contract) => {
+                                        const isImage = [".jpg", ".jpeg", ".png", ".gif", ".webp"].includes(contract.fileType.toLowerCase())
+                                        const date = new Date(contract.createdAt)
+                                        const formattedDate = new Intl.DateTimeFormat("vi-VN", {
+                                            day: "2-digit",
+                                            month: "2-digit",
+                                            year: "numeric",
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                        }).format(date)
+
+                                        return (
+                                            <div key={contract.contractId} className="bg-gray-50 p-4 rounded-lg">
+                                                <div className="flex flex-col space-y-3">
+                                                    {isImage && (
+                                                        <div className="w-full h-40 bg-white rounded-lg overflow-hidden border">
+                                                            <img
+                                                                src={contract.filePath || "/placeholder.svg"}
+                                                                alt={contract.fileName}
+                                                                className="w-full h-full object-contain"
+                                                            />
+                                                        </div>
+                                                    )}
+                                                    <div>
+                                                        <p className="font-medium truncate" title={contract.fileName}>
+                                                            {contract.fileName}
+                                                        </p>
+                                                        <p className="text-xs text-gray-500 mt-1">Ngày tải lên: {formattedDate}</p>
+                                                        <div className="mt-3">
+                                                            <a
+                                                                href={contract.filePath}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="text-sm text-green-600 hover:text-green-800 font-medium flex items-center"
+                                                            >
+                                                                <svg
+                                                                    xmlns="http://www.w3.org/2000/svg"
+                                                                    className="h-4 w-4 mr-1"
+                                                                    fill="none"
+                                                                    viewBox="0 0 24 24"
+                                                                    stroke="currentColor"
+                                                                >
+                                                                    <path
+                                                                        strokeLinecap="round"
+                                                                        strokeLinejoin="round"
+                                                                        strokeWidth={2}
+                                                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                                                    />
+                                                                    <path
+                                                                        strokeLinecap="round"
+                                                                        strokeLinejoin="round"
+                                                                        strokeWidth={2}
+                                                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                                                    />
+                                                                </svg>
+                                                                Xem hợp đồng
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {/* Additional Info Card */}
                     <Card className="lg:col-span-3">
                         <CardHeader>
                             <CardTitle>Thông tin bổ sung</CardTitle>
