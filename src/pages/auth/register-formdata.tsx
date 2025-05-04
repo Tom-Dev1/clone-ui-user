@@ -72,6 +72,9 @@ export function RegisterForm() {
   // Ref for file input
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+  const [fileErrors, setFileErrors] = useState<string[]>([])
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+  const MAX_FILES = 5;
 
   const [locationData, setLocationData] = useState<LocationData>({
     provinceId: null,
@@ -250,7 +253,29 @@ export function RegisterForm() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const filesArray = Array.from(e.target.files)
-      setSelectedFiles(filesArray)
+      const newErrors: string[] = []
+
+      // Validate each file
+      filesArray.forEach((file) => {
+        if (file.size > MAX_FILE_SIZE) {
+          newErrors.push(`File ${file.name} vượt quá kích thước cho phép (5MB)`)
+        }
+        if (!file.type.startsWith('image/')) {
+          newErrors.push(`File ${file.name} không phải là ảnh`)
+        }
+      })
+
+      // Check total number of files
+      if (selectedFiles.length + filesArray.length > MAX_FILES) {
+        newErrors.push(`Bạn chỉ có thể tải lên tối đa ${MAX_FILES} ảnh`)
+      }
+
+      if (newErrors.length === 0) {
+        setSelectedFiles((prev) => [...prev, ...filesArray])
+        setFileErrors([])
+      } else {
+        setFileErrors(newErrors)
+      }
 
       // Mark as touched
       setTouched((prev) => ({
@@ -259,12 +284,25 @@ export function RegisterForm() {
       }))
 
       // Validate files
-      const fieldError = validateField("contractFiles", filesArray)
+      const fieldError = validateField("contractFiles", [...selectedFiles, ...filesArray])
       setErrors((prev) => ({
         ...prev,
         contractFiles: fieldError,
       }))
     }
+  }
+
+  // Handle file removal
+  const handleRemoveFile = (index: number) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index))
+    setFileErrors([])
+
+    // Revalidate after removal
+    const fieldError = validateField("contractFiles", selectedFiles.filter((_, i) => i !== index))
+    setErrors((prev) => ({
+      ...prev,
+      contractFiles: fieldError,
+    }))
   }
 
   // Handle input changes
@@ -965,16 +1003,50 @@ export function RegisterForm() {
                           {errors.contractFiles}
                         </p>
                       )}
-                      {selectedFiles.length > 0 && (
+                      {fileErrors.length > 0 && (
                         <div className="mt-2">
-                          <p className="text-xs text-gray-500 mb-1">Đã chọn {selectedFiles.length} tệp:</p>
-                          <ul className="text-xs text-gray-600 list-disc pl-5">
+                          {fileErrors.map((error, index) => (
+                            <p key={index} className="text-red-500 text-xs flex items-center">
+                              <AlertCircle className="h-3 w-3 mr-1" />
+                              {error}
+                            </p>
+                          ))}
+                        </div>
+                      )}
+                      {selectedFiles.length > 0 && (
+                        <div className="mt-4">
+                          <p className="text-xs text-gray-500 mb-2">
+                            Đã chọn {selectedFiles.length}/{MAX_FILES} tệp:
+                          </p>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                             {selectedFiles.map((file, index) => (
-                              <li key={index}>
-                                {file.name} ({Math.round(file.size / 1024)} KB)
-                              </li>
+                              <div key={index} className="relative group">
+                                <div className="aspect-square overflow-hidden rounded-lg border">
+                                  <img
+                                    src={URL.createObjectURL(file)}
+                                    alt={`Preview ${index + 1}`}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                                <div className="absolute top-0 right-0 p-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveFile(index)}
+                                    className="bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                                    </svg>
+                                  </button>
+                                </div>
+                                <div className="mt-1 text-xs text-gray-500 truncate">
+                                  {file.name}
+                                  <br />
+                                  ({Math.round(file.size / 1024)} KB)
+                                </div>
+                              </div>
                             ))}
-                          </ul>
+                          </div>
                         </div>
                       )}
                     </div>
