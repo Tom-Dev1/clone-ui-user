@@ -1,62 +1,61 @@
-"use client";
+"use client"
 
-import type React from "react";
-import { useState, useEffect, useCallback } from "react";
-import { LocationSelector } from "@/components/location-selector";
-import { UserType, DeparmentType } from "@/types/auth-type";
-import axios, { type AxiosError } from "axios";
-import { toast } from "sonner";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Leaf, AlertCircle, CheckCircle, User, Building } from 'lucide-react';
+import type React from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
+import { LocationSelector } from "@/components/location-selector"
+import { UserType, DeparmentType } from "@/types/auth-type"
+import axios, { type AxiosError } from "axios"
+import { toast } from "sonner"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Leaf, AlertCircle, CheckCircle, User, Building } from "lucide-react"
 
 interface LocationData {
-  provinceId: number | null;
-  districtId: number | null;
-  wardId: number | null;
-  provinceName: string;
-  districtName: string;
-  wardName: string;
+  provinceId: number | null
+  districtId: number | null
+  wardId: number | null
+  provinceName: string
+  districtName: string
+  wardName: string
 }
 
 interface RegisterFormData {
-  username: string;
-  email: string;
-  phone: string;
-  password: string;
-  confirmPassword: string;
-  userType: UserType;
-  fullName: string;
-  position: string;
-  department: string;
-  agencyName: string;
-  street: string;
-  wardName: string;
-  districtName: string;
-  provinceName: string;
+  username: string
+  email: string
+  phone: string
+  password: string
+  confirmPassword: string
+  userType: UserType
+  fullName: string
+  position: string
+  department: string
+  agencyName: string
+  street: string
+  wardName: string
+  districtName: string
+  provinceName: string
 }
 
-// Theo dõi trạng thái đã chạm vào của từng trường
+// Track touched state for each field
 interface TouchedFields {
-  username: boolean;
-  email: boolean;
-  phone: boolean;
-  password: boolean;
-  confirmPassword: boolean;
-  fullName: boolean;
-  department: boolean;
-  agencyName: boolean;
-  street: boolean;
+  username: boolean
+  email: boolean
+  phone: boolean
+  password: boolean
+  confirmPassword: boolean
+  fullName: boolean
+  department: boolean
+  agencyName: boolean
+  street: boolean
+  contractFiles: boolean
 }
 
 export function RegisterForm() {
-  const baseURL = `https://minhlong.mlhr.org`;
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState<
-    Partial<Record<keyof RegisterFormData, string>>
-  >({});
+  const baseURL = `https://minhlong.mlhr.org`
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [errors, setErrors] = useState<Partial<Record<keyof RegisterFormData | "contractFiles", string>>>({})
   const [touched, setTouched] = useState<TouchedFields>({
     username: false,
     email: false,
@@ -67,7 +66,12 @@ export function RegisterForm() {
     department: false,
     agencyName: false,
     street: false,
-  });
+    contractFiles: false,
+  })
+
+  // Ref for file input
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
 
   const [locationData, setLocationData] = useState<LocationData>({
     provinceId: null,
@@ -76,7 +80,7 @@ export function RegisterForm() {
     provinceName: "",
     districtName: "",
     wardName: "",
-  });
+  })
 
   const [formData, setFormData] = useState<RegisterFormData>({
     username: "",
@@ -93,112 +97,113 @@ export function RegisterForm() {
     wardName: "",
     districtName: "",
     provinceName: "",
-  });
+  })
 
-  // Thêm hàm kiểm tra độ mạnh của mật khẩu
-  const getPasswordStrength = (
-    password: string
-  ): "weak" | "medium" | "strong" => {
-    if (!password) return "weak";
+  // Password strength checker
+  const getPasswordStrength = (password: string): "weak" | "medium" | "strong" => {
+    if (!password) return "weak"
 
-    let score = 0;
+    let score = 0
 
     // Length check
-    if (password.length >= 8) score += 1;
+    if (password.length >= 8) score += 1
 
     // Contains number
-    if (/\d/.test(password)) score += 1;
+    if (/\d/.test(password)) score += 1
 
     // Contains special character
-    if (/[^A-Za-z0-9]/.test(password)) score += 1;
+    if (/[^A-Za-z0-9]/.test(password)) score += 1
 
     // Contains uppercase and lowercase
-    if (/[A-Z]/.test(password) && /[a-z]/.test(password)) score += 1;
+    if (/[A-Z]/.test(password) && /[a-z]/.test(password)) score += 1
 
-    if (score >= 4) return "strong";
-    if (score >= 2) return "medium";
-    return "weak";
-  };
+    if (score >= 4) return "strong"
+    if (score >= 2) return "medium"
+    return "weak"
+  }
 
-  // Hàm validate riêng lẻ cho từng trường
+  // Get password strength percentage for progress bar
+  // const getPasswordStrengthPercentage = (password: string): number => {
+  //   if (!password) return 0
+
+  //   const strength = getPasswordStrength(password)
+  //   if (strength === "strong") return 100
+  //   if (strength === "medium") return 66
+  //   return 33
+  // }
+
+  // Validate individual field
   const validateField = useCallback(
-    (name: keyof RegisterFormData, value: string): string | undefined => {
+    (name: keyof RegisterFormData | "contractFiles", value: string | File[]): string | undefined => {
       switch (name) {
         case "username":
-          if (!value) return "Tên đăng nhập là bắt buộc";
-          if (value.length < 8) return "Tên đăng nhập phải có ít nhất 8 ký tự";
-          return undefined;
+          if (!value) return "Tên đăng nhập là bắt buộc"
+          if ((value as string).length < 8) return "Tên đăng nhập phải có ít nhất 8 ký tự"
+          return undefined
 
         case "email":
-          if (!value) return "Email là bắt buộc";
-          if (!/\S+@\S+\.\S+/.test(value)) return "Email không hợp lệ";
-          return undefined;
+          if (!value) return "Email là bắt buộc"
+          if (!/\S+@\S+\.\S+/.test(value as string)) return "Email không hợp lệ"
+          return undefined
 
         case "phone":
-          if (!value) return "Số điện thoại là bắt buộc";
-          if (!/^\d{10}$/.test(value))
-            return "Số điện thoại phải có đúng 10 số";
-          return undefined;
+          if (!value) return "Số điện thoại là bắt buộc"
+          if (!/^\d{10}$/.test(value as string)) return "Số điện thoại phải có đúng 10 số"
+          return undefined
 
         case "password":
-          if (!value) return "Mật khẩu là bắt buộc";
-          if (value.length < 8) return "Mật khẩu phải có ít nhất 8 ký tự";
-          if (!/\d/.test(value)) return "Mật khẩu phải chứa ít nhất 1 số";
-          return undefined;
+          if (!value) return "Mật khẩu là bắt buộc"
+          if ((value as string).length < 8) return "Mật khẩu phải có ít nhất 8 ký tự"
+          if (!/\d/.test(value as string)) return "Mật khẩu phải chứa ít nhất 1 số"
+          return undefined
 
         case "confirmPassword":
-          if (!value) return "Xác nhận mật khẩu là bắt buộc";
-          if (value !== formData.password) return "Mật khẩu không khớp";
-          return undefined;
+          if (!value) return "Xác nhận mật khẩu là bắt buộc"
+          if (value !== formData.password) return "Mật khẩu không khớp"
+          return undefined
 
         case "fullName":
-          if (!value) return "Họ tên là bắt buộc";
-          return undefined;
+          if (!value) return "Họ tên là bắt buộc"
+          return undefined
 
         case "department":
-          if (formData.userType === UserType.EMPLOYEE && !value)
-            return "Phòng ban là bắt buộc";
-          return undefined;
+          if (formData.userType === UserType.EMPLOYEE && !value) return "Phòng ban là bắt buộc"
+          return undefined
 
         case "agencyName":
-          if (formData.userType === UserType.AGENCY && !value)
-            return "Tên đại lý là bắt buộc";
-          return undefined;
+          if (formData.userType === UserType.AGENCY && !value) return "Tên đại lý là bắt buộc"
+          return undefined
 
         case "street":
-          if (formData.userType === UserType.AGENCY && !value)
-            return "Địa chỉ là bắt buộc";
-          return undefined;
+          if (formData.userType === UserType.AGENCY && !value) return "Địa chỉ là bắt buộc"
+          return undefined
+
+        case "contractFiles":
+          if (formData.userType === UserType.AGENCY && (!value || (value as File[]).length === 0))
+            return "Vui lòng tải lên ảnh hợp đồng"
+          return undefined
 
         default:
-          return undefined;
+          return undefined
       }
     },
-    [formData.password, formData.userType]
-  );
+    [formData.password, formData.userType],
+  )
 
-  // Validate lại confirmPassword khi password thay đổi
+  // Revalidate confirmPassword when password changes
   useEffect(() => {
     if (touched.confirmPassword && formData.confirmPassword) {
-      const confirmError = validateField(
-        "confirmPassword",
-        formData.confirmPassword
-      );
+      const confirmError = validateField("confirmPassword", formData.confirmPassword)
       setErrors((prev) => ({
         ...prev,
         confirmPassword: confirmError,
-      }));
+      }))
     }
-  }, [
-    formData.password,
-    formData.confirmPassword,
-    touched.confirmPassword,
-    validateField,
-  ]);
+  }, [formData.password, formData.confirmPassword, touched.confirmPassword, validateField])
 
   // Handle user type change
   const handleUserTypeChange = (value: string) => {
-    const userType = value as UserType;
+    const userType = value as UserType
 
     // Update the form data with the new user type and set position to STAFF if it's EMPLOYEE
     setFormData((prev) => {
@@ -207,17 +212,17 @@ export function RegisterForm() {
         userType,
         // Set position to STAFF only when switching to EMPLOYEE
         position: userType === UserType.EMPLOYEE ? "STAFF" : prev.position,
-      };
-      console.log("User type changed:", newFormData);
-      return newFormData;
-    });
-  };
+      }
+      console.log("User type changed:", newFormData)
+      return newFormData
+    })
+  }
 
   // Update form values when location data changes (for both EMPLOYEE and AGENCY)
   const handleLocationChange = useCallback(
     (data: LocationData) => {
-      console.log("RegisterForm: Location data received:", data);
-      setLocationData(data);
+      console.log("RegisterForm: Location data received:", data)
+      setLocationData(data)
 
       // Update form data with location information
       setFormData((prev) => {
@@ -226,115 +231,138 @@ export function RegisterForm() {
           provinceName: data.provinceName,
           districtName: data.districtName,
           wardName: data.wardName,
-        };
-        console.log("Form data updated with location:", newFormData);
-        return newFormData;
-      });
+        }
+        console.log("Form data updated with location:", newFormData)
+        return newFormData
+      })
 
       // Clear location-related errors if values are provided
-      const newErrors = { ...errors };
-      if (data.provinceName) delete newErrors.provinceName;
-      if (data.districtName) delete newErrors.districtName;
-      if (data.wardName) delete newErrors.wardName;
-      setErrors(newErrors);
+      const newErrors = { ...errors }
+      if (data.provinceName) delete newErrors.provinceName
+      if (data.districtName) delete newErrors.districtName
+      if (data.wardName) delete newErrors.wardName
+      setErrors(newErrors)
     },
-    [errors]
-  );
+    [errors],
+  )
 
-  // Xử lý khi người dùng nhập liệu
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
+  // Handle file selection
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const filesArray = Array.from(e.target.files)
+      setSelectedFiles(filesArray)
 
-    // Cập nhật giá trị form
+      // Mark as touched
+      setTouched((prev) => ({
+        ...prev,
+        contractFiles: true,
+      }))
+
+      // Validate files
+      const fieldError = validateField("contractFiles", filesArray)
+      setErrors((prev) => ({
+        ...prev,
+        contractFiles: fieldError,
+      }))
+    }
+  }
+
+  // Handle input changes
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target
+
+    // Update form data
     setFormData((prev) => {
-      const newFormData = { ...prev, [name]: value };
-      console.log("Form data updated:", newFormData);
-      return newFormData;
-    });
+      const newFormData = { ...prev, [name]: value }
+      console.log("Form data updated:", newFormData)
+      return newFormData
+    })
 
-    // Đánh dấu trường đã được chạm vào
+    // Mark field as touched
     if (!touched[name as keyof TouchedFields]) {
       setTouched((prev) => ({
         ...prev,
         [name]: true,
-      }));
+      }))
     }
 
-    // Validate trường ngay khi người dùng nhập
-    const fieldError = validateField(name as keyof RegisterFormData, value);
+    // Validate field on input
+    const fieldError = validateField(name as keyof RegisterFormData, value)
     setErrors((prev) => ({
       ...prev,
       [name]: fieldError,
-    }));
-  };
+    }))
+  }
 
-  // Xử lý khi trường mất focus
-  const handleBlur = (
-    e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name } = e.target;
+  // Handle field blur
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name } = e.target
 
-    // Đánh dấu trường đã được chạm vào
+    // Mark field as touched
     setTouched((prev) => ({
       ...prev,
       [name]: true,
-    }));
+    }))
 
-    // Validate lại khi mất focus
-    const fieldError = validateField(
-      name as keyof RegisterFormData,
-      formData[name as keyof RegisterFormData]
-    );
+    // Validate on blur
+    const fieldError = validateField(name as keyof RegisterFormData, formData[name as keyof RegisterFormData])
     setErrors((prev) => ({
       ...prev,
       [name]: fieldError,
-    }));
-  };
+    }))
+  }
 
-  // Validate toàn bộ form
+  // Validate entire form
   const validateForm = (): boolean => {
-    const newErrors: Partial<Record<keyof RegisterFormData, string>> = {};
-    let isValid = true;
+    const newErrors: Partial<Record<keyof RegisterFormData | "contractFiles", string>> = {}
+    let isValid = true
 
-    // Validate từng trường
+    // Validate each field
     Object.keys(formData).forEach((key) => {
-      const fieldName = key as keyof RegisterFormData;
-      const error = validateField(fieldName, formData[fieldName]);
+      const fieldName = key as keyof RegisterFormData
+      const error = validateField(fieldName, formData[fieldName])
 
       if (error) {
-        newErrors[fieldName] = error;
-        isValid = false;
+        newErrors[fieldName] = error
+        isValid = false
       }
-    });
+    })
 
-    // Validate các trường đặc biệt cho từng loại tài khoản
+    // Validate files for agency
     if (formData.userType === UserType.AGENCY) {
-      if (!formData.provinceName) {
-        newErrors.provinceName = "Tỉnh/Thành phố là bắt buộc";
-        isValid = false;
-      }
-      if (!formData.districtName) {
-        newErrors.districtName = "Quận/Huyện là bắt buộc";
-        isValid = false;
-      }
-      if (!formData.wardName) {
-        newErrors.wardName = "Phường/Xã là bắt buộc";
-        isValid = false;
+      const fileError = validateField("contractFiles", selectedFiles)
+      if (fileError) {
+        newErrors.contractFiles = fileError
+        isValid = false
       }
     }
 
-    setErrors(newErrors);
-    return isValid;
-  };
+    // Validate location fields for agency accounts
+    if (formData.userType === UserType.AGENCY) {
+      if (!formData.provinceName) {
+        newErrors.provinceName = "Tỉnh/Thành phố là bắt buộc"
+        isValid = false
+      }
+      if (!formData.districtName) {
+        newErrors.districtName = "Quận/Huyện là bắt buộc"
+        isValid = false
+      }
+      if (!formData.wardName) {
+        newErrors.wardName = "Phường/Xã là bắt buộc"
+        isValid = false
+      }
+    }
+
+    setErrors(newErrors)
+    return isValid
+  }
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
 
     try {
-      // Đánh dấu tất cả các trường đã được chạm vào
+      // Mark all fields as touched
       setTouched({
         username: true,
         email: true,
@@ -345,44 +373,57 @@ export function RegisterForm() {
         department: true,
         agencyName: true,
         street: true,
-      });
+        contractFiles: true,
+      })
 
       if (!validateForm()) {
         // Scroll to the first error
-        const firstError = document.querySelector(".text-red-500");
+        const firstError = document.querySelector(".text-red-500")
         if (firstError) {
-          firstError.scrollIntoView({ behavior: "smooth", block: "center" });
+          firstError.scrollIntoView({ behavior: "smooth", block: "center" })
         }
-        return;
+        return
       }
 
-      setIsSubmitting(true);
+      setIsSubmitting(true)
 
-      // Chuẩn bị dữ liệu đăng ký
-      const registerData = {
-        ...formData,
-        createdAt: new Date(),
-      };
+      // Create FormData object for submission
+      const formDataToSubmit = new FormData()
 
-      console.log("Form submitted with data:", registerData);
+      // Add all form fields to FormData
+      Object.entries(formData).forEach(([key, value]) => {
+        if (key !== "confirmPassword") {
+          // Don't send confirmPassword to server
+          formDataToSubmit.append(key, value.toString())
+        }
+      })
+
+      // Add createdAt date
+      formDataToSubmit.append("createdAt", new Date().toISOString())
+
+      // Add files if any
+      if (selectedFiles.length > 0) {
+        selectedFiles.forEach((file) => {
+          formDataToSubmit.append("ContractFiles", file)
+        })
+      }
+
+      console.log("Form submitted with data:", Object.fromEntries(formDataToSubmit))
 
       try {
-        // Gọi API đăng ký trực tiếp thay vì qua AuthService
-        // để có thể xử lý response và error một cách chi tiết hơn
-        const response = await axios.post(
-          `${baseURL}/api/auth/register`,
-          registerData
-        );
+        // Gọi API đăng ký với FormData
+        const response = await axios.post(`${baseURL}/api/auth/register`, formDataToSubmit, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        })
 
         // Xử lý khi đăng ký thành công
-        console.log("Registration successful:", response.data);
+        console.log("Registration successful:", response.data)
 
         // Hiển thị thông báo thành công từ API
-        toast.success(
-          response.data.message ||
-          "Đăng ký thành công! Vui lòng chờ quản trị viên phê duyệt."
-        );
-        window.location.href = "/";
+        toast.success(response.data.message || "Đăng ký thành công! Vui lòng chờ quản trị viên phê duyệt.")
+        window.location.href = "/"
         // Reset form
         setFormData({
           username: "",
@@ -399,7 +440,13 @@ export function RegisterForm() {
           wardName: "",
           districtName: "",
           provinceName: "",
-        });
+        })
+
+        // Reset selected files
+        setSelectedFiles([])
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ""
+        }
 
         // Reset touched state
         setTouched({
@@ -412,10 +459,11 @@ export function RegisterForm() {
           department: false,
           agencyName: false,
           street: false,
-        });
+          contractFiles: false,
+        })
 
         // Reset errors
-        setErrors({});
+        setErrors({})
 
         // Reset location data
         setLocationData({
@@ -425,51 +473,51 @@ export function RegisterForm() {
           provinceName: "",
           districtName: "",
           wardName: "",
-        });
+        })
       } catch (error) {
         // Xử lý lỗi Axios
         if (axios.isAxiosError(error)) {
-          const axiosError = error as AxiosError;
+          const axiosError = error as AxiosError
 
           if (axiosError.response) {
             // Lỗi từ server (có response)
-            const statusCode = axiosError.response.status;
+            const statusCode = axiosError.response.status
             interface ApiErrorResponse {
-              error?: string;
-              message?: string;
-              errors?: Record<string, string>;
+              error?: string
+              message?: string
+              errors?: Record<string, string>
             }
-            const responseData = axiosError.response.data as ApiErrorResponse;
+            const responseData = axiosError.response.data as ApiErrorResponse
 
-            console.error("API Error Response:", responseData);
+            console.error("API Error Response:", responseData)
 
             // Kiểm tra nếu có error trong response
             if (responseData.error) {
               // Hiển thị thông báo lỗi từ server
-              toast.error(`Đăng ký thất bại: ${responseData.error}`);
+              toast.error(`Đăng ký thất bại: ${responseData.error}`)
 
               // Xử lý lỗi trùng lặp (username, email, phone)
-              const errorMessage = responseData.error.toLowerCase();
+              const errorMessage = responseData.error.toLowerCase()
 
               if (errorMessage.includes("username")) {
                 setErrors((prev) => ({
                   ...prev,
                   username: "Tên đăng nhập đã tồn tại",
-                }));
+                }))
               }
 
               if (errorMessage.includes("email")) {
                 setErrors((prev) => ({
                   ...prev,
                   email: "Email đã được sử dụng",
-                }));
+                }))
               }
 
               if (errorMessage.includes("phone")) {
                 setErrors((prev) => ({
                   ...prev,
                   phone: "Số điện thoại đã được sử dụng",
-                }));
+                }))
               }
 
               // Nếu không có thông tin cụ thể về trường nào bị lỗi
@@ -479,63 +527,57 @@ export function RegisterForm() {
                 !errorMessage.includes("phone")
               ) {
                 // Scroll to the top of the form to show the alert
-                window.scrollTo({ top: 0, behavior: "smooth" });
+                window.scrollTo({ top: 0, behavior: "smooth" })
               }
             } else if (responseData.message) {
               // Fallback to message if error is not present
-              toast.error(`Đăng ký thất bại: ${responseData.message}`);
+              toast.error(`Đăng ký thất bại: ${responseData.message}`)
 
               // Xử lý lỗi validation cụ thể
               if (typeof responseData.errors === "object") {
-                const newErrors = { ...errors };
+                const newErrors = { ...errors }
 
                 // Cập nhật state errors dựa trên lỗi từ server
-                Object.entries(responseData.errors).forEach(
-                  ([field, message]) => {
-                    const fieldName = field as keyof RegisterFormData;
-                    newErrors[fieldName] = message as string;
-                  }
-                );
+                Object.entries(responseData.errors).forEach(([field, message]) => {
+                  const fieldName = field as keyof RegisterFormData | "contractFiles"
+                  newErrors[fieldName] = message as string
+                })
 
-                setErrors(newErrors);
+                setErrors(newErrors)
               }
             } else {
               // Nếu không có thông báo lỗi cụ thể
               if (statusCode === 400) {
-                toast.error(
-                  "Dữ liệu không hợp lệ. Vui lòng kiểm tra lại thông tin."
-                );
+                toast.error("Dữ liệu không hợp lệ. Vui lòng kiểm tra lại thông tin.")
               } else if (statusCode === 401) {
-                toast.error("Bạn không có quyền thực hiện hành động này.");
+                toast.error("Bạn không có quyền thực hiện hành động này.")
               } else if (statusCode === 409) {
-                toast.error("Thông tin đã tồn tại trong hệ thống.");
+                toast.error("Thông tin đã tồn tại trong hệ thống.")
               } else if (statusCode >= 500) {
-                toast.error("Lỗi máy chủ. Vui lòng thử lại sau.");
+                toast.error("Lỗi máy chủ. Vui lòng thử lại sau.")
               } else {
-                toast.error("Đăng ký thất bại. Vui lòng thử lại sau.");
+                toast.error("Đăng ký thất bại. Vui lòng thử lại sau.")
               }
             }
           } else if (axiosError.request) {
             // Lỗi không nhận được response (network issues)
-            toast.error(
-              "Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng và thử lại."
-            );
+            toast.error("Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng và thử lại.")
           } else {
             // Lỗi khi thiết lập request
-            toast.error(`Lỗi: ${axiosError.message}`);
+            toast.error(`Lỗi: ${axiosError.message}`)
           }
         } else {
           // Lỗi không phải từ Axios
-          toast.error("Đăng ký thất bại. Vui lòng thử lại.");
+          toast.error("Đăng ký thất bại. Vui lòng thử lại.")
         }
       }
     } catch (error) {
-      console.error("Unexpected error during form submission:", error);
-      toast.error("Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau.");
+      console.error("Unexpected error during form submission:", error)
+      toast.error("Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau.")
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   return (
     <Card className="w-full max-w-6xl mx-auto bg-white shadow-lg">
@@ -544,9 +586,7 @@ export function RegisterForm() {
           <Leaf className="h-8 w-8" />
         </div>
         <CardTitle className="text-2xl font-bold">Đăng ký tài khoản</CardTitle>
-        <CardDescription>
-          Tạo tài khoản để truy cập vào hệ thống quản lý nông nghiệp
-        </CardDescription>
+        <CardDescription>Tạo tài khoản để truy cập vào hệ thống quản lý nông nghiệp</CardDescription>
       </CardHeader>
       <CardContent className="pt-6">
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -556,15 +596,17 @@ export function RegisterForm() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div
                 className={`flex items-center p-4 border rounded-lg cursor-pointer transition-all ${formData.userType === UserType.EMPLOYEE
-                    ? "border-green-500 bg-green-50"
-                    : "border-gray-200 hover:border-green-300"
+                  ? "border-green-500 bg-green-50"
+                  : "border-gray-200 hover:border-green-300"
                   }`}
                 onClick={() => handleUserTypeChange(UserType.EMPLOYEE)}
               >
-                <div className={`mr-4 p-2 rounded-full ${formData.userType === UserType.EMPLOYEE
+                <div
+                  className={`mr-4 p-2 rounded-full ${formData.userType === UserType.EMPLOYEE
                     ? "bg-green-100 text-green-600"
                     : "bg-gray-100 text-gray-500"
-                  }`}>
+                    }`}
+                >
                   <User className="h-6 w-6" />
                 </div>
                 <div>
@@ -575,15 +617,15 @@ export function RegisterForm() {
 
               <div
                 className={`flex items-center p-4 border rounded-lg cursor-pointer transition-all ${formData.userType === UserType.AGENCY
-                    ? "border-green-500 bg-green-50"
-                    : "border-gray-200 hover:border-green-300"
+                  ? "border-green-500 bg-green-50"
+                  : "border-gray-200 hover:border-green-300"
                   }`}
                 onClick={() => handleUserTypeChange(UserType.AGENCY)}
               >
-                <div className={`mr-4 p-2 rounded-full ${formData.userType === UserType.AGENCY
-                    ? "bg-green-100 text-green-600"
-                    : "bg-gray-100 text-gray-500"
-                  }`}>
+                <div
+                  className={`mr-4 p-2 rounded-full ${formData.userType === UserType.AGENCY ? "bg-green-100 text-green-600" : "bg-gray-100 text-gray-500"
+                    }`}
+                >
                   <Building className="h-6 w-6" />
                 </div>
                 <div>
@@ -710,17 +752,14 @@ export function RegisterForm() {
 
                   {touched.password && formData.password && (
                     <div className="mt-2">
-                      <p className="text-xs text-gray-500 mb-1">
-                        Độ mạnh mật khẩu:
-                      </p>
+                      <p className="text-xs text-gray-500 mb-1">Độ mạnh mật khẩu:</p>
                       <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
                         <div
                           className={`h-full ${getPasswordStrength(formData.password) === "strong"
-                              ? "bg-green-500 w-full"
-                              : getPasswordStrength(formData.password) ===
-                                "medium"
-                                ? "bg-yellow-500 w-2/3"
-                                : "bg-red-500 w-1/3"
+                            ? "bg-green-500 w-full"
+                            : getPasswordStrength(formData.password) === "medium"
+                              ? "bg-yellow-500 w-2/3"
+                              : "bg-red-500 w-1/3"
                             }`}
                         ></div>
                       </div>
@@ -756,9 +795,7 @@ export function RegisterForm() {
                       <ul className="text-xs text-gray-500 mt-2 space-y-1">
                         <li
                           className={
-                            formData.password.length >= 8
-                              ? "text-green-500 flex items-center"
-                              : "flex items-center"
+                            formData.password.length >= 8 ? "text-green-500 flex items-center" : "flex items-center"
                           }
                         >
                           {formData.password.length >= 8 ? (
@@ -770,9 +807,7 @@ export function RegisterForm() {
                         </li>
                         <li
                           className={
-                            /\d/.test(formData.password)
-                              ? "text-green-500 flex items-center"
-                              : "flex items-center"
+                            /\d/.test(formData.password) ? "text-green-500 flex items-center" : "flex items-center"
                           }
                         >
                           {/\d/.test(formData.password) ? (
@@ -798,14 +833,12 @@ export function RegisterForm() {
                         </li>
                         <li
                           className={
-                            /[A-Z]/.test(formData.password) &&
-                              /[a-z]/.test(formData.password)
+                            /[A-Z]/.test(formData.password) && /[a-z]/.test(formData.password)
                               ? "text-green-500 flex items-center"
                               : "flex items-center"
                           }
                         >
-                          {/[A-Z]/.test(formData.password) &&
-                            /[a-z]/.test(formData.password) ? (
+                          {/[A-Z]/.test(formData.password) && /[a-z]/.test(formData.password) ? (
                             <CheckCircle className="h-3 w-3 mr-1" />
                           ) : (
                             <span className="w-3 h-3 mr-1">•</span>
@@ -851,14 +884,7 @@ export function RegisterForm() {
                       <label htmlFor="position" className="text-sm font-medium">
                         Chức vụ
                       </label>
-                      <Input
-                        type="text"
-                        id="position"
-                        name="position"
-                        value="STAFF"
-                        disabled
-                        className="bg-gray-100"
-                      />
+                      <Input type="text" id="position" name="position" value="STAFF" disabled className="bg-gray-100" />
                     </div>
 
                     <div className="space-y-2">
@@ -868,23 +894,19 @@ export function RegisterForm() {
                       <Select
                         value={formData.department}
                         onValueChange={(value) => {
-                          setFormData((prev) => ({ ...prev, department: value }));
+                          setFormData((prev) => ({ ...prev, department: value }))
                           // Validate after change
-                          const fieldError = validateField("department", value);
-                          setErrors((prev) => ({ ...prev, department: fieldError }));
-                          setTouched((prev) => ({ ...prev, department: true }));
+                          const fieldError = validateField("department", value)
+                          setErrors((prev) => ({ ...prev, department: fieldError }))
+                          setTouched((prev) => ({ ...prev, department: true }))
                         }}
                       >
                         <SelectTrigger className={touched.department && errors.department ? "border-red-300" : ""}>
                           <SelectValue placeholder="Chọn phòng ban" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value={DeparmentType.WAREHOUSE}>
-                            {DeparmentType.WAREHOUSE}
-                          </SelectItem>
-                          <SelectItem value={DeparmentType.SALES}>
-                            {DeparmentType.SALES}
-                          </SelectItem>
+                          <SelectItem value={DeparmentType.WAREHOUSE}>{DeparmentType.WAREHOUSE}</SelectItem>
+                          <SelectItem value={DeparmentType.SALES}>{DeparmentType.SALES}</SelectItem>
                         </SelectContent>
                       </Select>
                       {touched.department && errors.department && (
@@ -921,6 +943,41 @@ export function RegisterForm() {
                         </p>
                       )}
                     </div>
+
+                    {/* Contract Files Upload */}
+                    <div className="space-y-2">
+                      <label htmlFor="contractFiles" className="text-sm font-medium">
+                        Ảnh hợp đồng
+                      </label>
+                      <Input
+                        ref={fileInputRef}
+                        type="file"
+                        id="contractFiles"
+                        name="contractFiles"
+                        onChange={handleFileChange}
+                        accept="image/*"
+                        multiple
+                        className={touched.contractFiles && errors.contractFiles ? "border-red-300" : ""}
+                      />
+                      {touched.contractFiles && errors.contractFiles && (
+                        <p className="text-red-500 text-xs flex items-center">
+                          <AlertCircle className="h-3 w-3 mr-1" />
+                          {errors.contractFiles}
+                        </p>
+                      )}
+                      {selectedFiles.length > 0 && (
+                        <div className="mt-2">
+                          <p className="text-xs text-gray-500 mb-1">Đã chọn {selectedFiles.length} tệp:</p>
+                          <ul className="text-xs text-gray-600 list-disc pl-5">
+                            {selectedFiles.map((file, index) => (
+                              <li key={index}>
+                                {file.name} ({Math.round(file.size / 1024)} KB)
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </>
               )}
@@ -932,10 +989,7 @@ export function RegisterForm() {
                 <div className="space-y-4">
                   <div>
                     <h4 className="text-sm font-medium mb-2">Chọn địa điểm</h4>
-                    <LocationSelector
-                      onLocationChange={handleLocationChange}
-                      initialValues={locationData}
-                    />
+                    <LocationSelector onLocationChange={handleLocationChange} initialValues={locationData} />
                     {(errors.provinceName || errors.districtName || errors.wardName) && (
                       <p className="text-red-500 text-xs mt-1 flex items-center">
                         <AlertCircle className="h-3 w-3 mr-1" />
@@ -990,5 +1044,5 @@ export function RegisterForm() {
         </form>
       </CardContent>
     </Card>
-  );
+  )
 }
