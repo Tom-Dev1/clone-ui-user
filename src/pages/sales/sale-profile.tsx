@@ -63,7 +63,7 @@ export default function SaleProfile() {
         }
 
         fetchUserData()
-    }, [userInfo])
+    }, [userInfo?.id])
 
 
 

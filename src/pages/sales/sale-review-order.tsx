@@ -47,7 +47,7 @@ export default function SaleReviewOrderPage() {
         setError(null)
 
         try {
-            const data = await fetchWithAuth("https://minhlong.mlhr.org/api/returns")
+            const data = await fetchWithAuth("https://minhlong.mlhr.org/api/returns/return-requests/sale")
             setReturnOrders(data)
             setTotalItems(data.length)
             setLoading(false)

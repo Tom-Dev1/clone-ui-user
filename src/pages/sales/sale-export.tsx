@@ -71,7 +71,7 @@ const SalesExports = () => {
 
     try {
       setLoading(true)
-      const response = await fetchWithAuth(`https://minhlong.mlhr.org/api/RequestExport/all`)
+      const response = await fetchWithAuth(`https://minhlong.mlhr.org/api/RequestExport/manage-by-sales`)
 
       // Save all data
       setExportRequests(response)

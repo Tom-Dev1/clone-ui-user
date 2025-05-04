@@ -1,4 +1,6 @@
 import { get } from "@/api/axiosUtils";
+import { OrderStatusCards } from "@/components/sales/dashboard/order-status-cards";
+import { SalesMetrics } from "@/components/sales/dashboard/sales-metrics";
 import { OrderSummaryCards } from "@/components/sales/order-summary-cards";
 import { SalesLayout } from "@/layouts/sale-layout";
 import { RequestProduct } from "@/types/sales-orders";
@@ -14,7 +16,6 @@ export default function SalesDashboard() {
     const [, setError] = useState<string | null>(null)
     const [totalProducts, setTotalProducts] = useState(0)
     const [totalQuantity, setTotalQuantity] = useState(0)
-    const [filteredOrders, setFilteredOrders] = useState<RequestProduct[]>([])
 
     const fetchOrders = async () => {
         setIsLoading(true)
@@ -37,8 +38,6 @@ export default function SalesDashboard() {
                     ...order,
                     isLoading: false,
                 }))
-
-                setFilteredOrders(ordersWithLoadingState)
 
                 // Cập nhật tổng số sản phẩm và số lượng
                 const { totalProductCount, totalQuantityCount } = updateTotals(ordersWithLoadingState)
@@ -75,17 +74,20 @@ export default function SalesDashboard() {
         <SalesLayout>
             <div className="m-4">
                 <h1 className="text-2xl font-bold mb-6">Tổng quan</h1>
-
+                <OrderStatusCards />
                 {/* Summary Cards */}
-                <OrderSummaryCards
-                    ordersCount={filteredOrders.length}
-                    totalProducts={totalProducts}
-                    totalQuantity={totalQuantity}
-                />
-
+                <div className="mt-5">
+                    <OrderSummaryCards
+                        totalProducts={totalProducts}
+                        totalQuantity={totalQuantity}
+                    />
+                </div>
+                <div className="mb-8">
+                    <SalesMetrics />
+                </div>
 
                 {/* Recent Orders Table */}
-                <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+                {/* <div className="bg-white rounded-lg shadow-sm overflow-hidden">
                     <h3 className="text-lg font-medium p-6 pb-0">Đơn hàng gần đây</h3>
                     <div className="overflow-x-auto">
                         <table className="min-w-full divide-y divide-gray-200">
@@ -151,7 +153,7 @@ export default function SalesDashboard() {
                             </tbody>
                         </table>
                     </div>
-                </div>
+                </div> */}
             </div>
         </SalesLayout>
     )

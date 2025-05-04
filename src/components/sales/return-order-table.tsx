@@ -124,15 +124,15 @@ export default function ReturnOrderTable({
                                                 </DropdownMenuItem>
                                             )} */}
                                         {order.status === "Pending" && (
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="h-8 px-2 text-green-600"
+                                            <DropdownMenuItem
+
+
+                                                className="w-full h-8 px-2 text-green-600"
                                                 onClick={() => onApproveReturn(order.returnRequestId)}
                                             >
                                                 <CheckCircle className="h-4 w-4 mr-1" />
                                                 Chấp nhận
-                                            </Button>
+                                            </DropdownMenuItem>
                                         )}
                                     </DropdownMenuContent>
                                 </DropdownMenu>

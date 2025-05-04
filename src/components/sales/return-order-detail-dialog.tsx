@@ -118,6 +118,12 @@ export default function ReturnOrderDetailDialog({
                     </div>
 
 
+
+
+
+                </div>
+
+                <DialogFooter>
                     {/* Status update section */}
                     {returnOrder.status === "Pending" && (
                         <div>
@@ -131,11 +137,6 @@ export default function ReturnOrderDetailDialog({
                             </div>
                         </div>
                     )}
-
-
-                </div>
-
-                <DialogFooter>
                     <Button variant="outline" onClick={() => onOpenChange(false)}>
                         Đóng
                     </Button>

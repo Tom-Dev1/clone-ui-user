@@ -62,7 +62,7 @@ export default function AgencyProfile() {
         }
 
         fetchUserData()
-    }, [userInfo])
+    }, [userInfo?.id])
 
 
     return (
