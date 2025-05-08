@@ -22,6 +22,7 @@ import {
 import { fetchProductCategories } from "@/services/product-service"
 // import type { ProductCategory } from "@/services/product-service"
 import { CartIndicator } from "./cart-indicator"
+import { NotificationPopover } from "./notification-popover"
 
 interface SiteHeaderProps {
     isHomePage?: boolean
@@ -450,6 +451,13 @@ export function SiteHeader({ isHomePage = false }: SiteHeaderProps) {
                         </div>
                     )}
 
+                    {/* Notification Button */}
+                    {isEmailVerified && isAuthenticated && (
+                        <div className="mr-2">
+                            <NotificationPopover />
+                        </div>
+                    )}
+
                     {/* Auth Button - Desktop */}
                     {isAuthenticated && user ? (
                         isEmailVerified ? (
@@ -544,4 +552,3 @@ export function SiteHeader({ isHomePage = false }: SiteHeaderProps) {
         </div>
     )
 }
-

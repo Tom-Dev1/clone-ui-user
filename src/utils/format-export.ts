@@ -20,6 +20,17 @@ export const formatDate = (dateString: string | null) => {
     }
 }
 
+// Sort date for requestDate
+export const sortDate = (dateString: string | null) => {
+    if (!dateString) return new Date(0) // Return earliest date for null values
+    try {
+        return new Date(dateString)
+    } catch (error) {
+        console.log(error)
+        return new Date(0) // Return earliest date for invalid dates
+    }
+}
+
 // Calculate total requested quantity
 export const getTotalRequestedQuantity = (request: RequestExport) => {
     return request.requestExportDetails.reduce((total, item) => total + item.requestedQuantity, 0)

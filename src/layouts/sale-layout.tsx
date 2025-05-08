@@ -23,6 +23,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useAuth } from "@/contexts/AuthContext";
+import { NotificationPopover } from "@/components/notification-popover";
 
 interface SalesLayoutProps {
   children: ReactNode;
@@ -190,7 +191,7 @@ export function SalesLayout({ children }: SalesLayoutProps) {
             </div>
 
             <div className="flex items-center">
-
+              <NotificationPopover />
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-gray-700 hidden md:inline-block">
                   Xin chào,{" "}

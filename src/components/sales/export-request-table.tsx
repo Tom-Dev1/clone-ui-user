@@ -71,13 +71,12 @@ export const ExportRequestTable = ({
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead className="w-[120px] text-center">Mã yêu cầu</TableHead>
                             <TableHead className="w-[170px] text-center">Mã phiếu xuất</TableHead>
                             <TableHead className="w-[160px] text-center">Đại lý</TableHead>
-                            <TableHead className="w-[160px] text-center cursor-pointer" onClick={() => handleSort("approvedDate")}>
+                            <TableHead className="w-[160px] text-center cursor-pointer" onClick={() => handleSort("requestDate")}>
                                 <div className="flex items-center justify-center">
                                     Ngày duyệt
-                                    {renderSortIcon("approvedDate")}
+                                    {renderSortIcon("requestDate")}
                                 </div>
                             </TableHead>
                             <TableHead className="text-center">Ghi chú</TableHead>
@@ -101,10 +100,9 @@ export const ExportRequestTable = ({
                     <TableBody>
                         {filteredRequests.map((request) => (
                             <TableRow key={request.requestExportId}>
-                                <TableCell className="font-medium text-center">{request.requestExportId}</TableCell>
                                 <TableCell className="w-[170px] text-center">{request.requestExportCode}</TableCell>
                                 <TableCell className="w-[160px] text-center">{request.agencyName}</TableCell>
-                                <TableCell className="w-[160px] text-center">{formatDate(request.approvedDate)}</TableCell>
+                                <TableCell className="w-[160px] text-center">{formatDate(request.requestDate)}</TableCell>
                                 <TableCell className="truncate">{request.note || "Không có ghi chú"}</TableCell>
                                 <TableCell className="w-[120px] text-center">{request.requestExportDetails.length}</TableCell>
                                 <TableCell className="w-[120px] text-center">{getTotalRequestedQuantity(request)}</TableCell>

@@ -16,6 +16,7 @@ export interface RequestExport {
     status: string
     approvedDate: string
     note: string
+    requestDate: string
     requestExportDetails: RequestExportDetail[]
 }
 

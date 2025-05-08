@@ -35,9 +35,9 @@ export const OrderSearchFilter = ({
                         <SelectItem value="all">Tất cả trạng thái</SelectItem>
                         <SelectItem value="WaitPaid">Chờ thanh toán</SelectItem>
                         <SelectItem value="Paid">Đã thanh toán</SelectItem>
-                        <SelectItem value="Processing">Đang xử lý</SelectItem>
-                        <SelectItem value="Delivery">Đang giao hàng</SelectItem>
-                        <SelectItem value="Canceled">Đã hủy</SelectItem>
+                        <SelectItem value="WaitingDelivery">Đã giao hàng </SelectItem>
+                        <SelectItem value="Exported">Chờ xuất kho</SelectItem>
+                        <SelectItem value="Canceled">Từ chối</SelectItem>
                     </SelectContent>
                 </Select>
             </div>

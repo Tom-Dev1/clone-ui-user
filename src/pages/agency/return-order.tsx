@@ -257,18 +257,100 @@ export default function AgencyReturnOrder() {
                                 )}
                             </TabsContent>
 
-                            {/* Other tab contents will be filtered by the TabsTrigger */}
                             <TabsContent value="Pending" className="space-y-4">
-                                {/* Content is filtered by the useEffect */}
+                                {filteredOrders.filter(order => order.status === "Pending").length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                                        <PackageOpen className="h-12 w-12 text-muted-foreground mb-4" />
+                                        <h3 className="text-lg font-medium">Không có đơn trả hàng đang chờ duyệt</h3>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <ReturnOrderTable
+                                            returnOrders={getPaginatedData().filter(order => order.status === "Pending")}
+                                            sortField={sortField}
+                                            sortDirection={sortDirection}
+                                            onSortChange={handleSortChange}
+                                            onViewDetails={handleViewDetails}
+                                        />
+                                        <ReturnOrderPagination
+                                            currentPage={currentPage}
+                                            totalPages={totalPages}
+                                            onPageChange={handlePageChange}
+                                        />
+                                    </>
+                                )}
                             </TabsContent>
+
                             <TabsContent value="Approved" className="space-y-4">
-                                {/* Content is filtered by the useEffect */}
+                                {filteredOrders.filter(order => order.status === "Approved").length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                                        <PackageOpen className="h-12 w-12 text-muted-foreground mb-4" />
+                                        <h3 className="text-lg font-medium">Không có đơn trả hàng đã được duyệt</h3>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <ReturnOrderTable
+                                            returnOrders={getPaginatedData().filter(order => order.status === "Approved")}
+                                            sortField={sortField}
+                                            sortDirection={sortDirection}
+                                            onSortChange={handleSortChange}
+                                            onViewDetails={handleViewDetails}
+                                        />
+                                        <ReturnOrderPagination
+                                            currentPage={currentPage}
+                                            totalPages={totalPages}
+                                            onPageChange={handlePageChange}
+                                        />
+                                    </>
+                                )}
                             </TabsContent>
+
                             <TabsContent value="Completed" className="space-y-4">
-                                {/* Content is filtered by the useEffect */}
+                                {filteredOrders.filter(order => order.status === "Completed").length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                                        <PackageOpen className="h-12 w-12 text-muted-foreground mb-4" />
+                                        <h3 className="text-lg font-medium">Không có đơn trả hàng đã hoàn thành</h3>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <ReturnOrderTable
+                                            returnOrders={getPaginatedData().filter(order => order.status === "Completed")}
+                                            sortField={sortField}
+                                            sortDirection={sortDirection}
+                                            onSortChange={handleSortChange}
+                                            onViewDetails={handleViewDetails}
+                                        />
+                                        <ReturnOrderPagination
+                                            currentPage={currentPage}
+                                            totalPages={totalPages}
+                                            onPageChange={handlePageChange}
+                                        />
+                                    </>
+                                )}
                             </TabsContent>
+
                             <TabsContent value="Rejected" className="space-y-4">
-                                {/* Content is filtered by the useEffect */}
+                                {filteredOrders.filter(order => order.status === "Rejected").length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                                        <PackageOpen className="h-12 w-12 text-muted-foreground mb-4" />
+                                        <h3 className="text-lg font-medium">Không có đơn trả hàng bị từ chối</h3>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <ReturnOrderTable
+                                            returnOrders={getPaginatedData().filter(order => order.status === "Rejected")}
+                                            sortField={sortField}
+                                            sortDirection={sortDirection}
+                                            onSortChange={handleSortChange}
+                                            onViewDetails={handleViewDetails}
+                                        />
+                                        <ReturnOrderPagination
+                                            currentPage={currentPage}
+                                            totalPages={totalPages}
+                                            onPageChange={handlePageChange}
+                                        />
+                                    </>
+                                )}
                             </TabsContent>
                         </Tabs>
                     </CardContent>

@@ -18,12 +18,15 @@ export interface Order {
     discount: number;
     agencyId: number;
     finalPrice: number;
-    status: string;
+    status: STATUS_AGENCY_ORDER
     salesName: string;
     agencyName: string;
     requestCode: string;
     orderDetails: OrderDetail[];
 }
+
+
+export type STATUS_AGENCY_ORDER = 'Exported' | 'Paid' | 'Canceled' | 'WaitingDelivery'
 
 // Define type for sort direction
 export type SortDirection = "asc" | "desc";

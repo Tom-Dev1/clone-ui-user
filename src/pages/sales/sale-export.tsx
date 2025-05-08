@@ -45,7 +45,7 @@ const SalesExports = () => {
   }>({ type: null, title: "", message: "" })
 
   // Sorting and pagination state
-  const [sortField, setSortField] = useState<string>("approvedDate")
+  const [sortField, setSortField] = useState<string>("requestDate")
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc")
   const [currentPage, setCurrentPage] = useState<number>(1)
   const [pageSize] = useState<number>(15)
@@ -130,14 +130,14 @@ const SalesExports = () => {
     // Filter by date range
     if (dateRange.from) {
       filtered = filtered.filter((request) => {
-        if (!request.approvedDate) return false
-        return new Date(request.approvedDate) >= dateRange.from!
+        if (!request.requestDate) return false
+        return new Date(request.requestDate) >= dateRange.from!
       })
     }
     if (dateRange.to) {
       filtered = filtered.filter((request) => {
-        if (!request.approvedDate) return false
-        return new Date(request.approvedDate) <= dateRange.to!
+        if (!request.requestDate) return false
+        return new Date(request.requestDate) <= dateRange.to!
       })
     }
 
@@ -238,8 +238,6 @@ const SalesExports = () => {
       setSelectedRequestForMainWarehouse(null)
     }
   }
-
-
 
   if (authError) {
     return (

@@ -6,6 +6,7 @@ import { getToken } from "@/utils/auth-utils"
 import { Loader2, AlertCircle } from "lucide-react"
 import { toast } from "sonner"
 import type { AgencyLevel } from "@/types/agency-level"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 // Import components
 import { AgencyLevelDialog } from "@/components/agency-level/agency-level-dialog"
@@ -15,11 +16,13 @@ import { AgencyLevelStats } from "@/components/agency-level/agency-level-stats"
 import { AgencyLevelViewDialog } from "@/components/agency-level/agency-level-view-dialog"
 import { AgencyLevelUpdateDialog } from "@/components/agency-level/agency-level-update-dialog"
 import { AgencyLevelDeleteDialog } from "@/components/agency-level/agency-level-delete-dialog"
+import { AgencyLevelUpgradeRequests } from "@/components/agency-level/agency-level-upgrade-requests"
 
 export default function SaleAgencyLevel() {
     const [agencyLevels, setAgencyLevels] = useState<AgencyLevel[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [activeTab, setActiveTab] = useState("manage")
 
     // State for view dialog
     const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
@@ -98,36 +101,49 @@ export default function SaleAgencyLevel() {
                         <p className="text-muted-foreground">Xem thông tin về các cấp độ đại lý và quyền lợi tương ứng</p>
                     </div>
 
-                    <AgencyLevelDialog onAgencyLevelAdded={fetchAgencyLevels} />
+                    {activeTab === "manage" && <AgencyLevelDialog onAgencyLevelAdded={fetchAgencyLevels} />}
                 </div>
 
-                {isLoading ? (
-                    <div className="flex justify-center items-center h-64">
-                        <Loader2 className="h-8 w-8 animate-spin mr-2" />
-                        <p>Đang tải dữ liệu cấp độ đại lý...</p>
-                    </div>
-                ) : error ? (
-                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded flex items-center">
-                        <AlertCircle className="h-5 w-5 mr-2" />
-                        <span>{error}</span>
-                    </div>
-                ) : (
-                    <>
-                        {/* Overview Cards */}
-                        <AgencyLevelStats agencyLevels={agencyLevels} />
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+                    <TabsList>
+                        <TabsTrigger value="manage">Quản lý cấp độ</TabsTrigger>
+                        <TabsTrigger value="upgrade">Duyệt lên cấp cho đại lý</TabsTrigger>
+                    </TabsList>
 
-                        {/* Agency Levels Table */}
-                        <AgencyLevelTable
-                            agencyLevels={agencyLevels}
-                            onViewLevel={handleViewLevel}
-                            onEditLevel={handleEditLevel}
-                            onDeleteLevel={handleDeleteLevel}
-                        />
+                    <TabsContent value="manage">
+                        {isLoading ? (
+                            <div className="flex justify-center items-center h-64">
+                                <Loader2 className="h-8 w-8 animate-spin mr-2" />
+                                <p>Đang tải dữ liệu cấp độ đại lý...</p>
+                            </div>
+                        ) : error ? (
+                            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded flex items-center">
+                                <AlertCircle className="h-5 w-5 mr-2" />
+                                <span>{error}</span>
+                            </div>
+                        ) : (
+                            <>
+                                {/* Overview Cards */}
+                                <AgencyLevelStats agencyLevels={agencyLevels} />
 
-                        {/* Detailed Cards */}
-                        <AgencyLevelCards agencyLevels={agencyLevels} />
-                    </>
-                )}
+                                {/* Agency Levels Table */}
+                                <AgencyLevelTable
+                                    agencyLevels={agencyLevels}
+                                    onViewLevel={handleViewLevel}
+                                    onEditLevel={handleEditLevel}
+                                    onDeleteLevel={handleDeleteLevel}
+                                />
+
+                                {/* Detailed Cards */}
+                                <AgencyLevelCards agencyLevels={agencyLevels} />
+                            </>
+                        )}
+                    </TabsContent>
+
+                    <TabsContent value="upgrade">
+                        <AgencyLevelUpgradeRequests />
+                    </TabsContent>
+                </Tabs>
 
                 {/* View Dialog */}
                 <AgencyLevelViewDialog isOpen={isViewDialogOpen} onOpenChange={setIsViewDialogOpen} levelId={selectedLevelId} />

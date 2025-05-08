@@ -117,7 +117,7 @@ export const OrderTable = ({
                                                 <span>Xem chi tiết</span>
                                             </DropdownMenuItem>
 
-                                            {order.status === "WaitPaid" && (
+                                            {order.status === "WaitingDelivery" && (
                                                 <>
                                                     <DropdownMenuItem onClick={() => onPayment(order)}>
                                                         <CreditCard className="mr-2 h-4 w-4" />
