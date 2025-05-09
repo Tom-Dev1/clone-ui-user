@@ -26,7 +26,7 @@ export interface Order {
 }
 
 
-export type STATUS_AGENCY_ORDER = 'Exported' | 'Paid' | 'Canceled' | 'WaitingDelivery'
+export type STATUS_AGENCY_ORDER = 'Exported' | 'Paid' | 'Canceled' | 'WaitingDelivery' | 'WaitPaid'
 
 // Define type for sort direction
 export type SortDirection = "asc" | "desc";

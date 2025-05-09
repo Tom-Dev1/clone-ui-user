@@ -147,7 +147,7 @@ export const OrderDetailDialog = ({
                 </ScrollArea>
 
                 <DialogFooter className="px-6 py-4 border-t flex-col sm:flex-row gap-2 sm:justify-between">
-                    {selectedOrder.status === "WaitingDelivery" && (
+                    {selectedOrder.status === "WaitPaid" && (
                         <div className="flex gap-2 w-full sm:w-auto order-2 sm:order-1">
                             <Button
                                 variant="destructive"
