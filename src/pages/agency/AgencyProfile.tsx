@@ -178,7 +178,7 @@ export default function AgencyProfile() {
                                 <Avatar className="h-24 w-24 border-4 border-white shadow-md">
                                     <AvatarImage src={profileImage || "/placeholder.svg"} alt="Avatar" />
                                     <AvatarFallback className="bg-green-100 text-green-800 text-xl">
-                                        {userData?.username?.charAt(0).toUpperCase() || "U"}
+                                        {scoreData?.agencyName.charAt(0).toUpperCase() || "U"}
                                     </AvatarFallback>
                                 </Avatar>
                                 {userData?.status && (
@@ -188,7 +188,7 @@ export default function AgencyProfile() {
                                     ></span>
                                 )}
                             </div>
-                            <h3 className="font-medium text-lg mt-4">{userData?.username || "Chưa có thông tin"}</h3>
+                            <h3 className="font-medium text-lg mt-4">{scoreData?.agencyName || "Chưa có thông tin"}</h3>
                             <p className="text-muted-foreground text-sm">{userData?.userType || "Đại lý"}</p>
 
                             {userData?.agencyLevelName && (
@@ -204,6 +204,7 @@ export default function AgencyProfile() {
                                         <h4 className="font-medium text-sm">Điểm uy tín</h4>
                                         <span className={`font-bold ${getScoreLevel(scoreData.totalScore).color}`}>
                                             {scoreData.totalScore} điểm
+                                            {scoreData.agencyName}
                                         </span>
                                     </div>
                                     <Progress
