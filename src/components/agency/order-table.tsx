@@ -63,7 +63,6 @@ export const OrderTable = ({
                             </div>
                         </TableHead>
                         <TableHead>Đại lý</TableHead>
-                        <TableHead>Người duyệt</TableHead>
                         <TableHead className="cursor-pointer" onClick={() => onSortChange("orderDate")}>
                             <div className="flex items-center">
                                 Ngày đặt
@@ -97,13 +96,12 @@ export const OrderTable = ({
                             <TableRow key={order.orderId}>
                                 <TableCell className="font-medium">{order.orderCode}</TableCell>
                                 <TableCell>{order.agencyName}</TableCell>
-                                <TableCell>{order.salesName}</TableCell>
                                 <TableCell>{formatDate(order.orderDate)}</TableCell>
                                 <TableCell>
                                     <OrderStatusBadge status={order.status} />
                                 </TableCell>
                                 <TableCell className="text-center">{order.finalPrice.toLocaleString("vi-VN")} đ</TableCell>
-                                <TableCell>
+                                <TableCell className="text-center">
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
                                             <Button variant="ghost" className="h-8 w-8 p-0">

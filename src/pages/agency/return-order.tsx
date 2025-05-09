@@ -62,7 +62,7 @@ export default function AgencyReturnOrder() {
                     throw new Error("Authentication token not found")
                 }
 
-                const response = await fetch("https://minhlong.mlhr.org/api/returns", {
+                const response = await fetch("https://minhlong.mlhr.org/api/returns/agency-return", {
                     headers: {
                         Authorization: `Bearer ${token}`,
                         "Content-Type": "application/json",
