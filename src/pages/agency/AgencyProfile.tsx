@@ -4,9 +4,11 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { getUserInfo, getToken } from "@/utils/auth-utils"
-import { User, Mail, Phone, CheckCircle, CreditCard, Award, ShieldCheck, InfoIcon } from "lucide-react"
+import { User, Mail, Phone, CheckCircle, CreditCard, Award, ShieldCheck, InfoIcon, TrendingUp } from "lucide-react"
 import { toast } from "sonner"
 import { AgencyLayout } from "@/layouts/agency-layout"
+import { Progress } from "@/components/ui/progress"
+import { Badge } from "@/components/ui/badge"
 
 // Update the UserData interface to include contracts
 interface UserData {
@@ -29,10 +31,24 @@ interface UserData {
     }[]
 }
 
+// Define interface for agency score data
+interface AgencyScoreData {
+    agencyId: number
+    agencyName: string
+    totalScore: number
+    scoreHistory: {
+        scoreChange: number
+        reason: string
+        createdDate: string
+    }[]
+}
+
 export default function AgencyProfile() {
     const userInfo = getUserInfo()
     const [userData, setUserData] = useState<UserData | null>(null)
     const [profileImage] = useState("/placeholder.svg?height=200&width=200")
+    const [scoreData, setScoreData] = useState<AgencyScoreData | null>(null)
+    const [isLoadingScore, setIsLoadingScore] = useState(false)
 
     // Fetch user data from API
     useEffect(() => {
@@ -71,7 +87,77 @@ export default function AgencyProfile() {
         fetchUserData()
     }, [userInfo?.id])
 
-    // Replace the return statement with the updated UI that includes contracts
+    // Fetch agency score data
+    useEffect(() => {
+        const fetchAgencyScore = async () => {
+            setIsLoadingScore(true)
+            try {
+                const token = getToken()
+                if (!token) {
+                    toast.error("Phiên đăng nhập hết hạn")
+                    return
+                }
+
+                const response = await fetch("https://minhlong.mlhr.org/api/AgencyScore/get-my-score", {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                })
+
+                if (!response.ok) {
+                    throw new Error(`Error: ${response.status}`)
+                }
+
+                const data = await response.json()
+                setScoreData(data)
+            } catch (error) {
+                console.error("Failed to fetch agency score:", error)
+                // Don't show toast for this error to avoid too many notifications
+            } finally {
+                setIsLoadingScore(false)
+            }
+        }
+
+        fetchAgencyScore()
+    }, [])
+
+    // Format date
+    const formatDate = (dateString: string) => {
+        const date = new Date(dateString)
+        return new Intl.DateTimeFormat("vi-VN", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+        }).format(date)
+    }
+
+    // Get score level based on total score
+    const getScoreLevel = (score: number) => {
+        if (score >= 1000) return { level: "Xuất sắc", color: "text-green-600" }
+        if (score >= 750) return { level: "Tốt", color: "text-blue-600" }
+        if (score >= 500) return { level: "Khá", color: "text-yellow-600" }
+        if (score >= 250) return { level: "Trung bình", color: "text-orange-600" }
+        return { level: "Cần cải thiện", color: "text-red-600" }
+    }
+
+    // Get progress color based on score
+    const getProgressColor = (score: number) => {
+        if (score >= 1000) return "bg-green-500"
+        if (score >= 750) return "bg-blue-500"
+        if (score >= 500) return "bg-yellow-500"
+        if (score >= 250) return "bg-orange-500"
+        return "bg-red-500"
+    }
+
+    // Calculate progress percentage (max score is 1200)
+    const calculateProgress = (score: number) => {
+        const maxScore = 1200
+        return Math.min(Math.round((score / maxScore) * 100), 100)
+    }
+
     return (
         <AgencyLayout>
             <div className="container mx-auto py-6 px-4 md:px-6">
@@ -108,6 +194,57 @@ export default function AgencyProfile() {
                             {userData?.agencyLevelName && (
                                 <div className="mt-3 px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-sm font-medium">
                                     {userData.agencyLevelName}
+                                </div>
+                            )}
+
+                            {/* Agency Score Section */}
+                            {scoreData && (
+                                <div className="mt-6 w-full">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <h4 className="font-medium text-sm">Điểm uy tín</h4>
+                                        <span className={`font-bold ${getScoreLevel(scoreData.totalScore).color}`}>
+                                            {scoreData.totalScore} điểm
+                                        </span>
+                                    </div>
+                                    <Progress
+                                        value={calculateProgress(scoreData.totalScore)}
+                                        className="h-2"
+                                        indicatorClassName={getProgressColor(scoreData.totalScore)}
+                                    />
+                                    <p className="text-xs text-right mt-1 text-muted-foreground">
+                                        Mức:{" "}
+                                        <span className={`font-medium ${getScoreLevel(scoreData.totalScore).color}`}>
+                                            {getScoreLevel(scoreData.totalScore).level}
+                                        </span>
+                                    </p>
+
+                                    {scoreData.scoreHistory && scoreData.scoreHistory.length > 0 && (
+                                        <div className="mt-4">
+                                            <h4 className="font-medium text-sm text-left mb-2">Lịch sử điểm gần đây</h4>
+                                            <div className="bg-gray-50 rounded-lg p-3 text-left">
+                                                {scoreData.scoreHistory.slice(0, 3).map((history, index) => (
+                                                    <div key={index} className="mb-2 last:mb-0">
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-xs text-gray-500">{formatDate(history.createdDate)}</span>
+                                                            <Badge variant={history.scoreChange > 0 ? "default" : "destructive"} className="text-xs">
+                                                                {history.scoreChange > 0 ? "+" : ""}
+                                                                {history.scoreChange}
+                                                            </Badge>
+                                                        </div>
+                                                        <p className="text-sm mt-1">{history.reason}</p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {isLoadingScore && (
+                                <div className="mt-6 w-full text-center">
+                                    <div className="animate-pulse bg-gray-200 h-4 w-3/4 mx-auto rounded mb-2"></div>
+                                    <div className="animate-pulse bg-gray-200 h-2 w-full rounded mb-2"></div>
+                                    <div className="animate-pulse bg-gray-200 h-4 w-1/2 mx-auto rounded"></div>
                                 </div>
                             )}
                         </CardContent>
@@ -211,6 +348,28 @@ export default function AgencyProfile() {
                                             </div>
                                         </div>
                                     </div>
+
+                                    {/* Agency Score Summary */}
+                                    {scoreData && (
+                                        <div className="bg-gray-50 p-4 rounded-lg">
+                                            <div className="flex items-center space-x-3">
+                                                <div className="p-2 bg-green-100 rounded-full">
+                                                    <TrendingUp className="h-5 w-5 text-green-600" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-medium text-gray-500">Điểm uy tín</p>
+                                                    <p className="font-medium">
+                                                        <span className={getScoreLevel(scoreData.totalScore).color}>
+                                                            {scoreData.totalScore} điểm
+                                                        </span>
+                                                        <span className="text-xs ml-2 text-gray-500">
+                                                            ({getScoreLevel(scoreData.totalScore).level})
+                                                        </span>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </CardContent>
@@ -315,6 +474,16 @@ export default function AgencyProfile() {
                                                 : "chưa được cấp"}
                                             . Để nâng cấp tài khoản, vui lòng liên hệ với nhân viên kinh doanh của chúng tôi.
                                         </p>
+
+                                        {scoreData && (
+                                            <p className="text-sm mt-2">
+                                                Điểm uy tín hiện tại của bạn là <strong>{scoreData.totalScore}</strong> điểm, đạt mức{" "}
+                                                <strong className={getScoreLevel(scoreData.totalScore).color}>
+                                                    {getScoreLevel(scoreData.totalScore).level}
+                                                </strong>
+                                                . Điểm uy tín cao sẽ giúp bạn được xem xét nâng cấp đại lý và tăng hạn mức tín dụng.
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
                             </div>
