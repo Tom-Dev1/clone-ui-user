@@ -11,14 +11,13 @@ import {
   Menu,
   Home,
   LayoutDashboard,
-
   Package,
   FileText,
-
   User,
   LogOut,
   CreditCard,
   CheckCheck,
+  MessageCircleMore,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/hooks/use-media-query";
@@ -72,9 +71,6 @@ export function SalesLayout({ children }: SalesLayoutProps) {
       icon: <FileText className="h-5 w-5" />,
     },
 
-
-
-
     {
       title: "Duyệt trả hàng",
       href: "/sales/review-order",
@@ -100,21 +96,17 @@ export function SalesLayout({ children }: SalesLayoutProps) {
       href: "/sales/profile",
       icon: <User className="h-5 w-5" />,
     },
-
-
-
-
-
-
+    {
+      title: "Tin nhắn",
+      href: "/sales/messages",
+      icon: <MessageCircleMore className="h-5 w-5" />,
+    },
 
     // {
     //   title: "Thuế",
     //   href: "/sales/tax",
     //   icon: <Receipt className="h-5 w-5" />,
     // },
-
-
-
   ];
   return (
     <div className="min-h-screen bg-gray-100">
@@ -181,10 +173,7 @@ export function SalesLayout({ children }: SalesLayoutProps) {
                   </SheetContent>
                 </Sheet>
               )}
-              <Link
-                to="/"
-                className="text-xl font-bold flex items-center"
-              >
+              <Link to="/" className="text-xl font-bold flex items-center">
                 <Home className="h-5 w-5" />
                 <span className="ml-5 ">Trang chủ</span>
               </Link>
