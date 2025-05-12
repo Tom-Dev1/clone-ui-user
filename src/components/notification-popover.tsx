@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
 import { fetchWithAuth } from "@/utils/api-utils"
 import { getToken } from "@/utils/auth-utils"
+import { useNavigate } from "react-router-dom"
 
 // Define notification types
 type NotificationType = "all" | "unread" | "read"
@@ -25,6 +26,7 @@ interface Notification {
 }
 
 export function NotificationPopover() {
+    const navigate = useNavigate()
     const [open, setOpen] = useState(false)
     const [notifications, setNotifications] = useState<Notification[]>([])
     const [activeTab, setActiveTab] = useState<NotificationType>("all")
@@ -104,7 +106,11 @@ export function NotificationPopover() {
             await markAsRead(notification.notificationId)
         }
 
+        // Close the popover
+        setOpen(false)
 
+        // Navigate to the review order page
+        navigate("/sales/review-order")
     }
 
     // Filter notifications based on active tab

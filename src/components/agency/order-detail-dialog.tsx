@@ -66,10 +66,7 @@ export const OrderDetailDialog = ({
                                         <p className="text-sm font-medium text-muted-foreground">Đại lý</p>
                                         <p className="font-medium">{selectedOrder.agencyName}</p>
                                     </div>
-                                    <div className="space-y-1">
-                                        <p className="text-sm font-medium text-muted-foreground">Người duyệt đơn</p>
-                                        <p className="font-medium">{selectedOrder.salesName || "Chưa có thông tin"}</p>
-                                    </div>
+
                                     <div className="space-y-1">
                                         <p className="text-sm font-medium text-muted-foreground">Mã yêu cầu</p>
                                         <p className="font-medium">{selectedOrder.requestCode || "Không có"}</p>

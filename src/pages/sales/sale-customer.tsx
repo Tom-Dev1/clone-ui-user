@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/pagination"
 import { format } from "date-fns"
 import { vi } from "date-fns/locale"
-import { Loader2, Search, Users, Building, MoreHorizontal, Eye, Mail, Phone, MapPin } from "lucide-react"
+import { Loader2, Search, Users, Building, MoreHorizontal, Eye, Mail, Phone, MapPin, ArrowUpDown } from "lucide-react"
 import { toast } from "sonner"
 import { getToken } from "@/utils/auth-utils"
 
@@ -124,6 +124,9 @@ const AgencyDetail = ({ agency, onClose }: AgencyDetailProps) => {
     )
 }
 
+type SortField = "agencyName" | "createdAt"
+type SortOrder = "asc" | "desc"
+
 const SaleCustomer = () => {
     const [agencies, setAgencies] = useState<Agency[]>([])
     const [filteredAgencies, setFilteredAgencies] = useState<Agency[]>([])
@@ -134,6 +137,8 @@ const SaleCustomer = () => {
     const [itemsPerPage] = useState(10)
     const [selectedAgency, setSelectedAgency] = useState<Agency | null>(null)
     const [showDetail, setShowDetail] = useState(false)
+    const [sortField, setSortField] = useState<SortField>("createdAt")
+    const [sortOrder, setSortOrder] = useState<SortOrder>("desc")
 
     // Fetch agencies data
     useEffect(() => {
@@ -175,10 +180,25 @@ const SaleCustomer = () => {
         fetchAgencies()
     }, [])
 
+    // Sort agencies
+    const sortAgencies = (agencies: Agency[]) => {
+        return [...agencies].sort((a, b) => {
+            if (sortField === "agencyName") {
+                return sortOrder === "asc"
+                    ? a.agencyName.localeCompare(b.agencyName)
+                    : b.agencyName.localeCompare(a.agencyName)
+            } else {
+                return sortOrder === "asc"
+                    ? new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+                    : new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            }
+        })
+    }
+
     // Filter agencies based on search term
     useEffect(() => {
         if (searchTerm.trim() === "") {
-            setFilteredAgencies(agencies)
+            setFilteredAgencies(sortAgencies(agencies))
         } else {
             const lowercasedSearch = searchTerm.toLowerCase()
             const filtered = agencies.filter(
@@ -188,10 +208,10 @@ const SaleCustomer = () => {
                     agency.phone.includes(lowercasedSearch) ||
                     agency.address.toLowerCase().includes(lowercasedSearch),
             )
-            setFilteredAgencies(filtered)
+            setFilteredAgencies(sortAgencies(filtered))
         }
-        setCurrentPage(1) // Reset to first page when search changes
-    }, [searchTerm, agencies])
+        setCurrentPage(1)
+    }, [searchTerm, agencies, sortField, sortOrder])
 
     // Calculate pagination
     const totalPages = Math.ceil(filteredAgencies.length / itemsPerPage)
@@ -219,6 +239,16 @@ const SaleCustomer = () => {
         } catch (error) {
             console.error("Error formatting date:", error)
             return dateString
+        }
+    }
+
+    // Handle sort
+    const handleSort = (field: SortField) => {
+        if (sortField === field) {
+            setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+        } else {
+            setSortField(field)
+            setSortOrder("asc")
         }
     }
 
@@ -308,23 +338,39 @@ const SaleCustomer = () => {
                                     <Table>
                                         <TableHeader>
                                             <TableRow>
-                                                <TableHead className="w-[80px]">ID</TableHead>
-                                                <TableHead>Tên đại lý</TableHead>
+                                                <TableHead>
+                                                    <Button
+                                                        variant="ghost"
+                                                        onClick={() => handleSort("agencyName")}
+                                                        className="flex items-center gap-1"
+                                                    >
+                                                        Tên đại lý
+                                                        <ArrowUpDown className="h-4 w-4" />
+                                                    </Button>
+                                                </TableHead>
                                                 <TableHead>Email</TableHead>
                                                 <TableHead>Số điện thoại</TableHead>
-                                                <TableHead>Ngày tạo</TableHead>
-                                                <TableHead className="text-right">Thao tác</TableHead>
+                                                <TableHead>
+                                                    <Button
+                                                        variant="ghost"
+                                                        onClick={() => handleSort("createdAt")}
+                                                        className="flex items-center gap-1"
+                                                    >
+                                                        Ngày tạo
+                                                        <ArrowUpDown className="h-4 w-4" />
+                                                    </Button>
+                                                </TableHead>
+                                                <TableHead>Thao tác</TableHead>
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
                                             {currentItems.map((agency) => (
                                                 <TableRow key={agency.agencyId}>
-                                                    <TableCell className="font-medium">{agency.agencyId}</TableCell>
                                                     <TableCell>{agency.agencyName}</TableCell>
                                                     <TableCell>{agency.email}</TableCell>
                                                     <TableCell>{agency.phone}</TableCell>
                                                     <TableCell>{formatDate(agency.createdAt)}</TableCell>
-                                                    <TableCell className="text-right">
+                                                    <TableCell>
                                                         <DropdownMenu>
                                                             <DropdownMenuTrigger asChild>
                                                                 <Button variant="ghost" className="h-8 w-8 p-0">

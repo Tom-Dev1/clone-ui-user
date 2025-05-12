@@ -21,6 +21,7 @@ export enum DebtStatus {
     StillValid = "StillValid",
     NearDue = "NearDue",
     OverDue = "OverDue",
+    DebtFree = "DebtFree",
 }
 export enum Status {
     PAID = "PAID",

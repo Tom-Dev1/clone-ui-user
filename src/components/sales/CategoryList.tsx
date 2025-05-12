@@ -23,7 +23,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { Pencil, Trash2, Eye, MoreHorizontal } from "lucide-react";
+import { Pencil, Trash2, Eye, MoreHorizontal, ArrowUpDown } from "lucide-react";
 import { toast } from "sonner";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
 
@@ -44,6 +44,8 @@ interface CategoryFormData {
   notes: string;
   isActive: boolean;
 }
+
+type SortOrder = "asc" | "desc";
 
 const CategoryList = () => {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -76,6 +78,7 @@ const CategoryList = () => {
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(
     null
   );
+  const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
 
   useEffect(() => {
     fetchCategories();
@@ -330,6 +333,34 @@ const CategoryList = () => {
     }
   };
 
+  // Sort categories
+  const sortCategories = (categories: Category[]) => {
+    return [...categories].sort((a, b) => {
+      return sortOrder === "asc"
+        ? a.categoryName.localeCompare(b.categoryName)
+        : b.categoryName.localeCompare(a.categoryName);
+    });
+  };
+
+  // Update useEffect for filtering
+  useEffect(() => {
+    if (categories.length > 0) {
+      const filtered = categories.filter(
+        (category) =>
+          category.categoryName
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          category.categoryId.toString().includes(searchTerm)
+      );
+      setFilteredCategories(sortCategories(filtered));
+    }
+  }, [searchTerm, categories, sortOrder]);
+
+  // Handle sort
+  const handleSort = () => {
+    setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+  };
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -447,20 +478,25 @@ const CategoryList = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Tên danh mục</TableHead>
-                  <TableHead>Thứ tự</TableHead>
+                  <TableHead>
+                    <Button
+                      variant="ghost"
+                      onClick={handleSort}
+                      className="flex items-center gap-1"
+                    >
+                      Tên danh mục
+                      <ArrowUpDown className="h-4 w-4" />
+                    </Button>
+                  </TableHead>
                   <TableHead>Trạng thái</TableHead>
-                  <TableHead className=" w-[150px] text-center">Thao tác</TableHead>
+                  <TableHead>Thao tác</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredCategories.length > 0 ? (
                   filteredCategories.map((category) => (
                     <TableRow key={category.categoryId}>
-                      <TableCell>{category.categoryId}</TableCell>
                       <TableCell>{category.categoryName}</TableCell>
-                      <TableCell>{category.sortOrder}</TableCell>
                       <TableCell>
                         <span
                           className={`px-2 py-1 rounded-full text-xs ${category.isActive
@@ -471,7 +507,7 @@ const CategoryList = () => {
                           {category.isActive ? "Hoạt động" : "Không hoạt động"}
                         </span>
                       </TableCell>
-                      <TableCell className=" w-[150px] text-center">
+                      <TableCell className="">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="outline" size="icon" className="h-8 w-8 p-0">

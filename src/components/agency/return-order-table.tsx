@@ -40,19 +40,19 @@ export const ReturnOrderTable = ({
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead className="w-[180px]">
+                        <TableHead >
                             <div className="flex items-center cursor-pointer" onClick={() => onSortChange("returnRequestId")}>
                                 Mã đơn trả hàng
                                 {renderSortIcon("returnRequestId")}
                             </div>
                         </TableHead>
-                        <TableHead className="w-[180px]">
+                        <TableHead >
                             <div className="flex items-center cursor-pointer" onClick={() => onSortChange("orderId")}>
                                 Mã đơn hàng
                                 {renderSortIcon("orderId")}
                             </div>
                         </TableHead>
-                        <TableHead className="w-[150px]">
+                        <TableHead >
                             <div className="flex items-center cursor-pointer" onClick={() => onSortChange("createdAt")}>
                                 Ngày tạo
                                 {renderSortIcon("createdAt")}
@@ -64,15 +64,15 @@ export const ReturnOrderTable = ({
                                 {renderSortIcon("createdByUserName")}
                             </div>
                         </TableHead>
-                        <TableHead className="w-[100px] text-center">Số SP</TableHead>
-                        <TableHead className="w-[100px] text-center">Tổng SL</TableHead>
-                        <TableHead className="w-[120px]">
+                        <TableHead >Số SP</TableHead>
+                        <TableHead >Tổng SL</TableHead>
+                        <TableHead>
                             <div className="flex items-center cursor-pointer" onClick={() => onSortChange("status")}>
                                 Trạng thái
                                 {renderSortIcon("status")}
                             </div>
                         </TableHead>
-                        <TableHead className="w-[80px] text-right">Thao tác</TableHead>
+                        <TableHead >Thao tác</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -94,7 +94,7 @@ export const ReturnOrderTable = ({
                                 <TableCell>
                                     <ReturnStatusBadge status={order.status} />
                                 </TableCell>
-                                <TableCell className="text-right">
+                                <TableCell >
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
                                             <Button variant="ghost" size="icon" className="h-8 w-8">
