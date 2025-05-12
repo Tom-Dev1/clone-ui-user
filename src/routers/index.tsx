@@ -20,6 +20,7 @@ import SaleAgencyLevel from "@/pages/sales/sale-agency-level";
 import SaleReviewOrder from "@/pages/sales/sale-review-order";
 import SaleCustomer from "@/pages/sales/sale-customer";
 import AgencyReturnOrder from "@/pages/agency/return-order";
+import ChatPage from "@/pages/sales/sale-chat-page";
 
 // Lazy load pages for better performance
 const Home = lazy(() => import("@/pages/home"));
@@ -196,7 +197,7 @@ export const AppRouter = () => {
             path="/sales/messages"
             element={
               <ProtectedRoute requiredRole={UserRole.SALES_MANAGER}>
-                <SalesDashboard />
+                <ChatPage />
               </ProtectedRoute>
             }
           />
