@@ -496,9 +496,7 @@ export function FloatingChat() {
               <div className="flex flex-col items-center justify-center h-full text-gray-500 text-center">
                 <MessageSquare className="h-12 w-12 text-gray-300 mb-2" />
                 <p className="text-sm">Chưa có tin nhắn nào</p>
-                <p className="text-xs">
-                  Hãy bắt đầu cuộc trò chuyện với quản lý của bạn
-                </p>
+                <p className="text-xs">Hãy bắt đầu cuộc trò chuyện</p>
               </div>
             ) : (
               <div className="space-y-3">
