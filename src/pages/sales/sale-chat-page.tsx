@@ -69,6 +69,7 @@ export default function ChatPage() {
   const [uploadProgress, setUploadProgress] = useState(0);
 
   const connectionRef = useRef<signalR.HubConnection | null>(null);
+  const globalConnectionRef = useRef<signalR.HubConnection | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -112,7 +113,111 @@ export default function ChatPage() {
     };
 
     fetchRooms();
-  }, [selectedRoom]);
+
+    // Set up global SignalR connection for background message receiving
+    setupGlobalSignalR();
+
+    return () => {
+      if (globalConnectionRef.current) {
+        globalConnectionRef.current.stop();
+        globalConnectionRef.current = null;
+      }
+    };
+  }, []);
+
+  // Setup global SignalR connection for background notifications
+  const setupGlobalSignalR = async () => {
+    try {
+      const authToken = localStorage.getItem("auth_token");
+
+      if (!authToken) {
+        console.error("Authentication token not found");
+        return;
+      }
+
+      // Create SignalR connection
+      const connection = new signalR.HubConnectionBuilder()
+        .withUrl("https://minhlong.mlhr.org/chatHub", {
+          accessTokenFactory: () => authToken,
+        })
+        .withAutomaticReconnect([0, 2000, 5000, 10000])
+        .build();
+
+      // Set up message receiving
+      connection.on("ReceiveMessage", (msg) => {
+        // If the message is for the current chat room, update messages
+        if (msg.chatRoomId === selectedRoom) {
+          setMessages((prev) => [
+            ...prev,
+            {
+              chatMessageId: msg.chatMessageId || Date.now().toString(),
+              chatRoomId: msg.chatRoomId,
+              senderId: msg.senderId,
+              senderName: msg.senderName,
+              messageText: msg.messageText,
+              timestamp: msg.timestamp,
+              isRead: false,
+              fileUrl: msg.fileUrl,
+            },
+          ]);
+        }
+
+        // Update the rooms list to reflect the new message
+        updateRoomWithNewMessage(msg);
+      });
+
+      // Start connection
+      await connection.start();
+      console.log("✅ Connected to Global SignalR");
+
+      // Store connection in ref
+      globalConnectionRef.current = connection;
+
+      // Join all rooms
+      const response = await fetch("https://minhlong.mlhr.org/api/chat/rooms", {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+
+      if (response.ok) {
+        const rooms = await response.json();
+        for (const room of rooms) {
+          await connection.invoke("JoinRoom", room.chatRoomId);
+          console.log(`Joined room globally: ${room.chatRoomId}`);
+        }
+      }
+    } catch (error) {
+      console.error("Global SignalR connection failed:", error);
+    }
+  };
+
+  // Update room list when a new message is received
+  const updateRoomWithNewMessage = (message: any) => {
+    setRooms((prevRooms) => {
+      // Find the room that received the message
+      const updatedRooms = prevRooms.map((room) => {
+        if (room.chatRoomId === message.chatRoomId) {
+          // Update the room with the new message info
+          return {
+            ...room,
+            lastMessage:
+              message.messageText ||
+              (message.fileUrl ? "Đã gửi một hình ảnh" : ""),
+            lastTimestamp: message.timestamp,
+          };
+        }
+        return room;
+      });
+
+      // Sort rooms by most recent message
+      return updatedRooms.sort(
+        (a, b) =>
+          new Date(b.lastTimestamp).getTime() -
+          new Date(a.lastTimestamp).getTime()
+      );
+    });
+  };
 
   // Fetch messages when a room is selected
   useEffect(() => {
@@ -202,19 +307,25 @@ export default function ChatPage() {
 
       // Set up message receiving
       connection.on("ReceiveMessage", (msg) => {
-        setMessages((prev) => [
-          ...prev,
-          {
-            chatMessageId: msg.chatMessageId || Date.now().toString(),
-            chatRoomId: msg.chatRoomId,
-            senderId: msg.senderId,
-            senderName: msg.senderName,
-            messageText: msg.messageText,
-            timestamp: msg.timestamp,
-            isRead: false,
-            fileUrl: msg.fileUrl,
-          },
-        ]);
+        // Only process messages for this room
+        if (msg.chatRoomId === roomId) {
+          setMessages((prev) => [
+            ...prev,
+            {
+              chatMessageId: msg.chatMessageId || Date.now().toString(),
+              chatRoomId: msg.chatRoomId,
+              senderId: msg.senderId,
+              senderName: msg.senderName,
+              messageText: msg.messageText,
+              timestamp: msg.timestamp,
+              isRead: false,
+              fileUrl: msg.fileUrl,
+            },
+          ]);
+
+          // Update the rooms list to reflect the new message
+          updateRoomWithNewMessage(msg);
+        }
       });
 
       // Start connection
