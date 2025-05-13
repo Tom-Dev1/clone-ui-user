@@ -45,8 +45,8 @@ const AuthContext = createContext<AuthContextType>({
   userDetails: null,
   isAuthenticated: false,
   isLoading: true,
-  login: () => {},
-  logout: () => {},
+  login: () => { },
+  logout: () => { },
 });
 
 // Custom hook to use the auth context
@@ -69,7 +69,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const token = localStorage.getItem("auth_token");
       if (!token) return null;
 
-      const response = await fetch(`${baseURL}/api/user/${userId}`, {
+      const response = await fetch(`${baseURL}/api/get-info-user/${userId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -105,19 +105,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return {
         id:
           payload[
-            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
+          "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
           ] || "",
         username:
           payload[
-            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"
+          "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"
           ] || "",
         email:
           payload[
-            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
+          "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
           ] || "",
         role:
           payload[
-            "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+          "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
           ] || "",
         token: token,
       };

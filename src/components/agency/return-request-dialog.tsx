@@ -26,7 +26,6 @@ import { toast } from "sonner"
 // Define the base form schema with Zod
 const baseReturnRequestSchema = z.object({
     orderId: z.string().min(1, "Order ID is required"),
-    note: z.string().optional(),
     orderDetailId: z.string().min(1, "Phải chọn sản phẩm"),
     quantity: z.number().min(1, "Số lượng tối thiểu là 1"),
     reason: z.string().min(1, "Phải nhập lý do trả hàng!"),
@@ -58,7 +57,7 @@ export function ReturnRequestDialog({
         resolver: zodResolver(baseReturnRequestSchema),
         defaultValues: {
             orderId: selectedOrder?.orderId || "",
-            note: "",
+
             orderDetailId: "",
             quantity: 1,
             reason: "",
@@ -73,7 +72,7 @@ export function ReturnRequestDialog({
             form.setValue("orderDetailId", "")
             form.setValue("quantity", 1)
             form.setValue("reason", "")
-            form.setValue("note", "")
+
             setSelectedProductQuantity(null)
         }
     }, [selectedOrder, form])
@@ -144,9 +143,6 @@ export function ReturnRequestDialog({
             formData.append("quantity", values.quantity.toString())
             formData.append("reason", values.reason)
 
-            if (values.note) {
-                formData.append("note", values.note)
-            }
 
             // Append images
             selectedImages.forEach((image) => {
@@ -256,19 +252,6 @@ export function ReturnRequestDialog({
                             )}
                         />
 
-                        <FormField
-                            control={form.control}
-                            name="note"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Ghi chú (tùy chọn)</FormLabel>
-                                    <FormControl>
-                                        <Textarea placeholder="Nhập ghi chú bổ sung nếu có..." className="resize-none" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
 
                         <div className="space-y-2">
                             <FormLabel>Hình ảnh (tùy chọn)</FormLabel>

@@ -65,7 +65,7 @@ export default function AgencyProfile() {
                     return
                 }
 
-                const response = await fetch(`https://minhlong.mlhr.org/api/user/${userInfo.id}`, {
+                const response = await fetch(`https://minhlong.mlhr.org/api/get-info-user/${userInfo.id}`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                         "Content-Type": "application/json",

@@ -281,9 +281,10 @@ const AgencyOrders = () => {
 
       // Refresh orders after successful submission
       fetchOrders()
-    } catch (err) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
       console.error("Failed to submit return request:", err)
-      toast.error("Không thể gửi yêu cầu trả hàng. Vui lòng thử lại sau.")
+      toast.error(err.message || "Không thể gửi yêu cầu trả hàng. Vui lòng thử lại sau.")
     } finally {
       setIsSubmittingReturn(false)
     }
