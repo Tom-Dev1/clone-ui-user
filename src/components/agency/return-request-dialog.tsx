@@ -21,14 +21,15 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Loader2, Upload, X } from "lucide-react"
 import type { Order } from "@/types/agency-orders"
+import { toast } from "sonner"
 
 // Define the base form schema with Zod
 const baseReturnRequestSchema = z.object({
     orderId: z.string().min(1, "Order ID is required"),
     note: z.string().optional(),
-    orderDetailId: z.string().min(1, "Please select a product"),
-    quantity: z.number().min(1, "Quantity must be at least 1"),
-    reason: z.string().min(1, "Reason is required"),
+    orderDetailId: z.string().min(1, "Phải chọn sản phẩm"),
+    quantity: z.number().min(1, "Số lượng tối thiểu là 1"),
+    reason: z.string().min(1, "Phải nhập lý do trả hàng!"),
 })
 
 type ReturnRequestFormValues = z.infer<typeof baseReturnRequestSchema>
@@ -125,6 +126,13 @@ export function ReturnRequestDialog({
                 type: "max",
                 message: `Quantity cannot exceed ${selectedProductQuantity}`,
             })
+            return
+        }
+
+        // Validate that at least one image is selected
+        if (selectedImages.length === 0) {
+            // Show error message
+            toast.error("Vui lòng tải lên ít nhất một hình ảnh để tiếp tục.")
             return
         }
 

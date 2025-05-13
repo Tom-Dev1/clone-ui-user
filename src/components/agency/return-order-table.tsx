@@ -85,8 +85,8 @@ export const ReturnOrderTable = ({
                     ) : (
                         returnOrders.map((order) => (
                             <TableRow key={order.returnRequestId} className="hover:bg-muted/30">
-                                <TableCell className="font-medium">{order.returnRequestId.substring(0, 8)}...</TableCell>
-                                <TableCell>{order.orderId.substring(0, 8)}...</TableCell>
+                                <TableCell className="font-medium">{order.returnRequestCode}</TableCell>
+                                <TableCell>{order.orderCode}</TableCell>
                                 <TableCell>{format(new Date(order.createdAt), "dd/MM/yyyy HH:mm", { locale: vi })}</TableCell>
                                 <TableCell>{order.createdByUserName}</TableCell>
                                 <TableCell className="text-center">{order.details.length}</TableCell>

@@ -137,11 +137,11 @@ export const ExportRequestDetailDialog = ({
                                             <dt className="text-muted-foreground">Trạng thái:</dt>
                                             <dd>{renderStatusBadge(selectedRequest.status)}</dd>
 
-                                            <dt className="text-muted-foreground">Người duyệt:</dt>
-                                            <dd>{selectedRequest.approvedByName || "Chưa duyệt"}</dd>
+                                            <dt className="text-muted-foreground">Kho: </dt>
+                                            <dd>{selectedRequest.warehouseName || "Chưa duyệt"}</dd>
 
                                             <dt className="text-muted-foreground">Ngày duyệt:</dt>
-                                            <dd>{formatDate(selectedRequest.approvedDate)}</dd>
+                                            <dd>{formatDate(selectedRequest.requestDate)}</dd>
 
                                             {selectedRequest.note && (
                                                 <>

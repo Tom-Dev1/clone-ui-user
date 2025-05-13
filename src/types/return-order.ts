@@ -14,8 +14,13 @@ export interface ReturnRequestDetail {
 }
 
 export interface ReturnRequest {
+
+
+
     returnRequestId: string
     orderId: string
+    orderCode: string
+    returnRequestCode: string
     createdAt: string
     createdByUserName: string
     status: string

@@ -110,7 +110,7 @@ export function NotificationPopover() {
         setOpen(false)
 
         // Navigate to the review order page
-        navigate("/sales/review-order")
+        navigate("/sales/export")
     }
 
     // Filter notifications based on active tab

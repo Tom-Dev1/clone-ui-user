@@ -12,9 +12,12 @@ export interface RequestExport {
     orderId: string
     requestExportCode: string
     agencyName: string
+
+    warehouseName: string
+
     approvedByName: string
     status: string
-    approvedDate: string
+
     note: string
     requestDate: string
     requestExportDetails: RequestExportDetail[]

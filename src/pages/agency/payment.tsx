@@ -58,7 +58,7 @@ const AgencyPaymentHistoryPage: React.FC = () => {
           return
         }
 
-        const response = await fetch("https://minhlong.mlhr.org/api/PaymentHistory/all", {
+        const response = await fetch("https://minhlong.mlhr.org/api/PaymentHistory/my-payment-history", {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",

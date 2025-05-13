@@ -18,6 +18,9 @@ interface UserData {
     phone: string
     status: boolean
     verifyEmail: boolean
+    position: string,
+    department: string,
+
 }
 
 export default function SaleProfile() {
@@ -42,7 +45,7 @@ export default function SaleProfile() {
                     return
                 }
 
-                const response = await fetch(`https://minhlong.mlhr.org/api/user/${userInfo.id}`, {
+                const response = await fetch(`https://minhlong.mlhr.org/api/get-info-user/${userInfo.id}`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                         "Content-Type": "application/json",
@@ -88,7 +91,7 @@ export default function SaleProfile() {
                             </Avatar>
                             <div className="text-center">
                                 <h3 className="font-medium text-lg">{userData?.username || "Chưa có thông tin"}</h3>
-                                <p className="text-muted-foreground">{userData?.userType || "Nhân viên kinh doanh"}</p>
+                                <p className="text-muted-foreground">{userData?.department || "Nhân viên kinh doanh"}</p>
                             </div>
                         </div>
 
