@@ -8,9 +8,9 @@ export const sortData = (data: RequestExport[], field: string, direction: "asc" 
 
         // Determine values to compare based on field
         switch (field) {
-            case "approvedDate":
-                valueA = a.approvedDate ? new Date(a.approvedDate).getTime() : 0
-                valueB = b.approvedDate ? new Date(b.approvedDate).getTime() : 0
+            case "requestDate":
+                valueA = a.requestDate ? new Date(a.requestDate).getTime() : 0
+                valueB = b.requestDate ? new Date(b.requestDate).getTime() : 0
                 break
             case "status":
                 valueA = a.status || ""
