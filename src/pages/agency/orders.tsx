@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react"
 import { AgencyLayout } from "@/layouts/agency-layout"
 import { useAuth } from "@/contexts/AuthContext"
@@ -272,7 +271,8 @@ const AgencyOrders = () => {
       })
 
       if (!response.ok) {
-        throw new Error(`Error: ${response.status}`)
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Failed to submit return request')
       }
 
       // Close dialog and show success message

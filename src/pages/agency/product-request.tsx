@@ -12,8 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+
 import {
   Table,
   TableBody,
@@ -350,17 +349,7 @@ export default function AgencyProductRequest() {
                   </div>
                 </div>
 
-                <div className="mt-6 space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="note">Ghi chú</Label>
-                    <Textarea
-                      id="note"
-                      placeholder="Nhập ghi chú cho đơn hàng (nếu có)"
-                      value={note}
-                      onChange={(e) => setNote(e.target.value)}
-                    />
-                  </div>
-                </div>
+
               </div>
             ) : (
               <div className="text-center py-36 ">
