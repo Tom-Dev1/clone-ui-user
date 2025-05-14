@@ -1,3 +1,5 @@
+"use client";
+
 import type React from "react";
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
@@ -47,6 +49,7 @@ interface ChatMessage {
   timestamp: string;
   isRead: boolean;
   fileUrl?: string;
+  imageUrls?: string[];
 }
 
 interface FilePreview {
@@ -55,6 +58,12 @@ interface FilePreview {
 }
 
 export default function ChatPage() {
+  // Kiểm tra GUID hợp lệ
+  const validateGuid = (guid: string) => {
+    const regex =
+      /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+    return regex.test(guid);
+  };
   const [rooms, setRooms] = useState<ChatRoom[]>([]);
   const [selectedRoom, setSelectedRoom] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -129,9 +138,15 @@ export default function ChatPage() {
   const setupGlobalSignalR = async () => {
     try {
       const authToken = localStorage.getItem("auth_token");
+      const userId = localStorage.getItem("id");
 
-      if (!authToken) {
-        console.error("Authentication token not found");
+      if (!authToken || !userId) {
+        console.error("Authentication token or user ID not found");
+        return;
+      }
+
+      if (!validateGuid(userId)) {
+        console.error("Invalid GUID format for user ID");
         return;
       }
 
@@ -157,7 +172,11 @@ export default function ChatPage() {
               messageText: msg.messageText,
               timestamp: msg.timestamp,
               isRead: false,
-              fileUrl: msg.fileUrl,
+              fileUrl:
+                msg.fileUrl ||
+                (msg.imageUrls && msg.imageUrls.length > 0
+                  ? msg.imageUrls[0]
+                  : null),
             },
           ]);
         }
@@ -292,9 +311,14 @@ export default function ChatPage() {
     try {
       setConnectionStatus("connecting");
       const authToken = localStorage.getItem("auth_token");
+      const userId = localStorage.getItem("id");
 
-      if (!authToken) {
-        throw new Error("Authentication token not found");
+      if (!authToken || !userId) {
+        throw new Error("Authentication token or user ID not found");
+      }
+
+      if (!validateGuid(userId) || !validateGuid(roomId)) {
+        throw new Error("Invalid GUID format for user ID or room ID");
       }
 
       // Create SignalR connection
@@ -319,7 +343,11 @@ export default function ChatPage() {
               messageText: msg.messageText,
               timestamp: msg.timestamp,
               isRead: false,
-              fileUrl: msg.fileUrl,
+              fileUrl:
+                msg.fileUrl ||
+                (msg.imageUrls && msg.imageUrls.length > 0
+                  ? msg.imageUrls[0]
+                  : null),
             },
           ]);
 
@@ -432,7 +460,14 @@ export default function ChatPage() {
 
     try {
       const authToken = localStorage.getItem("auth_token");
+      const userId = localStorage.getItem("id");
+
+      if (!authToken || !userId) {
+        throw new Error("Authentication token or user ID not found");
+      }
+
       const fileUrls: string[] = [];
+      const publicIds: string[] = [];
 
       // Upload each file
       for (let i = 0; i < selectedFiles.length; i++) {
@@ -440,38 +475,48 @@ export default function ChatPage() {
 
         // Create form data
         const formData = new FormData();
-        formData.append("file", filePreview.file);
+        formData.append("files", filePreview.file);
 
         // Upload file to server
-        const response = await fetch("https://minhlong.mlhr.org/api/upload", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-          },
-          body: formData,
-        });
+        const response = await fetch(
+          "https://minhlong.mlhr.org/api/chat/upload",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+            },
+            body: formData,
+          }
+        );
 
         if (!response.ok) {
           throw new Error(`Failed to upload file ${filePreview.file.name}`);
         }
 
-        const data = await response.json();
-        fileUrls.push(data.url); // Assuming the API returns the file URL
+        const uploadResult = await response.json();
+        if (Array.isArray(uploadResult)) {
+          fileUrls.push(...uploadResult.map((x) => x.imageUrl));
+          publicIds.push(...uploadResult.map((x) => x.publicId));
+        } else {
+          fileUrls.push(uploadResult.url || uploadResult.imageUrl);
+          if (uploadResult.publicId) {
+            publicIds.push(uploadResult.publicId);
+          }
+        }
 
         // Update progress
         setUploadProgress(Math.round(((i + 1) / selectedFiles.length) * 100));
       }
 
-      // Send message for each file
-      for (const fileUrl of fileUrls) {
-        await connectionRef.current.invoke(
-          "SendMessage",
-          selectedRoom,
-          userId,
-          messageInput || "Đã gửi một hình ảnh", // Use message text or default text
-          fileUrl
-        );
-      }
+      // Send message with all file URLs
+      await connectionRef.current.invoke(
+        "SendMessage",
+        selectedRoom,
+        userId,
+        messageInput || "Đã gửi một hình ảnh",
+        fileUrls,
+        publicIds
+      );
 
       // Clear message input and selected files
       setMessageInput("");
@@ -501,13 +546,24 @@ export default function ChatPage() {
     if (!messageInput.trim() || !selectedRoom || !connectionRef.current) return;
 
     try {
+      const userId = localStorage.getItem("id");
+
+      if (!userId) {
+        throw new Error("User ID not found");
+      }
+
+      if (!validateGuid(userId) || !validateGuid(selectedRoom)) {
+        throw new Error("Invalid GUID format for user ID or room ID");
+      }
+
       // Send message via SignalR
       await connectionRef.current.invoke(
         "SendMessage",
         selectedRoom,
         userId,
         messageInput,
-        null // fileUrl is null for text messages
+        [], // Empty array for fileUrls
+        [] // Empty array for publicIds
       );
 
       console.log("✅ Message sent");
@@ -675,6 +731,21 @@ export default function ChatPage() {
                                 />
                               </div>
                             )}
+
+                            {message.imageUrls &&
+                              message.imageUrls.length > 0 && (
+                                <div className="mt-2 flex flex-wrap gap-2">
+                                  {message.imageUrls.map((url, index) => (
+                                    <img
+                                      key={index}
+                                      src={url || "/placeholder.svg"}
+                                      alt={`Shared image ${index + 1}`}
+                                      className="max-w-[200px] h-auto object-contain cursor-pointer hover:opacity-90 transition-opacity rounded-md"
+                                      onClick={() => window.open(url, "_blank")}
+                                    />
+                                  ))}
+                                </div>
+                              )}
 
                             {message.fileUrl &&
                               !isImageUrl(message.fileUrl) && (
