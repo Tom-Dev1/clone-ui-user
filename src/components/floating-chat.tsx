@@ -30,6 +30,7 @@ interface ChatMessage {
   timestamp: string;
   isRead: boolean;
   fileUrl?: string;
+  imageUrls?: string[];
 }
 
 interface FilePreview {
@@ -38,6 +39,13 @@ interface FilePreview {
 }
 
 export function FloatingChat() {
+  // Kiểm tra GUID hợp lệ
+  const validateGuid = (guid: string) => {
+    const regex =
+      /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+    return regex.test(guid);
+  };
+
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [manager, setManager] = useState<Manager | null>(null);
@@ -143,6 +151,10 @@ export function FloatingChat() {
         throw new Error("User ID not found in localStorage");
       }
 
+      if (!validateGuid(userId) || !validateGuid(manager.userId)) {
+        throw new Error("Invalid GUID format for user ID or manager ID");
+      }
+
       // Check for existing chat rooms
       const roomsResponse = await fetch(
         "https://minhlong.mlhr.org/api/chat/rooms",
@@ -233,9 +245,14 @@ export function FloatingChat() {
     try {
       setConnectionStatus("connecting");
       const authToken = localStorage.getItem("auth_token");
+      const userId = localStorage.getItem("id");
 
-      if (!authToken) {
-        throw new Error("Authentication token not found");
+      if (!authToken || !userId) {
+        throw new Error("Authentication token or user ID not found");
+      }
+
+      if (!validateGuid(userId) || !validateGuid(roomId)) {
+        throw new Error("Invalid GUID format for user ID or room ID");
       }
 
       // Create SignalR connection
@@ -258,7 +275,12 @@ export function FloatingChat() {
             messageText: msg.messageText,
             timestamp: msg.timestamp,
             isRead: false,
-            fileUrl: msg.fileUrl,
+            fileUrl:
+              msg.fileUrl ||
+              (msg.imageUrls && msg.imageUrls.length > 0
+                ? msg.imageUrls[0]
+                : null),
+            imageUrls: msg.imageUrls,
           },
         ]);
       });
@@ -339,7 +361,13 @@ export function FloatingChat() {
     try {
       const authToken = localStorage.getItem("auth_token");
       const userId = localStorage.getItem("id");
+
+      if (!userId || !validateGuid(userId) || !validateGuid(chatRoomId)) {
+        throw new Error("Invalid user ID or chat room ID");
+      }
+
       const fileUrls: string[] = [];
+      const publicIds: string[] = [];
 
       // Upload each file
       for (let i = 0; i < selectedFiles.length; i++) {
@@ -347,38 +375,48 @@ export function FloatingChat() {
 
         // Create form data
         const formData = new FormData();
-        formData.append("file", filePreview.file);
+        formData.append("files", filePreview.file);
 
         // Upload file to server
-        const response = await fetch("https://minhlong.mlhr.org/api/upload", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-          },
-          body: formData,
-        });
+        const response = await fetch(
+          "https://minhlong.mlhr.org/api/chat/upload",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+            },
+            body: formData,
+          }
+        );
 
         if (!response.ok) {
           throw new Error(`Failed to upload file ${filePreview.file.name}`);
         }
 
-        const data = await response.json();
-        fileUrls.push(data.url); // Assuming the API returns the file URL
+        const uploadResult = await response.json();
+        if (Array.isArray(uploadResult)) {
+          fileUrls.push(...uploadResult.map((x) => x.imageUrl));
+          publicIds.push(...uploadResult.map((x) => x.publicId));
+        } else {
+          fileUrls.push(uploadResult.url || uploadResult.imageUrl);
+          if (uploadResult.publicId) {
+            publicIds.push(uploadResult.publicId);
+          }
+        }
 
         // Update progress
         setUploadProgress(Math.round(((i + 1) / selectedFiles.length) * 100));
       }
 
-      // Send message for each file
-      for (const fileUrl of fileUrls) {
-        await connectionRef.current.invoke(
-          "SendMessage",
-          chatRoomId,
-          userId,
-          messageInput || "Đã gửi một hình ảnh", // Use message text or default text
-          fileUrl
-        );
-      }
+      // Send message with all file URLs
+      await connectionRef.current.invoke(
+        "SendMessage",
+        chatRoomId,
+        userId,
+        messageInput || "Đã gửi một hình ảnh",
+        fileUrls,
+        publicIds
+      );
 
       // Clear message input and selected files
       setMessageInput("");
@@ -409,13 +447,18 @@ export function FloatingChat() {
     try {
       const userId = localStorage.getItem("id");
 
+      if (!userId || !validateGuid(userId) || !validateGuid(chatRoomId)) {
+        throw new Error("Invalid user ID or chat room ID");
+      }
+
       // Send message via SignalR
       await connectionRef.current.invoke(
         "SendMessage",
         chatRoomId,
         userId,
         messageInput,
-        null // fileUrl is null for text messages
+        [], // Empty array for fileUrls
+        [] // Empty array for publicIds
       );
 
       console.log("✅ Message sent");
@@ -535,6 +578,20 @@ export function FloatingChat() {
                                 window.open(message.fileUrl, "_blank")
                               }
                             />
+                          </div>
+                        )}
+
+                        {message.imageUrls && message.imageUrls.length > 0 && (
+                          <div className="mt-2 flex flex-wrap gap-1">
+                            {message.imageUrls.map((url, index) => (
+                              <img
+                                key={index}
+                                src={url || "/placeholder.svg"}
+                                alt={`Shared image ${index + 1}`}
+                                className="max-w-[150px] h-auto object-contain cursor-pointer hover:opacity-90 transition-opacity rounded-md"
+                                onClick={() => window.open(url, "_blank")}
+                              />
+                            ))}
                           </div>
                         )}
 
