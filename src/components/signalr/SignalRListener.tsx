@@ -9,14 +9,13 @@ let isConnected = false;
 export default function SignalRListener() {
   const navigate = useNavigate();
   const [showDeactivatedModal, setShowDeactivatedModal] = useState(false);
-
   const handleAccountDeactivated = () => {
     // Clear session storage first
-    sessionStorage.clear();
+    localStorage.clear();
     // Set modal to false to close it
     setShowDeactivatedModal(false);
-    // Then navigate to login
-    navigate("/login");
+    // Then refresh the page
+    window.location.reload();
   };
 
   useEffect(() => {
