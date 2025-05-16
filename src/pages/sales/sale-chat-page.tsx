@@ -76,6 +76,8 @@ export default function ChatPage() {
   const [selectedFiles, setSelectedFiles] = useState<FilePreview[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  // Add a ref to track pending message IDs
+  const pendingMessageIds = useRef<Set<string>>(new Set());
 
   const connectionRef = useRef<signalR.HubConnection | null>(null);
   const globalConnectionRef = useRef<signalR.HubConnection | null>(null);
@@ -132,7 +134,7 @@ export default function ChatPage() {
         globalConnectionRef.current = null;
       }
     };
-  }, []);
+  }, [selectedRoom]);
 
   // Setup global SignalR connection for background notifications
   const setupGlobalSignalR = async () => {
@@ -160,8 +162,26 @@ export default function ChatPage() {
 
       // Set up message receiving
       connection.on("ReceiveMessage", (msg) => {
+        if (msg.senderId === localStorage.getItem("id")) return;
         // If the message is for the current chat room, update messages
         if (msg.chatRoomId === selectedRoom) {
+          console.log(
+            "Global connection received message for current room:",
+            msg
+          );
+
+          // Check if this is a response to our own message
+          if (msg.senderId === userId) {
+            // If we have a pending message with similar content, don't add it again
+            if (isPendingMessage(msg)) {
+              console.log(
+                "Skipping duplicate message from global connection",
+                msg
+              );
+              return;
+            }
+          }
+
           setMessages((prev) => [
             ...prev,
             {
@@ -172,11 +192,8 @@ export default function ChatPage() {
               messageText: msg.messageText,
               timestamp: msg.timestamp,
               isRead: false,
-              fileUrl:
-                msg.fileUrl ||
-                (msg.imageUrls && msg.imageUrls.length > 0
-                  ? msg.imageUrls[0]
-                  : null),
+              fileUrl: msg.fileUrl,
+              imageUrls: msg.imageUrls || [],
             },
           ]);
         }
@@ -209,6 +226,39 @@ export default function ChatPage() {
     } catch (error) {
       console.error("Global SignalR connection failed:", error);
     }
+  };
+
+  // Check if a message is a duplicate of a pending message
+  const isPendingMessage = (msg: any): boolean => {
+    // If we don't have any pending messages, it's not a duplicate
+    if (pendingMessageIds.current.size === 0) return false;
+
+    // Check if this message has similar content to any pending message
+    const isSimilar = Array.from(pendingMessageIds.current).some((id) => {
+      const pendingMsg = messages.find((m) => m.chatMessageId === id);
+      if (!pendingMsg) return false;
+
+      // Compare message content
+      const sameText = pendingMsg.messageText === msg.messageText;
+      const sameType =
+        (pendingMsg.imageUrls &&
+          pendingMsg.imageUrls.length > 0 &&
+          msg.imageUrls &&
+          msg.imageUrls.length > 0) ||
+        (pendingMsg.fileUrl && msg.fileUrl);
+
+      return sameText && sameType;
+    });
+
+    if (isSimilar) {
+      // Remove the pending message ID since we've received the server response
+      const pendingIds = Array.from(pendingMessageIds.current);
+      if (pendingIds.length > 0) {
+        pendingMessageIds.current.delete(pendingIds[0]);
+      }
+    }
+
+    return isSimilar;
   };
 
   // Update room list when a new message is received
@@ -262,6 +312,9 @@ export default function ChatPage() {
         const data = await response.json();
         setMessages(data);
 
+        // Clear pending messages when changing rooms
+        pendingMessageIds.current.clear();
+
         // Scroll to bottom after messages load
         setTimeout(() => {
           scrollToBottom();
@@ -300,6 +353,72 @@ export default function ChatPage() {
     };
   }, [selectedFiles]);
 
+  // Add this new useEffect after the other useEffects
+  // This effect ensures that when selectedRoom changes, we update our message handler
+  useEffect(() => {
+    if (!globalConnectionRef.current || !selectedRoom) return;
+
+    // Re-register the message handler when selectedRoom changes
+    const handleMessage = (msg: any) => {
+      if (msg.chatRoomId === selectedRoom) {
+        console.log("Handling message for room:", selectedRoom, msg);
+
+        // Check if this is a response to our own message
+        if (msg.senderId === userId) {
+          // If we have a pending message with similar content, don't add it again
+          if (isPendingMessage(msg)) {
+            console.log("Skipping duplicate message from room connection", msg);
+            return;
+          }
+        }
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            chatMessageId: msg.chatMessageId || Date.now().toString(),
+            chatRoomId: msg.chatRoomId,
+            senderId: msg.senderId,
+            senderName: msg.senderName,
+            messageText: msg.messageText,
+            timestamp: msg.timestamp,
+            isRead: false,
+            fileUrl: msg.fileUrl,
+            imageUrls: msg.imageUrls || [],
+          },
+        ]);
+
+        // Force scroll to bottom
+        setTimeout(scrollToBottom, 100);
+      }
+    };
+
+    // Remove previous handler and add new one
+    globalConnectionRef.current.off("ReceiveMessage");
+    globalConnectionRef.current.on("ReceiveMessage", handleMessage);
+
+    return () => {
+      if (globalConnectionRef.current) {
+        globalConnectionRef.current.off("ReceiveMessage", handleMessage);
+      }
+    };
+  }, [selectedRoom, userId]);
+
+  // Handle image loading events
+  useEffect(() => {
+    const handleImageLoad = () => {
+      // Force re-render when images are loaded
+      forceUpdate();
+    };
+
+    // Add event listener to document
+    document.addEventListener("load", handleImageLoad, true);
+
+    return () => {
+      // Clean up
+      document.removeEventListener("load", handleImageLoad, true);
+    };
+  }, []);
+
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
@@ -331,8 +450,21 @@ export default function ChatPage() {
 
       // Set up message receiving
       connection.on("ReceiveMessage", (msg) => {
+        if (msg.senderId === localStorage.getItem("id")) return;
         // Only process messages for this room
         if (msg.chatRoomId === roomId) {
+          // Check if this is a response to our own message
+          if (msg.senderId === userId) {
+            // If we have a pending message with similar content, don't add it again
+            if (isPendingMessage(msg)) {
+              console.log(
+                "Skipping duplicate message from room-specific connection",
+                msg
+              );
+              return;
+            }
+          }
+
           setMessages((prev) => [
             ...prev,
             {
@@ -343,11 +475,8 @@ export default function ChatPage() {
               messageText: msg.messageText,
               timestamp: msg.timestamp,
               isRead: false,
-              fileUrl:
-                msg.fileUrl ||
-                (msg.imageUrls && msg.imageUrls.length > 0
-                  ? msg.imageUrls[0]
-                  : null),
+              fileUrl: msg.fileUrl,
+              imageUrls: msg.imageUrls || [], // Ensure imageUrls is properly passed
             },
           ]);
 
@@ -508,6 +637,30 @@ export default function ChatPage() {
         setUploadProgress(Math.round(((i + 1) / selectedFiles.length) * 100));
       }
 
+      // Create a temporary message ID
+      const tempMessageId = Date.now().toString();
+
+      // Add to pending messages
+      pendingMessageIds.current.add(tempMessageId);
+
+      // Add the message to the local state immediately for instant feedback
+      const newMessage = {
+        chatMessageId: tempMessageId,
+        chatRoomId: selectedRoom,
+        senderId: userId,
+        senderName: "You", // This will be replaced when the server confirms
+        messageText: messageInput || "Đã gửi một hình ảnh",
+        timestamp: new Date().toISOString(),
+        isRead: false,
+        imageUrls: fileUrls,
+      };
+
+      // Update messages state immediately
+      setMessages((prev) => [...prev, newMessage]);
+
+      // Scroll to bottom to show the new message
+      setTimeout(scrollToBottom, 50);
+
       // Send message with all file URLs
       await connectionRef.current.invoke(
         "SendMessage",
@@ -523,13 +676,18 @@ export default function ChatPage() {
       clearAllFiles();
       setUploadProgress(0);
 
-      console.log("✅ Files uploaded and messages sent");
+      console.log("✅ Files uploaded and messages sent", fileUrls);
     } catch (error) {
       console.error("Error uploading files:", error);
       alert("Không thể tải lên tệp. Vui lòng thử lại sau.");
     } finally {
       setIsUploading(false);
     }
+  };
+
+  // Also add this function to force re-render the component when needed
+  const forceUpdate = () => {
+    setMessages((prev) => [...prev]);
   };
 
   // Handle sending a new message
@@ -556,6 +714,32 @@ export default function ChatPage() {
         throw new Error("Invalid GUID format for user ID or room ID");
       }
 
+      // Create a temporary message ID
+      const tempMessageId = Date.now().toString();
+
+      // Add to pending messages
+      pendingMessageIds.current.add(tempMessageId);
+
+      // Create a temporary message for immediate feedback
+      const tempMessage = {
+        chatMessageId: tempMessageId,
+        chatRoomId: selectedRoom,
+        senderId: userId,
+        senderName: "You", // Will be replaced by server response
+        messageText: messageInput,
+        timestamp: new Date().toISOString(),
+        isRead: false,
+      };
+
+      // Add to messages immediately
+      setMessages((prev) => [...prev, tempMessage]);
+
+      // Clear input field
+      setMessageInput("");
+
+      // Scroll to bottom
+      setTimeout(scrollToBottom, 50);
+
       // Send message via SignalR
       await connectionRef.current.invoke(
         "SendMessage",
@@ -567,7 +751,6 @@ export default function ChatPage() {
       );
 
       console.log("✅ Message sent");
-      setMessageInput("");
     } catch (error) {
       console.error("Error sending message:", error);
     }
@@ -737,11 +920,23 @@ export default function ChatPage() {
                                 <div className="mt-2 flex flex-wrap gap-2">
                                   {message.imageUrls.map((url, index) => (
                                     <img
-                                      key={index}
+                                      key={`${message.chatMessageId}-img-${index}`}
                                       src={url || "/placeholder.svg"}
                                       alt={`Shared image ${index + 1}`}
                                       className="max-w-[200px] h-auto object-contain cursor-pointer hover:opacity-90 transition-opacity rounded-md"
                                       onClick={() => window.open(url, "_blank")}
+                                      onLoad={() => {
+                                        console.log("Image loaded:", url);
+                                        setTimeout(scrollToBottom, 100);
+                                      }}
+                                      onError={(e) => {
+                                        console.error(
+                                          "Image failed to load:",
+                                          url
+                                        );
+                                        e.currentTarget.src =
+                                          "/placeholder.svg";
+                                      }}
                                     />
                                   ))}
                                 </div>
