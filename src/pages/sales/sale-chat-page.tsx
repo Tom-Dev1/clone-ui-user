@@ -78,6 +78,17 @@ export default function ChatPage() {
   const [uploadProgress, setUploadProgress] = useState(0);
   // Add a ref to track pending message IDs
   const pendingMessageIds = useRef<Set<string>>(new Set());
+  const [lightbox, setLightbox] = useState<{
+    isOpen: boolean;
+    currentImageIndex: number;
+    images: string[];
+    messageId: string;
+  }>({
+    isOpen: false,
+    currentImageIndex: 0,
+    images: [],
+    messageId: "",
+  });
 
   const connectionRef = useRef<signalR.HubConnection | null>(null);
   const globalConnectionRef = useRef<signalR.HubConnection | null>(null);
@@ -373,22 +384,6 @@ export default function ChatPage() {
     };
   }, [selectedRoom, userId]);
 
-  // Handle image loading events
-  useEffect(() => {
-    const handleImageLoad = () => {
-      // Force re-render when images are loaded
-      forceUpdate();
-    };
-
-    // Add event listener to document
-    document.addEventListener("load", handleImageLoad, true);
-
-    return () => {
-      // Clean up
-      document.removeEventListener("load", handleImageLoad, true);
-    };
-  }, []);
-
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
@@ -655,11 +650,6 @@ export default function ChatPage() {
     }
   };
 
-  // Also add this function to force re-render the component when needed
-  const forceUpdate = () => {
-    setMessages((prev) => [...prev]);
-  };
-
   // Handle sending a new message
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -886,10 +876,18 @@ export default function ChatPage() {
                                   {imgs.map((url, i) => (
                                     <img
                                       key={`${message.chatMessageId}-img-${i}`}
-                                      src={url}
+                                      src={url || "/placeholder.svg"}
                                       alt="Shared image"
                                       className="max-w-[200px] h-auto object-contain rounded-md cursor-pointer hover:opacity-90 transition-opacity"
-                                      onClick={() => window.open(url, "_blank")}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setLightbox({
+                                          isOpen: true,
+                                          currentImageIndex: i,
+                                          images: imgs,
+                                          messageId: message.chatMessageId,
+                                        });
+                                      }}
                                     />
                                   ))}
                                 </div>
@@ -1056,6 +1054,127 @@ export default function ChatPage() {
           )}
         </div>
       </div>
+      {lightbox.isOpen && (
+        <div
+          className="fixed inset-0 bg-white bg-opacity-95 z-50 flex items-center justify-center p-4"
+          onClick={() => setLightbox((prev) => ({ ...prev, isOpen: false }))}
+        >
+          <div className="relative max-w-4xl w-full bg-white rounded-lg shadow-xl overflow-hidden">
+            <div className="absolute top-4 right-4 z-10">
+              <Button
+                variant="outline"
+                size="icon"
+                className="rounded-full bg-white hover:bg-gray-100 border-gray-200"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setLightbox((prev) => ({ ...prev, isOpen: false }));
+                }}
+              >
+                <X className="h-4 w-4 text-gray-500" />
+              </Button>
+            </div>
+
+            <div className="p-4 flex items-center justify-center">
+              <img
+                src={
+                  lightbox.images[lightbox.currentImageIndex] ||
+                  "/placeholder.svg"
+                }
+                alt="Enlarged view"
+                className="max-h-[80vh] max-w-full object-contain rounded-md"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+
+            {/* Navigation controls */}
+            {lightbox.images.length > 1 && (
+              <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
+                {lightbox.images.map((_, index) => (
+                  <button
+                    key={index}
+                    className={`w-2 h-2 rounded-full ${
+                      index === lightbox.currentImageIndex
+                        ? "bg-red-500"
+                        : "bg-gray-300"
+                    }`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setLightbox((prev) => ({
+                        ...prev,
+                        currentImageIndex: index,
+                      }));
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Left/Right navigation arrows */}
+            {lightbox.images.length > 1 && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 bg-white bg-opacity-70 hover:bg-opacity-100 rounded-full"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setLightbox((prev) => ({
+                      ...prev,
+                      currentImageIndex:
+                        (prev.currentImageIndex - 1 + prev.images.length) %
+                        prev.images.length,
+                    }));
+                  }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="h-5 w-5"
+                  >
+                    <path d="m15 18-6-6 6-6" />
+                  </svg>
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 bg-white bg-opacity-70 hover:bg-opacity-100 rounded-full"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setLightbox((prev) => ({
+                      ...prev,
+                      currentImageIndex:
+                        (prev.currentImageIndex + 1) % prev.images.length,
+                    }));
+                  }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="h-5 w-5"
+                  >
+                    <path d="m9 18 6-6-6-6" />
+                  </svg>
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </SalesLayout>
   );
 }
