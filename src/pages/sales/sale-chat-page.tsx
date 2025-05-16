@@ -4,7 +4,7 @@ import type React from "react";
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, parseISO } from "date-fns";
 import { vi } from "date-fns/locale";
 import {
   MessageSquare,
@@ -55,6 +55,10 @@ interface ChatMessage {
 interface FilePreview {
   file: File;
   previewUrl: string;
+}
+interface DateGroup {
+  date: Date;
+  messages: ChatMessage[];
 }
 
 export default function ChatPage() {
@@ -479,23 +483,19 @@ export default function ChatPage() {
   };
 
   // Group messages by date
-  const groupMessagesByDate = (messages: ChatMessage[]) => {
-    const groups: { [key: string]: ChatMessage[] } = {};
+  const groupMessagesByDate = (messages: ChatMessage[]): DateGroup[] => {
+    const groups: Record<string, DateGroup> = {};
 
-    messages.forEach((message) => {
-      const date = new Date(message.timestamp).toLocaleDateString();
-      if (!groups[date]) {
-        groups[date] = [];
-      }
-      groups[date].push(message);
+    messages.forEach((msg) => {
+      // parseISO hiểu ISO với bất cứ bao nhiêu chữ số thập phân
+      const d = parseISO(msg.timestamp);
+      const key = d.toISOString().slice(0, 10); // "YYYY-MM-DD"
+      if (!groups[key]) groups[key] = { date: d, messages: [] };
+      groups[key].messages.push(msg);
     });
 
-    return Object.entries(groups).map(([date, messages]) => ({
-      date,
-      messages,
-    }));
+    return Object.values(groups);
   };
-
   // Handle file selection
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -830,7 +830,7 @@ export default function ChatPage() {
                   <div key={groupIndex} className="mb-6">
                     <div className="flex justify-center mb-4">
                       <div className="bg-gray-200 text-gray-600 text-xs px-3 py-1 rounded-full">
-                        {new Date(group.date).toLocaleDateString("vi-VN", {
+                        {group.date.toLocaleDateString("vi-VN", {
                           weekday: "long",
                           year: "numeric",
                           month: "long",
