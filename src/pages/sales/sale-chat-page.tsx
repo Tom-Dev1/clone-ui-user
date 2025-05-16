@@ -181,21 +181,6 @@ export default function ChatPage() {
               return;
             }
           }
-
-          setMessages((prev) => [
-            ...prev,
-            {
-              chatMessageId: msg.chatMessageId || Date.now().toString(),
-              chatRoomId: msg.chatRoomId,
-              senderId: msg.senderId,
-              senderName: msg.senderName,
-              messageText: msg.messageText,
-              timestamp: msg.timestamp,
-              isRead: false,
-              fileUrl: msg.fileUrl,
-              imageUrls: msg.imageUrls || [],
-            },
-          ]);
         }
 
         // Update the rooms list to reflect the new message
@@ -372,21 +357,6 @@ export default function ChatPage() {
           }
         }
 
-        setMessages((prev) => [
-          ...prev,
-          {
-            chatMessageId: msg.chatMessageId || Date.now().toString(),
-            chatRoomId: msg.chatRoomId,
-            senderId: msg.senderId,
-            senderName: msg.senderName,
-            messageText: msg.messageText,
-            timestamp: msg.timestamp,
-            isRead: false,
-            fileUrl: msg.fileUrl,
-            imageUrls: msg.imageUrls || [],
-          },
-        ]);
-
         // Force scroll to bottom
         setTimeout(scrollToBottom, 100);
       }
@@ -450,39 +420,39 @@ export default function ChatPage() {
 
       // Set up message receiving
       connection.on("ReceiveMessage", (msg) => {
-        if (msg.senderId === localStorage.getItem("id")) return;
-        // Only process messages for this room
-        if (msg.chatRoomId === roomId) {
-          // Check if this is a response to our own message
-          if (msg.senderId === userId) {
-            // If we have a pending message with similar content, don't add it again
-            if (isPendingMessage(msg)) {
-              console.log(
-                "Skipping duplicate message from room-specific connection",
-                msg
-              );
-              return;
-            }
-          }
+        if (msg.senderId === userId) return; // bỏ qua tin của chính mình
+        if (msg.chatRoomId !== roomId) return; // chỉ handle room đang mở
 
-          setMessages((prev) => [
-            ...prev,
-            {
-              chatMessageId: msg.chatMessageId || Date.now().toString(),
-              chatRoomId: msg.chatRoomId,
-              senderId: msg.senderId,
-              senderName: msg.senderName,
-              messageText: msg.messageText,
-              timestamp: msg.timestamp,
-              isRead: false,
-              fileUrl: msg.fileUrl,
-              imageUrls: msg.imageUrls || [], // Ensure imageUrls is properly passed
-            },
-          ]);
+        // debug xem server gửi về cái gì
+        console.log("Incoming message", msg);
 
-          // Update the rooms list to reflect the new message
-          updateRoomWithNewMessage(msg);
+        // Gom mọi link ảnh vào 1 mảng
+        const imgs: string[] = [
+          ...(Array.isArray(msg.images) ? msg.images : []),
+          ...(Array.isArray(msg.imageUrls) ? msg.imageUrls : []),
+        ];
+
+        // nếu không có images từ server mà có fileUrl (kiểm tra extension) thì thêm fileUrl vào
+        if (imgs.length === 0 && msg.fileUrl && isImageUrl(msg.fileUrl)) {
+          imgs.push(msg.fileUrl);
         }
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            chatMessageId: msg.chatMessageId || Date.now().toString(),
+            chatRoomId: msg.chatRoomId,
+            senderId: msg.senderId,
+            senderName: msg.senderName,
+            messageText: msg.messageText,
+            timestamp: msg.timestamp,
+            isRead: false,
+            imageUrls: imgs, // chỉ dùng duy nhất field này
+          },
+        ]);
+
+        updateRoomWithNewMessage(msg);
+        scrollToBottom();
       });
 
       // Start connection
@@ -902,45 +872,29 @@ export default function ChatPage() {
                               </p>
                             )}
 
-                            {message.fileUrl && isImageUrl(message.fileUrl) && (
-                              <div className="mt-2 overflow-hidden rounded-md">
-                                <img
-                                  src={message.fileUrl || "/placeholder.svg"}
-                                  alt="Shared image"
-                                  className="max-w-full h-auto object-contain cursor-pointer hover:opacity-90 transition-opacity"
-                                  onClick={() =>
-                                    window.open(message.fileUrl, "_blank")
-                                  }
-                                />
-                              </div>
-                            )}
+                            {(() => {
+                              // Gom chung imageUrls + fileUrl thành 1 mảng
+                              const imgs: string[] = [
+                                ...(message.imageUrls ?? []),
+                                ...(message.fileUrl ? [message.fileUrl] : []),
+                              ];
 
-                            {message.imageUrls &&
-                              message.imageUrls.length > 0 && (
+                              if (imgs.length === 0) return null;
+
+                              return (
                                 <div className="mt-2 flex flex-wrap gap-2">
-                                  {message.imageUrls.map((url, index) => (
+                                  {imgs.map((url, i) => (
                                     <img
-                                      key={`${message.chatMessageId}-img-${index}`}
-                                      src={url || "/placeholder.svg"}
-                                      alt={`Shared image ${index + 1}`}
-                                      className="max-w-[200px] h-auto object-contain cursor-pointer hover:opacity-90 transition-opacity rounded-md"
+                                      key={`${message.chatMessageId}-img-${i}`}
+                                      src={url}
+                                      alt="Shared image"
+                                      className="max-w-[200px] h-auto object-contain rounded-md cursor-pointer hover:opacity-90 transition-opacity"
                                       onClick={() => window.open(url, "_blank")}
-                                      onLoad={() => {
-                                        console.log("Image loaded:", url);
-                                        setTimeout(scrollToBottom, 100);
-                                      }}
-                                      onError={(e) => {
-                                        console.error(
-                                          "Image failed to load:",
-                                          url
-                                        );
-                                        e.currentTarget.src =
-                                          "/placeholder.svg";
-                                      }}
                                     />
                                   ))}
                                 </div>
-                              )}
+                              );
+                            })()}
 
                             {message.fileUrl &&
                               !isImageUrl(message.fileUrl) && (
