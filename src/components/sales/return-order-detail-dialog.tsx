@@ -88,7 +88,7 @@ export default function ReturnOrderDetailDialog({
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <h3 className="text-sm font-medium text-muted-foreground">Mã đơn hàng</h3>
-                                <p className="text-sm">{returnOrder.orderId}</p>
+                                <p className="text-sm">{returnOrder.returnRequestCode}</p>
                             </div>
                             <div>
                                 <h3 className="text-sm font-medium text-muted-foreground">Mã đơn trả hàng</h3>

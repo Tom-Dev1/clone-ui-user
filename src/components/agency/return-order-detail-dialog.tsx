@@ -40,7 +40,7 @@ export const ReturnOrderDetailDialog = ({ isOpen, onOpenChange, returnOrder }: R
             <DialogContent className="sm:max-w-[700px] max-h-[90vh] flex flex-col">
                 <DialogHeader>
                     <DialogTitle>Chi tiết đơn trả hàng</DialogTitle>
-                    <DialogDescription>Mã đơn trả hàng: {returnOrder.returnRequestId}</DialogDescription>
+                    <DialogDescription>Mã đơn trả hàng: {returnOrder.returnRequestCode}</DialogDescription>
                 </DialogHeader>
 
                 <ScrollArea className="flex-1 pr-4">
@@ -48,7 +48,7 @@ export const ReturnOrderDetailDialog = ({ isOpen, onOpenChange, returnOrder }: R
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <p className="text-sm font-medium text-muted-foreground">Mã đơn hàng</p>
-                                <p className="font-medium">{returnOrder.orderId}</p>
+                                <p className="font-medium">{returnOrder.orderCode}</p>
                             </div>
                             <div>
                                 <p className="text-sm font-medium text-muted-foreground">Ngày tạo</p>

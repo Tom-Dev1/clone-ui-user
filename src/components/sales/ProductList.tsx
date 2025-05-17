@@ -75,7 +75,6 @@ interface Category {
 }
 
 interface ProductData {
-  productCode: string;
   productName: string;
   unit: string;
   defaultExpiration: number;
@@ -105,7 +104,6 @@ const ProductList = () => {
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc"); // Mặc định sắp xếp giảm dần (mới nhất trước)
 
   const [newProduct, setNewProduct] = useState<ProductData>({
-    productCode: "",
     productName: "",
     unit: "Bao", // Default to "Bao"
     defaultExpiration: 720,
@@ -115,7 +113,6 @@ const ProductList = () => {
   });
 
   const [editProduct, setEditProduct] = useState<ProductData>({
-    productCode: "",
     productName: "",
     unit: "",
     defaultExpiration: 30,
@@ -340,7 +337,6 @@ const ProductList = () => {
   const handleEditProduct = (product: Product) => {
     setSelectedProduct(product);
     setEditProduct({
-      productCode: product.productCode,
       productName: product.productName,
       unit: product.unit,
       defaultExpiration: product.defaultExpiration,
@@ -423,7 +419,7 @@ const ProductList = () => {
       const formData = new FormData();
 
       // Thêm thông tin sản phẩm vào FormData
-      formData.append("productCode", productData.productCode);
+
       formData.append("productName", productData.productName);
       formData.append("unit", productData.unit);
       formData.append(
@@ -458,7 +454,7 @@ const ProductList = () => {
       toast.success("Thành công: Đã thêm sản phẩm mới");
 
       setNewProduct({
-        productCode: "",
+
         productName: "",
         unit: "Bao",
         defaultExpiration: 30,
@@ -496,7 +492,7 @@ const ProductList = () => {
       const formData = new FormData();
 
       // Thêm thông tin sản phẩm vào FormData
-      formData.append("productCode", editProduct.productCode);
+
       formData.append("productName", editProduct.productName);
       formData.append("unit", editProduct.unit);
       formData.append(
@@ -739,7 +735,7 @@ const ProductList = () => {
               {filteredProducts.length > 0 ? (
                 filteredProducts.map((product) => (
                   <TableRow key={product.productId}>
-                    <TableCell className="w-[180px] text-center">
+                    <TableCell className="w-[180px] text-center truncate">
                       {product.productCode || "N/A"}
                     </TableCell>
                     <TableCell>{product.productName || "N/A"}</TableCell>

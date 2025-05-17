@@ -75,7 +75,7 @@ export const PaymentDialog = ({
         }
 
         // Calculate minimum acceptable payment (10% of remaining debt)
-        const minimumAcceptable = 10000
+        const minimumAcceptable = 2000
 
         // Check if payment is 0 or less than minimum acceptable (10%)
         if (amount <= 0 || amount < minimumAcceptable) {
