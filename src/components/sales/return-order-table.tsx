@@ -62,8 +62,8 @@ export default function ReturnOrderTable({
                 <TableHeader>
                     <TableRow>
                         <TableHead className="w-[180px]">
-                            <Button variant="ghost" className="p-0 font-medium" onClick={() => onSortChange("orderId")}>
-                                Mã đơn hàng {sortField === "orderId" && getSortIcon("orderId")}
+                            <Button variant="ghost" className="p-0 font-medium" onClick={() => onSortChange("orderCode")}>
+                                Mã đơn hàng {sortField === "orderCode" && getSortIcon("orderCode")}
                             </Button>
                         </TableHead>
                         <TableHead>Sản phẩm</TableHead>
@@ -89,7 +89,7 @@ export default function ReturnOrderTable({
                 <TableBody>
                     {returnOrders.map((order) => (
                         <TableRow key={order.returnRequestId}>
-                            <TableCell className="font-medium">{order.orderId.substring(0, 8)}...</TableCell>
+                            <TableCell className="font-medium">{order.orderCode}</TableCell>
                             <TableCell>{getProductNames(order)}</TableCell>
                             <TableCell className="text-center">{getTotalQuantity(order)}</TableCell>
                             <TableCell>{order.createdByUserName}</TableCell>

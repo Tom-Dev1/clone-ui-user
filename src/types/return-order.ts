@@ -26,6 +26,9 @@ export interface ReturnRequest {
     status: string
     note: string
     details: ReturnRequestDetail[]
+    images: ReturnRequestImage[]
+
+
 }
 
 export type SortDirection = "asc" | "desc"

@@ -15,7 +15,7 @@ import {
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -25,12 +25,14 @@ import { toast } from "sonner"
 
 // Define the base form schema with Zod
 const baseReturnRequestSchema = z.object({
-    orderId: z.string().min(1, "Order ID is required"),
-    items: z.array(z.object({
-        orderDetailId: z.string().min(1, "Phải chọn sản phẩm"),
-        quantity: z.number().min(1, "Số lượng tối thiểu là 1"),
-        reason: z.string().min(1, "Phải nhập lý do trả hàng!"),
-    }))
+    orderId: z.string().min(1, "Vui lòng nhập mã đơn hàng"),
+    items: z.array(
+        z.object({
+            orderDetailId: z.string().min(1, "Phải chọn sản phẩm"),
+            quantity: z.number().min(1, { message: 'Số lượng tối thiểu là 1' }),
+            reason: z.string().min(1, "Phải nhập lý do trả hàng!"),
+        }),
+    ),
 })
 
 type ReturnRequestFormValues = z.infer<typeof baseReturnRequestSchema>
@@ -59,11 +61,13 @@ export function ReturnRequestDialog({
         resolver: zodResolver(baseReturnRequestSchema),
         defaultValues: {
             orderId: selectedOrder?.orderId || "",
-            items: [{
-                orderDetailId: "",
-                quantity: 1,
-                reason: "",
-            }]
+            items: [
+                {
+                    orderDetailId: "",
+                    quantity: 1,
+                    reason: "",
+                },
+            ],
         },
     })
 
@@ -76,15 +80,17 @@ export function ReturnRequestDialog({
             const firstProduct = selectedOrder.orderDetails[0]
 
             // Initialize items array with the first product
-            form.setValue("items", [{
-                orderDetailId: firstProduct?.orderDetailId || "",
-                quantity: 1,
-                reason: "",
-            }])
+            form.setValue("items", [
+                {
+                    orderDetailId: firstProduct?.orderDetailId || "",
+                    quantity: 1,
+                    reason: "",
+                },
+            ])
 
             // Initialize product quantities
             const quantities: Record<string, number> = {}
-            selectedOrder.orderDetails.forEach(detail => {
+            selectedOrder.orderDetails.forEach((detail) => {
                 quantities[detail.orderDetailId] = detail.quantity
             })
             setProductQuantities(quantities)
@@ -105,11 +111,11 @@ export function ReturnRequestDialog({
     // Add new return item
     const addReturnItem = useCallback(() => {
         const currentItems = form.getValues("items")
-        const selectedProductIds = currentItems.map(item => item.orderDetailId)
+        const selectedProductIds = currentItems.map((item) => item.orderDetailId)
 
         // Find the first available product that hasn't been selected
         const availableProduct = selectedOrder?.orderDetails.find(
-            detail => !selectedProductIds.includes(detail.orderDetailId)
+            (detail) => !selectedProductIds.includes(detail.orderDetailId),
         )
 
         if (!availableProduct) {
@@ -123,18 +129,21 @@ export function ReturnRequestDialog({
                 orderDetailId: availableProduct.orderDetailId,
                 quantity: 1,
                 reason: "",
-            }
+            },
         ]
 
         form.setValue("items", newItems, { shouldValidate: true })
     }, [form, selectedOrder])
 
     // Remove return item
-    const removeReturnItem = useCallback((index: number) => {
-        const currentItems = form.getValues("items")
-        const newItems = currentItems.filter((_, i) => i !== index)
-        form.setValue("items", newItems, { shouldValidate: true })
-    }, [form])
+    const removeReturnItem = useCallback(
+        (index: number) => {
+            const currentItems = form.getValues("items")
+            const newItems = currentItems.filter((_, i) => i !== index)
+            form.setValue("items", newItems, { shouldValidate: true })
+        },
+        [form],
+    )
 
     // Handle product selection change
     const handleProductChange = (productId: string, index: number) => {
@@ -186,14 +195,14 @@ export function ReturnRequestDialog({
             formData.append("OrderId", values.orderId)
 
             // Convert items to the required format
-            const itemsJson = values.items.map(item => ({
+            const itemsJson = values.items.map((item) => ({
                 orderDetailId: item.orderDetailId,
                 quantity: item.quantity,
-                reason: item.reason
+                reason: item.reason,
             }))
 
             // Convert to escaped JSON string
-            formData.append("ItemsJson", JSON.stringify(itemsJson));
+            formData.append("ItemsJson", JSON.stringify(itemsJson))
 
             // Append images
             selectedImages.forEach((image) => {
@@ -229,6 +238,7 @@ export function ReturnRequestDialog({
                                         type="button"
                                         onClick={() => removeReturnItem(index)}
                                         className="absolute top-2 right-2 text-red-500 hover:text-red-700"
+                                        aria-label="Remove item"
                                     >
                                         <X className="h-4 w-4" />
                                     </button>
@@ -240,31 +250,34 @@ export function ReturnRequestDialog({
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Sản phẩm</FormLabel>
-                                            <Select
-                                                onValueChange={(value) => handleProductChange(value, index)}
-                                                value={field.value}
-                                            >
+                                            <Select onValueChange={(value) => handleProductChange(value, index)} value={field.value}>
                                                 <FormControl>
                                                     <SelectTrigger>
-                                                        {field.value
-                                                            ? selectedOrder?.orderDetails.find(detail => detail.orderDetailId === field.value)?.productName
-                                                            : "Chọn sản phẩm cần trả"
-                                                        }
+                                                        <SelectValue placeholder="Chọn sản phẩm cần trả">
+                                                            {field.value
+                                                                ? selectedOrder?.orderDetails.find((detail) => detail.orderDetailId === field.value)
+                                                                    ?.productName
+                                                                : "Chọn sản phẩm cần trả"}
+                                                        </SelectValue>
                                                     </SelectTrigger>
                                                 </FormControl>
                                                 <SelectContent>
                                                     {selectedOrder?.orderDetails
-                                                        .filter(detail => {
-                                                            return detail.orderDetailId === field.value ||
-                                                                !form.getValues("items").some(
-                                                                    (item, i) => i !== index && item.orderDetailId === detail.orderDetailId
-                                                                )
+                                                        .filter((detail) => {
+                                                            // Always show the currently selected product for this field
+                                                            if (detail.orderDetailId === field.value) return true
+
+                                                            // Show products that aren't selected in other items
+                                                            // or have remaining quantity available
+                                                            const isSelectedInOtherItems = form
+                                                                .getValues("items")
+                                                                .some((item, i) => i !== index && item.orderDetailId === detail.orderDetailId)
+
+                                                            // If the product has quantity > 0 and isn't selected elsewhere, show it
+                                                            return !isSelectedInOtherItems && productQuantities[detail.orderDetailId] > 0
                                                         })
                                                         .map((detail) => (
-                                                            <SelectItem
-                                                                key={detail.orderDetailId}
-                                                                value={detail.orderDetailId}
-                                                            >
+                                                            <SelectItem key={detail.orderDetailId} value={detail.orderDetailId}>
                                                                 {detail.productName} - SL còn lại: {productQuantities[detail.orderDetailId] || 0}
                                                             </SelectItem>
                                                         ))}
@@ -278,13 +291,21 @@ export function ReturnRequestDialog({
                                 <FormField
                                     control={form.control}
                                     name={`items.${index}.quantity`}
+                                    rules={{
+                                        required: 'Vui lòng nhập số lượng',
+                                        min: {
+                                            value: 1,
+                                            message: 'Số lượng phải lớn hơn hoặc bằng 1'
+                                        }
+                                    }}
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Số lượng</FormLabel>
                                             <FormControl>
                                                 <Input
                                                     type="number"
-                                                    min="1"
+
+
                                                     {...field}
                                                     onChange={(e) => {
                                                         const value = Number.parseInt(e.target.value, 10) || 0
@@ -296,7 +317,8 @@ export function ReturnRequestDialog({
                                             </FormControl>
                                             <FormDescription>
                                                 Nhập số lượng sản phẩm cần trả
-                                                {field.value && form.getValues(`items.${index}.orderDetailId`) &&
+                                                {field.value &&
+                                                    form.getValues(`items.${index}.orderDetailId`) &&
                                                     ` (tối đa: ${productQuantities[form.getValues(`items.${index}.orderDetailId`)] || 0})`}
                                             </FormDescription>
                                             <FormMessage />
@@ -311,11 +333,7 @@ export function ReturnRequestDialog({
                                         <FormItem>
                                             <FormLabel>Lý do trả hàng</FormLabel>
                                             <FormControl>
-                                                <Textarea
-                                                    placeholder="Nhập lý do trả hàng..."
-                                                    className="resize-none"
-                                                    {...field}
-                                                />
+                                                <Textarea placeholder="Nhập lý do trả hàng..." className="resize-none" {...field} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -324,21 +342,16 @@ export function ReturnRequestDialog({
                             </div>
                         ))}
 
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={addReturnItem}
-                            className="w-full"
-                        >
+                        <Button type="button" variant="outline" onClick={addReturnItem} className="w-full">
                             + Thêm sản phẩm trả
                         </Button>
 
                         <div className="space-y-2">
-                            <FormLabel>Hình ảnh (tùy chọn)</FormLabel>
+                            <FormLabel>Hình ảnh</FormLabel>
                             <div className="flex items-center gap-2">
                                 <label
                                     htmlFor="image-upload"
-                                    className="flex items-center gap-2 px-4 py-2 border border-dashed rounded-md cursor-pointer hover:bg-gray-50"
+                                    className="flex items-center gap-2 px-4 py-2 border border-dashed rounded-md cursor-pointer hover:bg-gray-50 transition-colors"
                                 >
                                     <Upload className="h-4 w-4" />
                                     <span>Tải ảnh lên</span>
@@ -360,13 +373,14 @@ export function ReturnRequestDialog({
                                         <div key={index} className="relative group">
                                             <img
                                                 src={url || "/placeholder.svg"}
-                                                alt={`Preview ${index + 1}`}
+                                                alt={`Hình ảnh ${index + 1}`}
                                                 className="h-20 w-20 object-cover rounded-md"
                                             />
                                             <button
                                                 type="button"
                                                 onClick={() => removeImage(index)}
                                                 className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                aria-label="Xóa ảnh"
                                             >
                                                 <X className="h-3 w-3" />
                                             </button>
@@ -377,12 +391,7 @@ export function ReturnRequestDialog({
                         </div>
 
                         <DialogFooter>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={handleClose}
-                                disabled={isSubmitting}
-                            >
+                            <Button type="button" variant="outline" onClick={handleClose} disabled={isSubmitting}>
                                 Hủy
                             </Button>
                             <Button type="submit" disabled={isSubmitting}>
