@@ -20,7 +20,7 @@ interface Category {
 }
 
 interface ProductData {
-    productCode: string
+
     productName: string
     unit: string
     defaultExpiration: number
@@ -48,7 +48,6 @@ const AddProductDialog: React.FC<AddProductDialogProps> = ({
     onClose,
     onSubmit,
     product,
-
     categories,
     isSubmitting,
     handleInputChange,
@@ -96,16 +95,7 @@ const AddProductDialog: React.FC<AddProductDialogProps> = ({
             <form onSubmit={handleSubmit}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4">
                     <div className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="productCode">Mã sản phẩm</Label>
-                            <Input
-                                id="productCode"
-                                name="productCode"
-                                value={product.productCode}
-                                onChange={handleInputChange}
-                                required
-                            />
-                        </div>
+
 
                         <div className="space-y-2">
                             <Label htmlFor="productName">Tên sản phẩm</Label>

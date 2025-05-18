@@ -62,6 +62,17 @@ export const PaymentDialog = ({
         onPaymentAmountChange(numericValue)
     }
 
+    // Handle pay all button click
+    const handlePayAll = () => {
+        if (selectedPayment) {
+            // Set payment amount to remaining debt amount
+            onPaymentAmountChange(selectedPayment.remainingDebtAmount.toString())
+
+            // Submit the payment
+            onPaymentSubmit()
+        }
+    }
+
     // Validate payment amount when it changes
     useEffect(() => {
         if (!selectedPayment) return
@@ -75,7 +86,7 @@ export const PaymentDialog = ({
         }
 
         // Calculate minimum acceptable payment (10% of remaining debt)
-        const minimumAcceptable = 10000
+        const minimumAcceptable = 0
 
         // Check if payment is 0 or less than minimum acceptable (10%)
         if (amount <= 0 || amount < minimumAcceptable) {
@@ -137,14 +148,24 @@ export const PaymentDialog = ({
                             </div>
                         </>
                     )}
-
-
                 </div>
-                <DialogFooter>
-                    <Button variant="outline" onClick={() => onOpenChange(false)}>
+                <DialogFooter className="flex flex-col sm:flex-row gap-2">
+                    <Button variant="outline" onClick={() => onOpenChange(false)} className="sm:order-1">
                         Hủy
                     </Button>
-                    <Button onClick={onPaymentSubmit} disabled={isLoading || !!errorMessage || !paymentAmount}>
+                    <Button
+                        variant="secondary"
+                        onClick={handlePayAll}
+                        disabled={isLoading || !selectedPayment || selectedPayment.remainingDebtAmount <= 0}
+                        className="sm:order-2"
+                    >
+                        Thanh toán hết
+                    </Button>
+                    <Button
+                        onClick={onPaymentSubmit}
+                        disabled={isLoading || !!errorMessage || !paymentAmount}
+                        className="sm:order-3"
+                    >
                         {isLoading ? "Đang xử lý..." : "Thanh toán"}
                     </Button>
                 </DialogFooter>
@@ -152,4 +173,3 @@ export const PaymentDialog = ({
         </Dialog>
     )
 }
-
