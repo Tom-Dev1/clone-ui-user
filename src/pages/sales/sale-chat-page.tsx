@@ -36,6 +36,7 @@ interface ChatRoom {
   createdAt: string;
   memberCount: number;
   lastMessage: string;
+  lastUserName: string;
   lastTimestamp: string;
   members: Member[];
 }
@@ -99,7 +100,7 @@ export default function ChatPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
+  const name = localStorage.getItem("name");
   // Fetch chat rooms on component mount
   useEffect(() => {
     const fetchRooms = async () => {
@@ -802,7 +803,10 @@ export default function ChatPage() {
                           </span>
                         </div>
                         <p className="text-sm text-gray-500 truncate mt-1">
-                          {room.lastMessage}
+                          {room.lastUserName === name
+                            ? "Bạn"
+                            : room.lastUserName}
+                          : {room.lastMessage}
                         </p>
                       </div>
                     </div>
