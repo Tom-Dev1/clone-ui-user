@@ -354,7 +354,6 @@ export default function SaleReviewOrderPage() {
               <ReturnOrderTable
                 returnOrders={filteredOrders}
                 onViewDetails={handleViewDetails}
-                onStatusUpdate={handleStatusUpdate}
                 onApproveReturn={handleApproveReturn}
                 sortField={sortField}
                 sortDirection={sortDirection}
