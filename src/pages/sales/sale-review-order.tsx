@@ -72,9 +72,14 @@ export default function SaleReviewOrderPage() {
     fetchReturnOrders();
   }, []);
 
-  // Apply filters and sorting
+  // Apply filters, sorting, and pagination
   useEffect(() => {
-    if (!returnOrders.length) return;
+    if (!returnOrders.length) {
+      setFilteredOrders([]);
+      setTotalItems(0);
+      setCurrentPage(1); // Reset to page 1 if no orders
+      return;
+    }
 
     let result = [...returnOrders];
 
@@ -142,13 +147,18 @@ export default function SaleReviewOrderPage() {
       }
     });
 
-    setTotalItems(result.length);
+    const newTotalItems = result.length;
+    setTotalItems(newTotalItems);
+
+    // Only reset currentPage if it exceeds the new totalPages
+    const totalPages = Math.ceil(newTotalItems / itemsPerPage) || 1;
+    if (currentPage > totalPages && newTotalItems > 0) {
+      setCurrentPage(totalPages);
+    }
 
     // Apply pagination
-    const paginatedResult = result.slice(
-      (currentPage - 1) * itemsPerPage,
-      currentPage * itemsPerPage
-    );
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const paginatedResult = result.slice(startIndex, startIndex + itemsPerPage);
 
     setFilteredOrders(paginatedResult);
   }, [
@@ -158,8 +168,8 @@ export default function SaleReviewOrderPage() {
     dateRange,
     sortField,
     sortDirection,
-    currentPage,
     itemsPerPage,
+    currentPage, // Keep currentPage in dependencies to ensure pagination updates
   ]);
 
   // Handle approve return request
@@ -172,14 +182,26 @@ export default function SaleReviewOrderPage() {
         }
       );
 
-      // Update local state
-      const updatedOrders = returnOrders.map((order) =>
-        order.returnRequestId === returnRequestId
-          ? { ...order, status: "Approved" }
-          : order
+      // Update both returnOrders and filteredOrders
+      setReturnOrders((prev) =>
+        prev.map((order) =>
+          order.returnRequestId === returnRequestId
+            ? { ...order, status: "Approved" }
+            : order
+        )
       );
 
-      setReturnOrders(updatedOrders);
+      setFilteredOrders((prev) =>
+        prev.map((order) =>
+          order.returnRequestId === returnRequestId
+            ? { ...order, status: "Approved" }
+            : order
+        )
+      );
+
+      if (selectedOrder?.returnRequestId === returnRequestId) {
+        setSelectedOrder({ ...selectedOrder, status: "Approved" });
+      }
 
       toast.success("Đơn trả hàng đã được chấp nhận thành công");
     } catch (err) {
@@ -198,18 +220,31 @@ export default function SaleReviewOrderPage() {
         `https://minhlong.mlhr.org/api/returns/reject-Return-Request/${returnRequestId}`,
         {
           method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ reason }),
         }
       );
 
-      // Update local state
-      const updatedOrders = returnOrders.map((order) =>
-        order.returnRequestId === returnRequestId
-          ? { ...order, status: "Rejected" }
-          : order
+      // Update both returnOrders and filteredOrders
+      setReturnOrders((prev) =>
+        prev.map((order) =>
+          order.returnRequestId === returnRequestId
+            ? { ...order, status: "Rejected" }
+            : order
+        )
       );
 
-      setReturnOrders(updatedOrders);
+      setFilteredOrders((prev) =>
+        prev.map((order) =>
+          order.returnRequestId === returnRequestId
+            ? { ...order, status: "Rejected" }
+            : order
+        )
+      );
+
+      if (selectedOrder?.returnRequestId === returnRequestId) {
+        setSelectedOrder({ ...selectedOrder, status: "Rejected" });
+      }
 
       toast.success("Đơn trả hàng đã được từ chối thành công");
     } catch (err) {
@@ -225,27 +260,40 @@ export default function SaleReviewOrderPage() {
   ) => {
     if (newStatus === "Approved") {
       return handleApproveReturn(returnRequestId);
+    } else if (newStatus === "Rejected") {
+      return handleRejectReturn(returnRequestId, "Cập nhật trạng thái");
     }
 
     try {
-      // This is a placeholder for the actual API call to update status
-      // You would need to implement the actual API endpoint
       await fetchWithAuth(
         `https://minhlong.mlhr.org/api/returns/${returnRequestId}/status`,
         {
           method: "PUT",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ status: newStatus }),
         }
       );
 
-      // Update local state
-      const updatedOrders = returnOrders.map((order) =>
-        order.returnRequestId === returnRequestId
-          ? { ...order, status: newStatus }
-          : order
+      // Update both returnOrders and filteredOrders
+      setReturnOrders((prev) =>
+        prev.map((order) =>
+          order.returnRequestId === returnRequestId
+            ? { ...order, status: newStatus }
+            : order
+        )
       );
 
-      setReturnOrders(updatedOrders);
+      setFilteredOrders((prev) =>
+        prev.map((order) =>
+          order.returnRequestId === returnRequestId
+            ? { ...order, status: newStatus }
+            : order
+        )
+      );
+
+      if (selectedOrder?.returnRequestId === returnRequestId) {
+        setSelectedOrder({ ...selectedOrder, status: newStatus });
+      }
 
       toast.success(
         `Trạng thái đơn trả hàng đã được cập nhật thành ${getStatusInVietnamese(
@@ -290,6 +338,7 @@ export default function SaleReviewOrderPage() {
       setSortField(field);
       setSortDirection("asc");
     }
+    setCurrentPage(1); // Reset to page 1 when sorting changes
   };
 
   // Handle filter change
@@ -306,7 +355,9 @@ export default function SaleReviewOrderPage() {
 
   // Handle page change
   const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+    const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+    const validatedPage = Math.max(1, Math.min(page, totalPages));
+    setCurrentPage(validatedPage);
   };
 
   // Handle items per page change
@@ -355,6 +406,7 @@ export default function SaleReviewOrderPage() {
                 returnOrders={filteredOrders}
                 onViewDetails={handleViewDetails}
                 onApproveReturn={handleApproveReturn}
+                onRejectReturn={handleRejectReturn}
                 sortField={sortField}
                 sortDirection={sortDirection}
                 onSortChange={handleSortChange}

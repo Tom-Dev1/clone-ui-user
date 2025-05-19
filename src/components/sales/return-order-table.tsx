@@ -64,6 +64,7 @@ export default function ReturnOrderTable({
   const [selectedReturnRequestId, setSelectedReturnRequestId] = useState<
     string | null
   >(null);
+  const [isRejecting, setIsRejecting] = useState(false);
 
   // Get sort icon
   const getSortIcon = (field: string) => {
@@ -94,38 +95,11 @@ export default function ReturnOrderTable({
     setIsRejectDialogOpen(true);
   };
 
-  const [isRejecting, setIsRejecting] = useState(false);
-
   const handleRejectSubmit = async () => {
-    if (selectedReturnRequestId && rejectReason.trim()) {
+    if (selectedReturnRequestId && rejectReason.trim() && onRejectReturn) {
       setIsRejecting(true);
       try {
-        const response = await fetch(
-          `https://minhlong.mlhr.org/api/returns/reject-Return-Request/${selectedReturnRequestId}`,
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ reason: rejectReason }),
-          }
-        );
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(
-            errorData.message || "Có lỗi xảy ra khi từ chối đơn trả hàng"
-          );
-        }
-
-        // Call onStatusUpdate to update parent component state
-        if (onRejectReturn) {
-          onRejectReturn(selectedReturnRequestId, "Rejected");
-        }
-
-        toast.success("Từ chối thành công");
-
+        await onRejectReturn(selectedReturnRequestId, rejectReason);
         setIsRejectDialogOpen(false);
         setRejectReason("");
         setSelectedReturnRequestId(null);
@@ -138,6 +112,8 @@ export default function ReturnOrderTable({
       } finally {
         setIsRejecting(false);
       }
+    } else {
+      toast.error("Vui lòng nhập lý do từ chối");
     }
   };
 
