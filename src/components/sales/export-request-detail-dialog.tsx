@@ -143,12 +143,7 @@ export const ExportRequestDetailDialog = ({
                                             <dt className="text-muted-foreground">Ngày duyệt:</dt>
                                             <dd>{formatDate(selectedRequest.requestDate)}</dd>
 
-                                            {selectedRequest.note && (
-                                                <>
-                                                    <dt className="text-muted-foreground">Ghi chú:</dt>
-                                                    <dd>{selectedRequest.note}</dd>
-                                                </>
-                                            )}
+
                                         </dl>
                                     </CardContent>
                                 </Card>

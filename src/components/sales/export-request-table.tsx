@@ -79,7 +79,6 @@ export const ExportRequestTable = ({
                                     {renderSortIcon("requestDate")}
                                 </div>
                             </TableHead>
-                            <TableHead className="text-center">Ghi chú</TableHead>
                             <TableHead className="w-[100px] text-center">Số SP</TableHead>
                             <TableHead className="w-[100px] text-center">Tổng SL</TableHead>
                             <TableHead className="w-[120px] text-center cursor-pointer" onClick={() => handleSort("totalValue")}>
@@ -103,7 +102,6 @@ export const ExportRequestTable = ({
                                 <TableCell className="w-[170px] text-center">{request.requestExportCode}</TableCell>
                                 <TableCell className="w-[160px] text-center">{request.agencyName}</TableCell>
                                 <TableCell className="w-[160px] text-center">{formatDate(request.requestDate)}</TableCell>
-                                <TableCell className="truncate">{request.note || "Không có ghi chú"}</TableCell>
                                 <TableCell className="w-[120px] text-center">{request.requestExportDetails.length}</TableCell>
                                 <TableCell className="w-[120px] text-center">{getTotalRequestedQuantity(request)}</TableCell>
                                 <TableCell className="w-[120px] text-right">{formatCurrency(getTotalValue(request))}</TableCell>
