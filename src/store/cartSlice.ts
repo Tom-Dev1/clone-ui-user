@@ -89,6 +89,9 @@ export const selectCartItems = (state: { cart: CartState }) => state.cart.items
 export const selectCartItemCount = (state: { cart: CartState }) =>
   state.cart.items.reduce((total, item) => total + item.quantity, 0)
 
+export const selectCartProductCount = (state: { cart: CartState }) =>
+  state.cart.items.length
+
 export const selectCartTotalPrice = (state: { cart: CartState }) =>
   state.cart.items.reduce((total, item) => total + (item.price || 0) * item.quantity, 0)
 
