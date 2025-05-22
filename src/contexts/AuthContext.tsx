@@ -1,5 +1,3 @@
-"use client";
-
 import {
   createContext,
   useContext,
@@ -7,6 +5,7 @@ import {
   useEffect,
   type ReactNode,
 } from "react";
+import { toast } from "sonner";
 
 // Define the user information structure based on JWT claims
 interface UserInfo {
@@ -139,6 +138,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       // Fetch additional user details
       const details = await fetchUserDetails(decodedUser.id);
+
+      // Fetch logout
+
+
       if (details) {
         setUserDetails(details);
         console.log("User details fetched:", details);
@@ -149,12 +152,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   // Logout function
-  const logout = () => {
-    setUser(null);
-    setUserDetails(null);
-    localStorage.removeItem("auth_token");
-    localStorage.removeItem("role_name");
-    localStorage.removeItem("remembered_username");
+  const logout = async () => {
+    try {
+      await fetch(`${baseURL}/api/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+
+      setUser(null);
+      setUserDetails(null);
+      localStorage.removeItem("auth_token");
+      localStorage.removeItem("role_name");
+      localStorage.removeItem("remembered_username");
+      toast.success("Đăng xuất thành công!");
+    } catch (error) {
+      console.error("Error during logout:", error);
+      toast.error("Có lỗi xảy ra khi đăng xuất!");
+    }
   };
 
   // Check for existing token on mount
