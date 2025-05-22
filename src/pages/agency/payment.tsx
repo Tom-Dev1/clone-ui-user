@@ -161,7 +161,7 @@ const AgencyPaymentHistoryPage: React.FC = () => {
   // Handle payment
   const handlePayment = async () => {
     if (!selectedPayment || !paymentAmount || Number.parseFloat(paymentAmount) <= 0) {
-      toast.error("Vui lòng nhập số tiền hợp lệ")
+
       return
     }
 
@@ -175,10 +175,10 @@ const AgencyPaymentHistoryPage: React.FC = () => {
       const paymentData = {
         orderId: selectedPayment.orderId,
         agencyId: selectedPayment.agencyId,
-        price: Number.parseFloat(paymentAmount),
+        price: Number(paymentAmount),
         description: `${selectedPayment.orderCode}`,
       }
-      console.log(paymentData)
+      console.log("paymentData:...", paymentData)
 
       const response = await fetch(`https://minhlong.mlhr.org/api/Payment/${userId}`, {
         method: "POST",

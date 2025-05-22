@@ -199,7 +199,7 @@ export default function AgencyProductRequest() {
       console.error("Error submitting request:", error);
 
       // Hiển thị thông báo lỗi
-      toast.success("Bạn đã đặt hàng, Vui lòng thử lại sau 24h");
+      toast.error("Bạn đã đặt hàng, Vui lòng thử lại sau 24h");
     } finally {
       setIsSubmitting(false);
     }

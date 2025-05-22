@@ -154,7 +154,7 @@ export const PaymentDialog = ({
                         Hủy
                     </Button>
                     <Button
-                        variant="secondary"
+                        variant="outline"
                         onClick={handlePayAll}
                         disabled={isLoading || !selectedPayment || selectedPayment.remainingDebtAmount <= 0}
                         className="sm:order-2"
