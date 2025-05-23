@@ -139,7 +139,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Fetch additional user details
       const details = await fetchUserDetails(decodedUser.id);
 
-      // Fetch logout
 
 
       if (details) {
@@ -154,17 +153,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Logout function
   const logout = async () => {
     try {
-      await fetch(`${baseURL}/api/auth/logout`, {
+      const token = localStorage.getItem("auth_token");
+      if (!token) return null;
+      const res = await fetch(`https://minhlong.mlhr.org/api/auth/logout`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         method: "POST",
         credentials: "include",
-      });
 
-      setUser(null);
-      setUserDetails(null);
-      localStorage.removeItem("auth_token");
-      localStorage.removeItem("role_name");
-      localStorage.removeItem("remembered_username");
-      toast.success("Đăng xuất thành công!");
+      });
+      if (res.ok) {
+        console.log(res);
+
+        setUser(null);
+        setUserDetails(null);
+        localStorage.removeItem("auth_token");
+        localStorage.removeItem("role_name");
+        localStorage.removeItem("remembered_username");
+        toast.success("Đăng xuất thành công!");
+      }
+
     } catch (error) {
       console.error("Error during logout:", error);
       toast.error("Có lỗi xảy ra khi đăng xuất!");

@@ -129,7 +129,7 @@ export const ExportRequestDetailDialog = ({
                                             <dd>{selectedRequest.requestExportId}</dd>
 
                                             <dt className="text-muted-foreground">Mã phiếu xuất:</dt>
-                                            <dd>{selectedRequest.requestExportCode}</dd>
+                                            <dd>{selectedRequest.orderCode}</dd>
 
                                             <dt className="text-muted-foreground">Đại lý:</dt>
                                             <dd>{selectedRequest.agencyName}</dd>

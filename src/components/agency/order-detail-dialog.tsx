@@ -130,7 +130,7 @@ export const OrderDetailDialog = ({
                                 <div className="flex flex-col space-y-3">
                                     <div className="flex justify-between items-center">
                                         <span className="text-muted-foreground">Giảm giá:</span>
-                                        <span>{selectedOrder.discount.toLocaleString("vi-VN")} đ</span>
+                                        <span>{selectedOrder.discount.toLocaleString("vi-VN")}%</span>
                                     </div>
                                     <Separator />
                                     <div className="flex justify-between items-center">
