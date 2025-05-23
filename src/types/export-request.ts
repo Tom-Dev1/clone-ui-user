@@ -12,7 +12,7 @@ export interface RequestExport {
     orderId: string
     requestExportCode: string
     agencyName: string
-
+    orderCode: string
     warehouseName: string
 
     approvedByName: string

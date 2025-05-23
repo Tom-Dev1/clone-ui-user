@@ -19,9 +19,33 @@ export default function ReturnOrderPagination({
     onPageChange,
     onItemsPerPageChange,
 }: ReturnOrderPaginationProps) {
-    const totalPages = Math.ceil(totalItems / itemsPerPage)
+    const totalPages = Math.ceil(totalItems / itemsPerPage) || 1
     const startItem = (currentPage - 1) * itemsPerPage + 1
     const endItem = Math.min(currentPage * itemsPerPage, totalItems)
+
+    const handleNextPage = () => {
+        if (currentPage < totalPages) {
+            onPageChange(currentPage + 1)
+        }
+    }
+
+    const handlePrevPage = () => {
+        if (currentPage > 1) {
+            onPageChange(currentPage - 1)
+        }
+    }
+
+    const handleFirstPage = () => {
+        if (currentPage !== 1) {
+            onPageChange(1)
+        }
+    }
+
+    const handleLastPage = () => {
+        if (currentPage !== totalPages) {
+            onPageChange(totalPages)
+        }
+    }
 
     return (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -55,7 +79,7 @@ export default function ReturnOrderPagination({
                         variant="outline"
                         size="icon"
                         className="h-8 w-8"
-                        onClick={() => onPageChange(1)}
+                        onClick={handleFirstPage}
                         disabled={currentPage === 1}
                     >
                         <ChevronsLeft className="h-4 w-4" />
@@ -65,7 +89,7 @@ export default function ReturnOrderPagination({
                         variant="outline"
                         size="icon"
                         className="h-8 w-8"
-                        onClick={() => onPageChange(currentPage - 1)}
+                        onClick={handlePrevPage}
                         disabled={currentPage === 1}
                     >
                         <ChevronLeft className="h-4 w-4" />
@@ -80,7 +104,7 @@ export default function ReturnOrderPagination({
                         variant="outline"
                         size="icon"
                         className="h-8 w-8"
-                        onClick={() => onPageChange(currentPage + 1)}
+                        onClick={handleNextPage}
                         disabled={currentPage === totalPages || totalPages === 0}
                     >
                         <ChevronRight className="h-4 w-4" />
@@ -90,7 +114,7 @@ export default function ReturnOrderPagination({
                         variant="outline"
                         size="icon"
                         className="h-8 w-8"
-                        onClick={() => onPageChange(totalPages)}
+                        onClick={handleLastPage}
                         disabled={currentPage === totalPages || totalPages === 0}
                     >
                         <ChevronsRight className="h-4 w-4" />

@@ -260,8 +260,8 @@ export default function ProductDetail() {
                     key={index}
                     onClick={() => setActiveImageIndex(index)}
                     className={`w-20 h-20 rounded-md border overflow-hidden flex-shrink-0 transition-all duration-200 ${activeImageIndex === index
-                        ? "ring-2 ring-primary scale-105"
-                        : "hover:ring-1 hover:ring-primary/50 hover:scale-[1.02]"
+                      ? "ring-2 ring-primary scale-105"
+                      : "hover:ring-1 hover:ring-primary/50 hover:scale-[1.02]"
                       }`}
                     aria-label={`View image ${index + 1}`}
                     aria-current={activeImageIndex === index ? "true" : "false"}
@@ -328,7 +328,7 @@ export default function ProductDetail() {
               </div>
             </div>
 
-            {canOrder && (
+            {canOrder && product.availableStock > 0 && (
               <div className="mt-6 pt-6 mb-5">
                 <h3 className="font-medium mb-4">Số lượng đặt hàng</h3>
                 <div className="flex flex-col gap-2">
@@ -375,13 +375,23 @@ export default function ProductDetail() {
 
             <div className="flex gap-4">
               {canOrder ? (
-                <button
-                  onClick={handleAddToCart}
-                  className="px-6 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 flex items-center gap-2"
-                >
-                  <ShoppingCart className="h-4 w-4" />
-                  Thêm vào giỏ hàng
-                </button>
+                product.availableStock > 0 ? (
+                  <button
+                    onClick={handleAddToCart}
+                    className="px-6 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 flex items-center gap-2"
+                  >
+                    <ShoppingCart className="h-4 w-4" />
+                    Thêm vào giỏ hàng
+                  </button>
+                ) : (
+                  <button
+                    disabled
+                    className="px-6 py-2 bg-muted text-muted-foreground rounded-md cursor-not-allowed flex items-center gap-2"
+                  >
+                    <ShoppingCart className="h-4 w-4" />
+                    Hết hàng
+                  </button>
+                )
               ) : (
                 <button className="px-6 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90">
                   Liên hệ để đặt

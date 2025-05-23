@@ -6,6 +6,7 @@ import {
     clearAllItems,
     selectCartItems,
     selectCartItemCount,
+    selectCartProductCount,
     selectCartTotalPrice,
 } from "@/store/cartSlice"
 import type { ProductDetail } from "@/services/product-service"
@@ -14,6 +15,7 @@ export function useCart() {
     const dispatch = useDispatch()
     const cartItems = useSelector(selectCartItems)
     const itemCount = useSelector(selectCartItemCount)
+    const productCount = useSelector(selectCartProductCount)
     const totalPrice = useSelector(selectCartTotalPrice)
 
     const addItemToCart = (product: ProductDetail, quantity: number) => {
@@ -56,6 +58,7 @@ export function useCart() {
     return {
         cartItems,
         itemCount,
+        productCount,
         totalPrice,
         addItem: addItemToCart,
         removeItem: removeItemFromCart,
