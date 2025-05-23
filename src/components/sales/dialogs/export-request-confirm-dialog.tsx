@@ -16,6 +16,7 @@ interface ExportRequestConfirmDialogProps {
     isOpen: boolean
     onOpenChange: (open: boolean) => void
     requestId: number | null
+    requestCode: string
     onConfirm: () => void
     isLoading: boolean
 }
@@ -23,7 +24,7 @@ interface ExportRequestConfirmDialogProps {
 export const ExportRequestConfirmDialog = ({
     isOpen,
     onOpenChange,
-    requestId,
+    requestCode,
     onConfirm,
     isLoading,
 }: ExportRequestConfirmDialogProps) => {
@@ -33,7 +34,7 @@ export const ExportRequestConfirmDialog = ({
                 <AlertDialogHeader>
                     <AlertDialogTitle>Xác nhận yêu cầu xuất kho</AlertDialogTitle>
                     <AlertDialogDescription>
-                        Bạn có chắc chắn muốn tạo yêu cầu xuất kho cho kho chính với mã yêu cầu #{requestId} không?
+                        Bạn có chắc chắn muốn tạo yêu cầu xuất kho cho kho chính với mã yêu cầu {requestCode} không?
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

@@ -111,7 +111,7 @@ export const ExportRequestDetailDialog = ({
                 <DialogHeader>
                     <DialogTitle>Chi tiết yêu cầu xuất kho</DialogTitle>
                     <DialogDescription>
-                        Mã yêu cầu: {selectedRequest?.requestExportId} - {selectedRequest?.requestExportCode}
+                        Mã yêu cầu: #{selectedRequest?.requestExportId} - {selectedRequest?.requestExportCode}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -126,10 +126,10 @@ export const ExportRequestDetailDialog = ({
                                     <CardContent>
                                         <dl className="grid grid-cols-2 gap-1 text-sm text-left">
                                             <dt className="text-muted-foreground">Mã yêu cầu:</dt>
-                                            <dd>{selectedRequest.requestExportId}</dd>
+                                            <dd>#{selectedRequest.requestExportId}</dd>
 
                                             <dt className="text-muted-foreground">Mã phiếu xuất:</dt>
-                                            <dd>{selectedRequest.orderCode}</dd>
+                                            <dd>{selectedRequest.requestExportCode}</dd>
 
                                             <dt className="text-muted-foreground">Đại lý:</dt>
                                             <dd>{selectedRequest.agencyName}</dd>

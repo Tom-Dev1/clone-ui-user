@@ -14,10 +14,8 @@ export interface RequestExport {
     agencyName: string
     orderCode: string
     warehouseName: string
-
     approvedByName: string
     status: string
-
     note: string
     requestDate: string
     requestExportDetails: RequestExportDetail[]

@@ -99,7 +99,7 @@ export const ExportRequestTable = ({
                     <TableBody>
                         {filteredRequests.map((request) => (
                             <TableRow key={request.requestExportId}>
-                                <TableCell className="w-[170px] text-center">{request.orderCode}</TableCell>
+                                <TableCell className="w-[170px] text-center">{request.requestExportCode}</TableCell>
                                 <TableCell className="w-[160px] text-center">{request.agencyName}</TableCell>
                                 <TableCell className="w-[160px] text-center">{formatDate(request.requestDate)}</TableCell>
                                 <TableCell className="w-[120px] text-center">{request.requestExportDetails.length}</TableCell>

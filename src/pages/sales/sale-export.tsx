@@ -55,6 +55,7 @@ const SalesExports = () => {
   // Add new state for the confirmation dialog
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false)
   const [selectedRequestForMainWarehouse, setSelectedRequestForMainWarehouse] = useState<number | null>(null)
+  const [selectedRequestCode, setSelectedRequestCode] = useState<string>("")
   const [isConfirmLoading, setIsConfirmLoading] = useState(false)
 
   // Check for authentication token
@@ -183,8 +184,12 @@ const SalesExports = () => {
 
   // Add the handler function for creating export request for main warehouse
   const handleCreateForMainWarehouse = (requestId: number) => {
-    setSelectedRequestForMainWarehouse(requestId)
-    setConfirmDialogOpen(true)
+    const selectedRequest = exportRequests.find(request => request.requestExportId === requestId);
+    if (selectedRequest) {
+      setSelectedRequestForMainWarehouse(requestId);
+      setSelectedRequestCode(selectedRequest.requestExportCode);
+      setConfirmDialogOpen(true);
+    }
   }
 
   // Add the function to handle the confirmation
@@ -362,6 +367,7 @@ const SalesExports = () => {
         isOpen={confirmDialogOpen}
         onOpenChange={setConfirmDialogOpen}
         requestId={selectedRequestForMainWarehouse}
+        requestCode={selectedRequestCode}
         onConfirm={handleConfirmCreateForMainWarehouse}
         isLoading={isConfirmLoading}
       />
