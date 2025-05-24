@@ -87,7 +87,7 @@ export const ReturnOrderTable = ({
                             <TableRow key={order.returnRequestId} className="hover:bg-muted/30">
                                 <TableCell className="font-medium">{order.returnRequestCode}</TableCell>
                                 <TableCell>{order.orderCode}</TableCell>
-                                <TableCell>{format(new Date(order.createdAt), "dd/MM/yyyy HH:mm", { locale: vi })}</TableCell>
+                                <TableCell>{format(new Date(order.createdAt), "dd/MM/yyyy", { locale: vi })}</TableCell>
                                 <TableCell>{order.createdByUserName}</TableCell>
                                 <TableCell className="text-center">{order.details.length}</TableCell>
                                 <TableCell className="text-center">{getTotalQuantity(order)}</TableCell>
