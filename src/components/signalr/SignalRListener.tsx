@@ -43,6 +43,8 @@ export default function SignalRListener() {
         navigatePath = "/sales/review-order";
       } else if (noti.title === "ReturnAgency") {
         navigatePath = "/agency/return-order";
+      } else if (noti.title === "Đơn hàng mới") {
+        navigatePath = "/sales/export";
       }
 
       toast(noti.message, {
