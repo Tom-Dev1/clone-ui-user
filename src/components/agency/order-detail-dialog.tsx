@@ -129,6 +129,10 @@ export const OrderDetailDialog = ({
                             <CardContent className="p-4">
                                 <div className="flex flex-col space-y-3">
                                     <div className="flex justify-between items-center">
+                                        <span className="text-muted-foreground">Tổng tiền hàng:</span>
+                                        <span>{selectedOrder.totalPrice ? selectedOrder.totalPrice.toLocaleString("vi-VN") + " đ" : "Đang cập nhật"}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center">
                                         <span className="text-muted-foreground">Giảm giá:</span>
                                         <span>{selectedOrder.discount.toLocaleString("vi-VN")}%</span>
                                     </div>
