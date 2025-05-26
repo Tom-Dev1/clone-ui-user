@@ -19,6 +19,10 @@ export interface RequestExport {
     note: string
     requestDate: string
     requestExportDetails: RequestExportDetail[]
+    discount: number,
+
+    totalPrice: number
+    finalPrice: number
 }
 
 export interface ApiProduct {

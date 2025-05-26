@@ -384,7 +384,7 @@ const CategoryList = () => {
               <form onSubmit={handleAddCategory}>
                 <div className="grid gap-4 py-4">
                   <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="categoryName" className="text-right">
+                    <Label htmlFor="categoryName" className="text-left w-40   ">
                       Tên danh mục
                     </Label>
                     <Input
@@ -396,21 +396,9 @@ const CategoryList = () => {
                       required
                     />
                   </div>
+
                   <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="sortOrder" className="text-right">
-                      Thứ tự
-                    </Label>
-                    <Input
-                      id="sortOrder"
-                      name="sortOrder"
-                      type="number"
-                      value={newCategory.sortOrder}
-                      onChange={(e) => handleInputChange(e, "new")}
-                      className="col-span-3"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="notes" className="text-right">
+                    <Label htmlFor="notes" className="text-left w-40">
                       Ghi chú
                     </Label>
                     <Textarea
@@ -423,8 +411,8 @@ const CategoryList = () => {
                     />
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="isActive" className="text-right">
-                      Hoạt động
+                    <Label htmlFor="isActive" className="text-left">
+                      Trạng thái
                     </Label>
                     <div className="flex items-center space-x-2 col-span-3">
                       <Switch
@@ -488,8 +476,11 @@ const CategoryList = () => {
                       <ArrowUpDown className="h-4 w-4" />
                     </Button>
                   </TableHead>
+
                   <TableHead>Trạng thái</TableHead>
+                  <TableHead>Ghi Chú</TableHead>
                   <TableHead>Thao tác</TableHead>
+
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -507,6 +498,7 @@ const CategoryList = () => {
                           {category.isActive ? "Hoạt động" : "Không hoạt động"}
                         </span>
                       </TableCell>
+                      <TableCell>{category.notes}</TableCell>
                       <TableCell className="">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -561,12 +553,7 @@ const CategoryList = () => {
             </DialogHeader>
 
             <div className="space-y-4 mt-4">
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">
-                  ID danh mục
-                </h3>
-                <p>{selectedCategory.categoryId}</p>
-              </div>
+
 
               <div>
                 <h3 className="text-sm font-medium text-gray-500">
@@ -576,14 +563,6 @@ const CategoryList = () => {
                   {selectedCategory.categoryName}
                 </p>
               </div>
-
-              <div>
-                <h3 className="text-sm font-medium text-gray-500">
-                  Thứ tự sắp xếp
-                </h3>
-                <p>{selectedCategory.sortOrder}</p>
-              </div>
-
               <div>
                 <h3 className="text-sm font-medium text-gray-500">
                   Trạng thái

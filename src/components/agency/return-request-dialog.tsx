@@ -304,14 +304,19 @@ export function ReturnRequestDialog({
                                             <FormControl>
                                                 <Input
                                                     type="number"
-
-
+                                                    min="0"
+                                                    onWheel={(e) => e.currentTarget.blur()}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === '-' || e.key === 'e' || e.key === 'E') {
+                                                            e.preventDefault()
+                                                        }
+                                                    }}
                                                     {...field}
                                                     onChange={(e) => {
                                                         const value = Number.parseInt(e.target.value, 10) || 0
                                                         const selectedProductId = form.getValues(`items.${index}.orderDetailId`)
                                                         const maxQuantity = productQuantities[selectedProductId] || 0
-                                                        field.onChange(Math.min(value, maxQuantity))
+                                                        field.onChange(Math.min(Math.max(0, value), maxQuantity))
                                                     }}
                                                 />
                                             </FormControl>

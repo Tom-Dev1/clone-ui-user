@@ -19,7 +19,7 @@ import { formatCurrency } from "@/utils/format-utils"
 import { useEffect, useState } from "react"
 import { fetchWithAuth } from "@/utils/api-utils"
 import type { ApiProduct } from "@/types/export-request"
-import { formatDate, getTotalRequestedQuantity, getTotalValue } from "@/utils/format-export"
+import { formatDate, getTotalRequestedQuantity, } from "@/utils/format-export"
 import { CirclePlus } from "lucide-react"
 
 interface ExportRequestDetailDialogProps {
@@ -111,7 +111,6 @@ export const ExportRequestDetailDialog = ({
                 <DialogHeader>
                     <DialogTitle>Chi tiết yêu cầu xuất kho</DialogTitle>
                     <DialogDescription>
-                        Mã yêu cầu: #{selectedRequest?.requestExportId} - {selectedRequest?.requestExportCode}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -125,8 +124,6 @@ export const ExportRequestDetailDialog = ({
                                     </CardHeader>
                                     <CardContent>
                                         <dl className="grid grid-cols-2 gap-1 text-sm text-left">
-                                            <dt className="text-muted-foreground">Mã yêu cầu:</dt>
-                                            <dd>#{selectedRequest.requestExportId}</dd>
 
                                             <dt className="text-muted-foreground">Mã phiếu xuất:</dt>
                                             <dd>{selectedRequest.requestExportCode}</dd>
@@ -160,12 +157,25 @@ export const ExportRequestDetailDialog = ({
                                             <dt className="text-muted-foreground">Tổng số lượng:</dt>
                                             <dd>{getTotalRequestedQuantity(selectedRequest)}</dd>
 
-                                            <dt className="text-muted-foreground">Tổng giá trị:</dt>
-                                            <dd className="font-medium">{formatCurrency(getTotalValue(selectedRequest))}</dd>
+                                            <dt className="text-muted-foreground">Tổng tiền:</dt>
+                                            <dd className="font-medium line-through text-gray-400">{formatCurrency(selectedRequest.totalPrice)}</dd>
+
+                                            <dt className="text-muted-foreground">Giảm giá:</dt>
+                                            <dd className="font-medium">{selectedRequest.discount}%</dd>
+
+
+                                            <div className="border-t border-gray-200 my-4"></div>
+                                            <div className="border-t border-gray-200 my-4"></div>
+
+
+                                            <dt className="text-muted-foreground">Thành tiền:</dt>
+                                            <dd className="font-medium">{formatCurrency(selectedRequest.finalPrice)}</dd>
                                         </dl>
                                     </CardContent>
                                 </Card>
                             </div>
+
+
 
                             <Card>
                                 <CardHeader className="pb-2">
