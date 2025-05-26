@@ -25,6 +25,7 @@ import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { FloatingChat } from "@/components/floating-chat";
+import { NotificationPopover } from "@/components/notification-popover";
 
 interface AgencyLayoutProps {
   children: ReactNode;
@@ -167,6 +168,7 @@ export function AgencyLayout({ children }: AgencyLayoutProps) {
             </div>
 
             <div className="flex items-center">
+              <NotificationPopover />
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-gray-700 hidden md:inline-block">
                   Xin chào,{" "}

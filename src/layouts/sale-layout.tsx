@@ -77,30 +77,32 @@ export function SalesLayout({ children }: SalesLayoutProps) {
       icon: <CheckCheck className="h-5 w-5" />,
     },
     {
-      title: "Quản lý đại lý",
-      href: "/sales/customer",
-      icon: <User className="h-5 w-5" />,
-    },
-    {
       title: "Sản phẩm",
       href: "/sales/product",
       icon: <Package className="h-5 w-5" />,
     },
+    {
+      title: "Quản lý đại lý",
+      href: "/sales/customer",
+      icon: <User className="h-5 w-5" />,
+    },
+
     {
       title: "Cấp đại lý",
       href: "/sales/level",
       icon: <CreditCard className="h-5 w-5" />,
     },
     {
-      title: "Hồ sơ cá nhân",
-      href: "/sales/profile",
-      icon: <User className="h-5 w-5" />,
-    },
-    {
       title: "Tin nhắn",
       href: "/sales/messages",
       icon: <MessageCircleMore className="h-5 w-5" />,
     },
+    {
+      title: "Hồ sơ cá nhân",
+      href: "/sales/profile",
+      icon: <User className="h-5 w-5" />,
+    },
+
 
     // {
     //   title: "Thuế",

@@ -54,8 +54,8 @@ const AgencyOrders = () => {
   const [isSubmittingReturn, setIsSubmittingReturn] = useState<boolean>(false)
   const [orderForReturn, setOrderForReturn] = useState<Order | null>(null)
 
-  const token = localStorage.getItem("auth_token") || ""
   const { user } = useAuth()
+  const token = localStorage.getItem("auth_token") || ""
 
   // Fetch orders from API
   const fetchOrders = async () => {
@@ -85,6 +85,11 @@ const AgencyOrders = () => {
     }
   }
 
+  useEffect(() => {
+    if (token) {
+      fetchOrders()
+    }
+  }, [token])
   // Listen for SignalR notifications
   useEffect(() => {
     const handleNewOrder = () => {
@@ -98,11 +103,6 @@ const AgencyOrders = () => {
   }, [])
 
   // Fetch orders on component mount
-  useEffect(() => {
-    if (token) {
-      fetchOrders()
-    }
-  }, [token])
 
   // Filter and sort orders when dependencies change
   useEffect(() => {
