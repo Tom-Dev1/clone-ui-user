@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
-import { Menu, Search, User, ChevronDown, LogOut, Settings, ShoppingBag } from "lucide-react"
+import { Menu, User, ChevronDown, LogOut, Settings, ShoppingBag } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -527,10 +527,6 @@ export function SiteHeader({ isHomePage = false }: SiteHeaderProps) {
                         </Button>
                     )}
 
-                    {/* Search Button */}
-                    <Button variant="ghost" size="icon">
-                        <Search className="h-5 w-5" />
-                    </Button>
 
                     {/* User Icon - Mobile */}
                     {isAuthenticated &&

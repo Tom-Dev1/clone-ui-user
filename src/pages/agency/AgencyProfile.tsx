@@ -24,7 +24,6 @@ import {
 import { toast } from "sonner";
 import { AgencyLayout } from "@/layouts/agency-layout";
 import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
 
 // Update the UserData interface to include contracts
 interface UserData {
@@ -234,9 +233,8 @@ export default function AgencyProfile() {
                   <div className="flex justify-between items-center mb-2">
                     <h4 className="font-medium text-sm">Điểm uy tín</h4>
                     <span
-                      className={`font-bold ${
-                        getScoreLevel(scoreData.totalScore).color
-                      }`}
+                      className={`font-bold ${getScoreLevel(scoreData.totalScore).color
+                        }`}
                     >
                       {scoreData.totalScore} điểm
                     </span>
@@ -249,9 +247,8 @@ export default function AgencyProfile() {
                   <p className="text-xs text-right mt-1 text-muted-foreground">
                     Mức:{" "}
                     <span
-                      className={`font-medium ${
-                        getScoreLevel(scoreData.totalScore).color
-                      }`}
+                      className={`font-medium ${getScoreLevel(scoreData.totalScore).color
+                        }`}
                     >
                       {getScoreLevel(scoreData.totalScore).level}
                     </span>
@@ -272,17 +269,7 @@ export default function AgencyProfile() {
                                   <span className="text-xs text-gray-500">
                                     {formatDate(history.createdDate)}
                                   </span>
-                                  <Badge
-                                    variant={
-                                      history.scoreChange > 0
-                                        ? "default"
-                                        : "destructive"
-                                    }
-                                    className="text-xs"
-                                  >
-                                    {history.scoreChange > 0 ? "+" : ""}
-                                    {history.scoreChange}
-                                  </Badge>
+
                                 </div>
                                 <p className="text-sm mt-1">{history.reason}</p>
                               </div>
@@ -417,9 +404,8 @@ export default function AgencyProfile() {
                         </p>
                         <div className="flex items-center mt-1">
                           <span
-                            className={`h-2 w-2 rounded-full ${
-                              userData?.status ? "bg-green-500" : "bg-red-500"
-                            } mr-2`}
+                            className={`h-2 w-2 rounded-full ${userData?.status ? "bg-green-500" : "bg-red-500"
+                              } mr-2`}
                           ></span>
                           <p className="font-medium">
                             {userData?.status
@@ -576,9 +562,9 @@ export default function AgencyProfile() {
                       Hạn mức tín dụng của bạn là{" "}
                       {userData?.creditLimit !== undefined
                         ? new Intl.NumberFormat("vi-VN", {
-                            style: "currency",
-                            currency: "VND",
-                          }).format(userData.creditLimit)
+                          style: "currency",
+                          currency: "VND",
+                        }).format(userData.creditLimit)
                         : "chưa được cấp"}
                       . Để nâng cấp tài khoản, vui lòng liên hệ với nhân viên
                       kinh doanh của chúng tôi.

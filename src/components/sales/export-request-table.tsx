@@ -122,7 +122,7 @@ export const ExportRequestTable = ({
                                             </DropdownMenuItem>
 
 
-                                            {request.status !== "Requested" && (
+                                            {request.status === "Requested" && (
                                                 <DropdownMenuItem onClick={() => handleCreateForMainWarehouse(request.requestExportId)}>
                                                     <CirclePlus className="w-4 h-4 mr-2" />
                                                     <span>Yêu cầu xuất kho</span>

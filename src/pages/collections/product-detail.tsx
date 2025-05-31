@@ -24,6 +24,14 @@ import {
 import { useCart } from "@/hooks/use-cart";
 import { formatCurrency } from "@/utils/utils";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -393,9 +401,30 @@ export default function ProductDetail() {
                   </button>
                 )
               ) : (
-                <button className="px-6 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90">
-                  Liên hệ để đặt
-                </button>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <button className="px-6 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90">
+                      Liên hệ đặt hàng
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>Liên hệ đặt hàng</DialogTitle>
+                      <DialogDescription>
+                        Vui lòng liên hệ số hotline sau để đặt hàng
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex items-center justify-center gap-2 py-4">
+                      <Phone className="h-5 w-5" />
+                      <a
+                        href="tel:0901234567"
+                        className="text-lg font-semibold text-primary hover:underline"
+                      >
+                        0901234567
+                      </a>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               )}
               <Link
                 to="/collections"
