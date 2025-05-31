@@ -6,6 +6,7 @@ import {
   type ReactNode,
 } from "react";
 import { toast } from "sonner";
+import { UserRole } from "@/types/auth-type";
 
 // Define the user information structure based on JWT claims
 interface UserInfo {
@@ -131,6 +132,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const decodedUser = decodeToken(token);
 
     if (decodedUser) {
+      // Check if user has valid role
+      const hasValidRole = Object.values(UserRole).includes(decodedUser.role as UserRole);
+
+      if (!hasValidRole) {
+        console.error("Invalid user role");
+        toast.error("Bạn không có quyền đăng nhập vào hệ thống!");
+        localStorage.clear();
+        return;
+      }
+
       setUser(decodedUser);
       localStorage.setItem("auth_token", token);
       localStorage.setItem("id", decodedUser.id);
@@ -138,9 +149,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       // Fetch additional user details
       const details = await fetchUserDetails(decodedUser.id);
-
-
-
       if (details) {
         setUserDetails(details);
         console.log("User details fetched:", details);
