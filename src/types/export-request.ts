@@ -20,6 +20,7 @@ export interface RequestExport {
     requestDate: string
     requestExportDetails: RequestExportDetail[]
     discount: number,
+    reason: string
 
     totalPrice: number
     finalPrice: number

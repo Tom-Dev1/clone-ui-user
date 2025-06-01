@@ -101,7 +101,7 @@ export const OrderDetailDialog = ({
                                                     <TableHead>Đơn vị</TableHead>
                                                     <TableHead className="text-right">Số lượng</TableHead>
                                                     <TableHead className="text-right">Đơn giá</TableHead>
-                                                    <TableHead className="text-right">Thành tiền</TableHead>
+                                                    <TableHead className="text-right">Tạm tính</TableHead>
                                                 </TableRow>
                                             </TableHeader>
                                             <TableBody>
@@ -138,7 +138,7 @@ export const OrderDetailDialog = ({
                                     </div>
                                     <Separator />
                                     <div className="flex justify-between items-center">
-                                        <span className="font-medium">Tổng tiền:</span>
+                                        <span className="font-medium">Thành tiền:</span>
                                         <span className="text-xl font-bold">{selectedOrder.finalPrice.toLocaleString("vi-VN")} đ</span>
                                     </div>
                                 </div>

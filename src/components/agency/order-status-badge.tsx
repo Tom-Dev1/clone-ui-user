@@ -27,7 +27,7 @@ export const OrderStatusBadge = ({ status }: OrderStatusBadgeProps) => {
 
         case "Canceled":
             return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 p-1 w-[100px]">
-                <span className="text-center w-[100px]">Từ chối</span>
+                <span className="text-center w-[100px]">Đã hủy</span>
             </Badge>
         default:
             return <Badge className="p-2 w-[103px] ">{status}</Badge>

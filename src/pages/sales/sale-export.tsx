@@ -55,8 +55,9 @@ const SalesExports = () => {
   // Add new state for the confirmation dialog
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false)
   const [selectedRequestForMainWarehouse, setSelectedRequestForMainWarehouse] = useState<number | null>(null)
-  const [selectedRequestCode, setSelectedRequestCode] = useState<string>("")
+  const [selectedRequestCode,] = useState<string>("")
   const [isConfirmLoading, setIsConfirmLoading] = useState(false)
+  const [, setIsCanceling] = useState(false)
 
   // Check for authentication token
   useEffect(() => {
@@ -182,15 +183,6 @@ const SalesExports = () => {
     setCurrentPage(1) // Reset to first page when changing sort
   }
 
-  // Add the handler function for creating export request for main warehouse
-  const handleCreateForMainWarehouse = (requestId: number) => {
-    const selectedRequest = exportRequests.find(request => request.requestExportId === requestId);
-    if (selectedRequest) {
-      setSelectedRequestForMainWarehouse(requestId);
-      setSelectedRequestCode(selectedRequest.requestExportCode);
-      setConfirmDialogOpen(true);
-    }
-  }
 
   // Add the function to handle the confirmation
   const handleConfirmCreateForMainWarehouse = async () => {
@@ -241,6 +233,45 @@ const SalesExports = () => {
       setIsConfirmLoading(false)
       setConfirmDialogOpen(false)
       setSelectedRequestForMainWarehouse(null)
+    }
+  }
+
+  const handleCancelRequest = async (requestId: number, reason: string) => {
+    try {
+      setIsCanceling(true)
+      const response = await fetchWithAuth("https://minhlong.mlhr.org/api/RequestExport/cancel-Request-Export", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          requestExportId: requestId,
+          reason: reason,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to cancel request")
+      }
+
+      // Refresh the requests list
+      fetchExportRequests()
+    } catch (error) {
+      console.error("Error canceling request:", error)
+      setAlertMessage({
+        type: "error",
+        title: "Lỗi",
+        message: "Không thể hủy yêu cầu xuất kho. Vui lòng thử lại sau.",
+      })
+      throw error
+    } finally {
+      setAlertMessage({
+        type: "success",
+        title: "Thành công",
+        message: "Yêu cầu xuất kho đã được hủy thành công.",
+      })
+      setIsCanceling(false)
+      setDetailsOpen(false)
     }
   }
 
@@ -321,8 +352,6 @@ const SalesExports = () => {
                 sortDirection={sortDirection}
                 handleSort={handleSort}
                 handleViewDetails={handleViewDetails}
-
-                handleCreateForMainWarehouse={handleCreateForMainWarehouse}
               />
             )}
 
@@ -360,6 +389,7 @@ const SalesExports = () => {
           setSelectedRequestForMainWarehouse(requestId)
           setConfirmDialogOpen(true)
         }}
+        onCancelRequest={handleCancelRequest}
       />
 
       {/* Add the new dialog component */}
