@@ -340,7 +340,7 @@ export default function OrderDashboard() {
                                 <Tooltip
                                     formatter={(value: number, name: string) => [
                                         name === 'revenue' ? formatCurrency(value) : formatCurrency(value),
-                                        name === 'revenue' ? 'Doanh thu' : 'Tiền'
+                                        name === 'revenue' ? 'Doanh thu' : 'Thành Tiền'
                                     ]}
                                     labelFormatter={(value) => {
                                         const date = new Date(value);
