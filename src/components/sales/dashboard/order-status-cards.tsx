@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { AlertCircle, CheckCircle, Clock, Package, TruckIcon, XCircle } from "lucide-react"
 import { getToken } from "@/utils/auth-utils"
 import { toast } from "sonner"
+import { SalesOrderCount } from "./sales-order-count"
+import { SalesRevenue } from "./sales-revenue"
 
 interface OrderStatusCount {
     status: string
@@ -133,10 +135,7 @@ export function OrderStatusCards() {
 
     return (
         <div className="space-y-6">
-            <h2 className="text-xl font-semibold">Trạng thái đơn hàng</h2>
-
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                {/* Total Orders Card */}
+            <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-3">
                 <Card>
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium text-muted-foreground">Tổng đơn hàng</CardTitle>
@@ -146,6 +145,11 @@ export function OrderStatusCards() {
                         <p className="text-xs text-muted-foreground mt-1">Tất cả đơn hàng</p>
                     </CardContent>
                 </Card>
+                <SalesOrderCount />
+                <SalesRevenue />
+            </div>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                {/* Total Orders Card */}
 
                 {/* Status Cards */}
                 {statusData.map((item) => {

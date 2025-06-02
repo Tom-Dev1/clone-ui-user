@@ -21,7 +21,6 @@ export interface RequestExport {
     requestExportDetails: RequestExportDetail[]
     discount: number,
     reason: string
-
     totalPrice: number
     finalPrice: number
 }
