@@ -45,13 +45,12 @@ export default function SalesDashboard() {
     const getStatusLabel = (status: string) => {
         switch (status) {
             case "Requested":
-                return "Chờ duyệt"
+                return "Chờ xuất kho"
             case "Approved":
-                return "Đã duyệt"
+                return "Đã xuất kho"
             case "Processing":
                 return "Chờ xử lý"
-            case "Partially_Exported":
-                return "Trả một phần"
+
             case "Canceled":
                 return "Đã hủy"
             default:
@@ -67,8 +66,6 @@ export default function SalesDashboard() {
                 return "#dcfce7" // green-50
             case "Processing":
                 return "#dbeafe" // blue-50
-            case "Partially_Exported":
-                return "#fee2e2" // red-50
             case "Canceled":
                 return "#fee2e2" // red-50
             default:
@@ -81,11 +78,10 @@ export default function SalesDashboard() {
             case "Requested":
                 return "#fde68a" // yellow-200
             case "Approved":
-                return "#86efac" // green-200
+                return "#86efac"  // green-200
             case "Processing":
                 return "#93c5fd" // blue-200
-            case "Partially_Exported":
-                return "#fca5a5" // red-200
+
             case "Canceled":
                 return "#fca5a5" // red-200
             default:
@@ -143,7 +139,7 @@ export default function SalesDashboard() {
                 }, {})
 
                 // Ensure all statuses are included with count 0 if no data
-                const allStatuses = ["Requested", "Approved", "Processing", "Partially_Exported", "Canceled"]
+                const allStatuses = ["Approved", "Canceled", "Requested", "Processing"]
                 const statusArray = allStatuses.map(status => ({
                     status: getStatusLabel(status),
                     count: statusCount[status] || 0,

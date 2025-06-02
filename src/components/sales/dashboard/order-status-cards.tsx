@@ -81,7 +81,7 @@ export function OrderStatusCards() {
                     icon: <Package className="h-5 w-5" />,
                     color: "text-indigo-500",
                     bgColor: "bg-indigo-50",
-                    label: "Chờ duyệt đơn",
+                    label: "Chờ xử lý",
                 }
             default:
                 return {
