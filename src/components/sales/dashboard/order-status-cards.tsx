@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { AlertCircle, CheckCircle, Clock, Package, TruckIcon, XCircle } from "lucide-react"
+import { AlertCircle, CheckCircle, Package, TruckIcon, XCircle } from "lucide-react"
 import { getToken } from "@/utils/auth-utils"
 import { toast } from "sonner"
 import { SalesOrderCount } from "./sales-order-count"
@@ -54,20 +54,14 @@ export function OrderStatusCards() {
     // Get appropriate icon and color for each status
     const getStatusInfo = (status: string) => {
         switch (status) {
-            case "Exported":
+            case "Approved":
                 return {
-                    icon: <Package className="h-5 w-5" />,
+                    icon: <CheckCircle className="h-5 w-5" />,
                     color: "text-blue-500",
                     bgColor: "bg-blue-50",
                     label: "Đã xuất kho",
                 }
-            case "WaitingDelivery":
-                return {
-                    icon: <Clock className="h-5 w-5" />,
-                    color: "text-yellow-500",
-                    bgColor: "bg-yellow-50",
-                    label: "Chờ giao hàng",
-                }
+
             case "Canceled":
                 return {
                     icon: <XCircle className="h-5 w-5" />,
@@ -75,19 +69,19 @@ export function OrderStatusCards() {
                     bgColor: "bg-red-50",
                     label: "Đã hủy",
                 }
-            case "Paid":
-                return {
-                    icon: <CheckCircle className="h-5 w-5" />,
-                    color: "text-green-500",
-                    bgColor: "bg-green-50",
-                    label: "Đã thanh toán",
-                }
-            case "Delivered":
+            case "Requested":
                 return {
                     icon: <TruckIcon className="h-5 w-5" />,
+                    color: "text-green-500",
+                    bgColor: "bg-green-50",
+                    label: "Chờ xuất kho",
+                }
+            case "Processing":
+                return {
+                    icon: <Package className="h-5 w-5" />,
                     color: "text-indigo-500",
                     bgColor: "bg-indigo-50",
-                    label: "Đã giao hàng",
+                    label: "Chờ duyệt đơn",
                 }
             default:
                 return {
