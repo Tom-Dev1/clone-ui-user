@@ -45,7 +45,6 @@ const SalesDebt = lazy(() => import("@/pages/sales/sale-debt"));
 const SalesProfile = lazy(() => import("@/pages/sales/sale-profile"));
 const SalesExports = lazy(() => import("@/pages/sales/sale-export"));
 const SalesProducts = lazy(() => import("@/pages/sales/sale-product"));
-const SalesCart = lazy(() => import("@/pages/sales/sale-cart"));
 
 // const AgencyDashboard = lazy(() => import("@/pages/agency/dashboard"))
 // const AgencyOrders = lazy(() => import("@/pages/agency/orders"))
@@ -200,14 +199,7 @@ export const AppRouter = () => {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/sales/cart"
-            element={
-              <ProtectedRoute requiredRole={UserRole.SALES_MANAGER}>
-                <SalesCart />
-              </ProtectedRoute>
-            }
-          />
+
           <Route
             path="/sales/profile"
             element={

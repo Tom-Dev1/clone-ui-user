@@ -168,9 +168,9 @@ export function SiteHeader({ isHomePage = false }: SiteHeaderProps) {
     const userRole = user?.role || ""
     const displayName = user?.username || userDetails?.username || "User"
 
-    const isSalesManager = () => {
-        return userRole === UserRole.SALES_MANAGER
-    }
+    // const isSalesManager = () => {
+    //     return userRole === UserRole.SALES_MANAGER
+    // }
 
     const isAgency = () => {
         return userRole === UserRole.AGENCY
@@ -446,7 +446,7 @@ export function SiteHeader({ isHomePage = false }: SiteHeaderProps) {
 
                 <div className="ml-auto flex items-center space-x-4">
                     {/* Only show cart indicator if user is verified and has appropriate role */}
-                    {isEmailVerified && (isSalesManager() || isAgency()) && (
+                    {isEmailVerified && isAgency() && (
                         <div className="mr-2">
                             <CartIndicator />
                         </div>
