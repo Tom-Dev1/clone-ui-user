@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import * as signalR from "@microsoft/signalr";
+import { toast } from "sonner";
 
 interface Manager {
   userId: string;
@@ -133,7 +134,10 @@ export function FloatingChat() {
     try {
       setLoading(true);
       const authToken = localStorage.getItem("auth_token");
-
+      if (!authToken) {
+        toast.error("Bạn cần đăng nhập để trò chuyện");
+        throw new Error("Authentication token not found");
+      }
       const response = await fetch(
         "https://minhlong.mlhr.org/api/agency/manager-by",
         {
