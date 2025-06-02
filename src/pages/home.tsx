@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import {
   ChevronLeft,
   ChevronRight,
-  Phone,
   Leaf,
   ShoppingBag,
   BookOpen,
@@ -18,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
+import { FloatingChat } from "@/components/floating-chat";
 
 export default function Home() {
   // Slideshow state and images
@@ -98,21 +98,24 @@ export default function Home() {
   // Blog posts data
   const blogPosts = [
     {
-      image: "https://resource.kinhtedothi.vn/2021/12/22/cach-cham-soc-cay-xanh-trong-nha-3.jpg ",
+      image:
+        "https://resource.kinhtedothi.vn/2021/12/22/cach-cham-soc-cay-xanh-trong-nha-3.jpg ",
       title: "Cách chăm sóc cây xanh trong nhà",
       excerpt:
         "Những bí quyết giúp cây xanh trong nhà luôn khỏe mạnh và phát triển tốt.",
       date: "15/03/2023",
     },
     {
-      image: "https://nshpos.com/Web/Resources/Uploaded/18/images/tintuc/blog/cay%20canh%20trong%20nha/cay-canh-trong-nha-1.jpg",
+      image:
+        "https://nshpos.com/Web/Resources/Uploaded/18/images/tintuc/blog/cay%20canh%20trong%20nha/cay-canh-trong-nha-1.jpg",
       title: "Top 10 cây cảnh dễ trồng cho người mới bắt đầu",
       excerpt:
         "Gợi ý những loại cây cảnh dễ chăm sóc, phù hợp với người mới bắt đầu trồng cây.",
       date: "20/04/2023",
     },
     {
-      image: "https://www.canhquanxanh.com.vn/images/images/tintuc/cay-canh-van-phong.jpg",
+      image:
+        "https://www.canhquanxanh.com.vn/images/images/tintuc/cay-canh-van-phong.jpg",
       title: "Cách bố trí cây xanh trong không gian làm việc",
       excerpt:
         "Những ý tưởng sáng tạo để bố trí cây xanh trong văn phòng làm việc.",
@@ -129,8 +132,9 @@ export default function Home() {
           {slides.map((slide, index) => (
             <div
               key={index}
-              className={`absolute inset-0 transition-opacity duration-1000 ${currentSlide === index ? "opacity-100 z-10" : "opacity-0 z-0"
-                }`}
+              className={`absolute inset-0 transition-opacity duration-1000 ${
+                currentSlide === index ? "opacity-100 z-10" : "opacity-0 z-0"
+              }`}
             >
               <img
                 src={slide.image || "/placeholder.svg"}
@@ -202,10 +206,11 @@ export default function Home() {
             <button
               key={index}
               onClick={() => goToSlide(index)}
-              className={`w-3 h-3 rounded-full transition-all ${currentSlide === index
-                ? "bg-white scale-125"
-                : "bg-white/50 hover:bg-white/80"
-                }`}
+              className={`w-3 h-3 rounded-full transition-all ${
+                currentSlide === index
+                  ? "bg-white scale-125"
+                  : "bg-white/50 hover:bg-white/80"
+              }`}
               aria-label={`Go to slide ${index + 1}`}
             />
           ))}
@@ -358,25 +363,13 @@ export default function Home() {
                   <Button className="shrink-0">Đăng ký</Button>
                 </div>
               </div>
-
             </div>
           </div>
         </ResponsiveContainer>
       </section>
 
-      {/* Add phone icon with ringing animation */}
-      <div className="fixed bottom-6 right-6 z-30">
-        <div className="relative">
-          <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping"></div>
-          <div className="absolute inset-0 bg-primary/20 rounded-full animate-pulse"></div>
-          <a
-            href="tel:02812345678"
-            className="relative flex items-center justify-center w-16 h-16 bg-primary rounded-full shadow-lg hover:bg-primary/90 transition-colors"
-          >
-            <Phone className="h-6 w-6 text-primary-foreground" />
-          </a>
-        </div>
-      </div>
+      {/* Floating chat button */}
+      <FloatingChat />
     </div>
   );
 }

@@ -607,7 +607,7 @@ export function FloatingChat() {
       {/* Floating chat button */}
       <button
         onClick={toggleChat}
-        className="fixed bottom-6 right-6 bg-green-600 text-white rounded-full p-3 shadow-lg hover:bg-green-700 transition-colors z-50"
+        className="fixed bottom-6 right-6 bg-green-600 text-white rounded-full p-4 shadow-lg hover:bg-green-700 transition-colors z-50"
         aria-label="Chat with manager"
       >
         <MessageSquare className="h-6 w-6" />
