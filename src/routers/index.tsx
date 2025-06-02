@@ -46,7 +46,6 @@ const SalesProfile = lazy(() => import("@/pages/sales/sale-profile"));
 const SalesExports = lazy(() => import("@/pages/sales/sale-export"));
 const SalesProducts = lazy(() => import("@/pages/sales/sale-product"));
 const SalesCart = lazy(() => import("@/pages/sales/sale-cart"));
-const SalesTax = lazy(() => import("@/pages/sales/sale-tax"));
 
 // const AgencyDashboard = lazy(() => import("@/pages/agency/dashboard"))
 // const AgencyOrders = lazy(() => import("@/pages/agency/orders"))
@@ -241,14 +240,7 @@ export const AppRouter = () => {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/sales/tax"
-            element={
-              <ProtectedRoute requiredRole={UserRole.SALES_MANAGER}>
-                <SalesTax />
-              </ProtectedRoute>
-            }
-          />
+
           <Route
             path="/sales/product"
             element={

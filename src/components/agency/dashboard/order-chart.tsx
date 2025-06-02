@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { Search, DollarSign, Package, Users, TrendingUp, BarChart3 } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
+import { Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 import { Order, STATUS_AGENCY_ORDER } from '@/types/agency-orders';
 import { TodayRevenue } from './today-revenue';
 import { MonthlyRevenue } from './monthly-revenue';
@@ -44,6 +44,7 @@ export default function OrderDashboard() {
     const [dateRange, setDateRange] = useState({ from: '', to: '' });
     const token = localStorage.getItem("auth_token") || "";
     const [loading, setLoading] = useState(false);
+    const [selectedYear, setSelectedYear] = useState<number>(2024);
 
     const fetchOrders = async () => {
         setLoading(true);
@@ -94,19 +95,54 @@ export default function OrderDashboard() {
 
     // Chart data preparation
     const chartData = useMemo(() => {
-        // Daily revenue chart data
-        const dailyRevenue = orders.reduce((acc, order) => {
-            const date = order.orderDate;
-            if (!acc[date]) {
-                acc[date] = { date, revenue: 0, orders: 0, discount: 0 };
-            }
-            acc[date].revenue += order.finalPrice;
-            acc[date].orders += 1;
-            acc[date].discount += order.discount;
-            return acc;
-        }, {} as Record<string, { date: string; revenue: number; orders: number; discount: number }>);
+        // Generate all months for 2024
+        const generateMonthlyData = () => {
+            // Create array of all months in 2024
+            const months = Array.from({ length: 12 }, (_, i) => {
+                const month = i + 1;
+                const date = new Date(2024, month - 1, 1).toISOString().split('T')[0];
+                return {
+                    date,
+                    revenue: 0,
+                    orders: 0,
+                    discount: 0
+                };
+            });
 
-        const revenueData = Object.values(dailyRevenue).sort((a, b) => a.date.localeCompare(b.date));
+            // Add actual data if available
+            orders.forEach(order => {
+                const orderDate = new Date(order.orderDate);
+                if (orderDate.getFullYear() === 2024) {
+                    const monthIndex = orderDate.getMonth();
+                    months[monthIndex].revenue += order.finalPrice;
+                    months[monthIndex].orders += 1;
+                    months[monthIndex].discount += order.discount;
+                }
+            });
+
+            return months;
+        };
+
+        // Process daily data for 2025
+        const processDailyData = () => {
+            const dailyRevenue = orders.reduce((acc, order) => {
+                const orderDate = new Date(order.orderDate);
+                if (orderDate.getFullYear() === 2025) {
+                    const date = order.orderDate;
+                    if (!acc[date]) {
+                        acc[date] = { date, revenue: 0, orders: 0, discount: 0 };
+                    }
+                    acc[date].revenue += order.finalPrice;
+                    acc[date].orders += 1;
+                    acc[date].discount += order.discount;
+                }
+                return acc;
+            }, {} as Record<string, { date: string; revenue: number; orders: number; discount: number }>);
+
+            return Object.values(dailyRevenue).sort((a, b) => a.date.localeCompare(b.date));
+        };
+
+        const revenueData = selectedYear === 2024 ? generateMonthlyData() : processDailyData();
 
         // Status pie chart data
         const statusData = Object.entries(stats.statusCounts).map(([status, count]) => ({
@@ -145,7 +181,7 @@ export default function OrderDashboard() {
             agencyData,
             salesData
         };
-    }, [orders, stats.statusCounts]);
+    }, [orders, stats.statusCounts, selectedYear]);
 
     // Filtered orders
     const filteredOrders = useMemo(() => {
@@ -262,30 +298,77 @@ export default function OrderDashboard() {
                     <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-semibold text-gray-900">Xu hướng doanh thu</h3>
-                            <TrendingUp className="h-5 w-5 text-blue-600" />
+                            <div className="flex items-center gap-2">
+                                <select
+                                    value={selectedYear}
+                                    onChange={(e) => setSelectedYear(Number(e.target.value))}
+                                    className="border border-gray-300 rounded-md px-2 py-1 text-sm"
+                                >
+                                    <option value={2024}>2024</option>
+                                    <option value={2025}>2025</option>
+                                </select>
+                                <TrendingUp className="h-5 w-5 text-blue-600" />
+                            </div>
                         </div>
                         <ResponsiveContainer width="100%" height={300}>
                             <AreaChart data={chartData.revenueData}>
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis
                                     dataKey="date"
-                                    tickFormatter={(value) => new Date(value).toLocaleDateString('vi-VN', { month: 'short', day: 'numeric' })}
+                                    tickFormatter={(value) => {
+                                        const date = new Date(value);
+                                        if (selectedYear === 2024) {
+                                            return date.toLocaleDateString('vi-VN', { month: 'short' });
+                                        }
+                                        return date.toLocaleDateString('vi-VN', { month: 'short', day: 'numeric' });
+                                    }}
                                 />
-                                <YAxis tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`} />
+                                <YAxis
+                                    yAxisId="left"
+                                    tickFormatter={(value) => {
+                                        if (value >= 1000000) {
+                                            return `${(value / 1000000).toFixed(1)}M`;
+                                        }
+                                        return `${(value / 1000).toFixed(0)}K`;
+                                    }}
+                                />
+                                <YAxis
+                                    yAxisId="right"
+                                    orientation="right"
+                                    tickFormatter={(value) => `${value}`}
+                                />
                                 <Tooltip
                                     formatter={(value: number, name: string) => [
                                         name === 'revenue' ? formatCurrency(value) : value,
                                         name === 'revenue' ? 'Doanh thu' : 'Số đơn'
                                     ]}
-                                    labelFormatter={(value) => `Ngày: ${formatDate(value)}`}
+                                    labelFormatter={(value) => {
+                                        const date = new Date(value);
+                                        if (selectedYear === 2024) {
+                                            return `Tháng: ${date.toLocaleDateString('vi-VN', { month: 'long', year: 'numeric' })}`;
+                                        }
+                                        return `Ngày: ${date.toLocaleDateString('vi-VN', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+                                    }}
                                 />
+                                <Legend />
                                 <Area
+                                    yAxisId="left"
                                     type="monotone"
                                     dataKey="revenue"
                                     stroke="#3B82F6"
                                     fill="#3B82F6"
                                     fillOpacity={0.1}
                                     strokeWidth={2}
+                                    name="Doanh thu"
+                                />
+                                <Line
+                                    yAxisId="right"
+                                    type="monotone"
+                                    dataKey="orders"
+                                    stroke="#10B981"
+                                    strokeWidth={2}
+                                    dot={{ r: 4 }}
+                                    name="Số đơn"
                                 />
                             </AreaChart>
                         </ResponsiveContainer>
@@ -319,10 +402,9 @@ export default function OrderDashboard() {
                     </div>
                 </div>
 
-                {/* Performance Charts */}
 
 
-                {/* Daily Orders and Revenue Comparison */}
+                {/* Daily Orders and Revenue Comparison
                 <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200 mb-8">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">So sánh đơn hàng và doanh thu theo ngày</h3>
                     <ResponsiveContainer width="100%" height={400}>
@@ -372,7 +454,7 @@ export default function OrderDashboard() {
                             />
                         </LineChart>
                     </ResponsiveContainer>
-                </div>
+                </div> */}
 
                 {/* Filters and Search */}
                 <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200 mb-6">
