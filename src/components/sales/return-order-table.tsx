@@ -186,7 +186,7 @@ export default function ReturnOrderTable({
                 </TableCell>
                 <TableCell>{order.createdByUserName}</TableCell>
                 <TableCell>{formatDate(order.createdAt)}</TableCell>
-                <TableCell>
+                <TableCell >
                   <ReturnStatusBadge
                     status={order.status}
                     getStatusInVietnamese={getStatusInVietnamese}

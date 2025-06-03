@@ -369,6 +369,7 @@ export default function SaleReviewOrderPage() {
             onApproveReturn={handleApproveReturn}
             onRejectReturn={handleRejectReturn}
             getStatusInVietnamese={getStatusInVietnamese}
+            fetchReturnOrders={fetchReturnOrders}
           />
         )}
       </div>

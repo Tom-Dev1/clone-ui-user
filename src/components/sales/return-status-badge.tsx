@@ -22,8 +22,10 @@ export default function ReturnStatusBadge({ status, getStatusInVietnamese }: Ret
     }
 
     return (
-        <Badge className={`${getStatusColor(status)} border-none`} variant="outline">
-            {getStatusInVietnamese(status)}
+        <Badge className={`${getStatusColor(status)} border-none w-24 `} variant="outline">
+            <h1 className="w-24 text-center">
+                {getStatusInVietnamese(status)}
+            </h1>
         </Badge>
     )
 }

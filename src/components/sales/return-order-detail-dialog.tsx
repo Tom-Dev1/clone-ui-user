@@ -27,6 +27,7 @@ interface ReturnOrderDetailDialogProps {
     onApproveReturn: (returnRequestId: string) => void;
     onRejectReturn?: (returnRequestId: string, reason: string) => Promise<void>;
     getStatusInVietnamese: (status: string) => string;
+    fetchReturnOrders: () => Promise<void>;
 }
 
 export default function ReturnOrderDetailDialog({
@@ -35,6 +36,7 @@ export default function ReturnOrderDetailDialog({
     onOpenChange,
     onApproveReturn,
     getStatusInVietnamese,
+    fetchReturnOrders
 }: ReturnOrderDetailDialogProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedImage, setSelectedImage] = useState<ReturnRequestImage | null>(
@@ -63,6 +65,7 @@ export default function ReturnOrderDetailDialog({
             toast.error("Không thể chấp nhận đơn trả hàng. Vui lòng thử lại.");
         } finally {
             setIsSubmitting(false);
+            await fetchReturnOrders();
         }
     };
 
@@ -103,6 +106,8 @@ export default function ReturnOrderDetailDialog({
             toast.error("Không thể từ chối đơn trả hàng. Vui lòng thử lại.");
         } finally {
             setIsSubmitting(false);
+            await fetchReturnOrders();
+
         }
     };
 
