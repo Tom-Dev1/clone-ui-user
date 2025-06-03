@@ -128,18 +128,25 @@ export default function OrderDashboard() {
             const dailyRevenue = orders.reduce((acc, order) => {
                 const orderDate = new Date(order.orderDate);
                 if (orderDate.getFullYear() === 2025) {
-                    const date = order.orderDate;
-                    if (!acc[date]) {
-                        acc[date] = { date, revenue: 0, orders: 0, discount: 0 };
+                    const dateKey = orderDate.toISOString().split('T')[0];
+                    if (!acc[dateKey]) {
+                        acc[dateKey] = {
+                            date: dateKey,
+                            revenue: 0,
+                            orders: 0,
+                            discount: 0
+                        };
                     }
-                    acc[date].revenue += order.finalPrice;
-                    acc[date].orders += 1;
-                    acc[date].discount += order.discount;
+                    acc[dateKey].revenue += order.finalPrice;
+                    acc[dateKey].orders += 1;
+                    acc[dateKey].discount += (order.totalPrice - order.finalPrice);
                 }
                 return acc;
             }, {} as Record<string, { date: string; revenue: number; orders: number; discount: number }>);
 
-            return Object.values(dailyRevenue).sort((a, b) => a.date.localeCompare(b.date));
+            // Convert to array and sort by date
+            return Object.values(dailyRevenue)
+                .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
         };
 
         const revenueData = selectedYear === 2024 ? generateMonthlyData() : processDailyData();
@@ -187,10 +194,10 @@ export default function OrderDashboard() {
     const filteredOrders = useMemo(() => {
         return orders.filter(order => {
             const matchesSearch =
-                order.orderCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                order.agencyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                order.salesName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                order.requestCode.toLowerCase().includes(searchTerm.toLowerCase());
+                (order.orderCode?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+                (order.agencyName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+                (order.salesName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+                (order.requestCode?.toLowerCase() || '').includes(searchTerm.toLowerCase());
 
             const matchesStatus = statusFilter === 'All' || order.status === statusFilter;
 
@@ -318,16 +325,16 @@ export default function OrderDashboard() {
                                     tickFormatter={(value) => {
                                         const date = new Date(value);
                                         if (selectedYear === 2024) {
-                                            return date.toLocaleDateString('vi-VN', { month: 'short' });
+                                            return `T${date.getMonth() + 1}`;
                                         }
-                                        return date.toLocaleDateString('vi-VN', { month: 'short', day: 'numeric' });
+                                        return `${date.getDate()}/${date.getMonth() + 1}`;
                                     }}
                                 />
                                 <YAxis
                                     yAxisId="left"
                                     tickFormatter={(value) => {
                                         if (value >= 1000000) {
-                                            return `${(value / 1000000).toFixed(1)}M`;
+                                            return `${(value / 1000000).toFixed(1)}Triệu`;
                                         }
                                         return `${(value / 1000).toFixed(0)}K`;
                                     }}
@@ -340,7 +347,7 @@ export default function OrderDashboard() {
                                 <Tooltip
                                     formatter={(value: number, name: string) => [
                                         name === 'revenue' ? formatCurrency(value) : formatCurrency(value),
-                                        name === 'revenue' ? 'Doanh thu' : 'Thành Tiền'
+                                        name === 'revenue' ? 'Doanh thu' : 'Doanh thu'
                                     ]}
                                     labelFormatter={(value) => {
                                         const date = new Date(value);
@@ -579,10 +586,10 @@ export default function OrderDashboard() {
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                             {formatCurrency(order.finalPrice)}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${statusColors[order.status]}`}>
+                                        <td className="px-6 py-4 whitespace-nowrap flex justify-center">
+                                            <h1 className={` w-28 px-2 py-2 text-xs font-semibold rounded-full ${statusColors[order.status]} text-center`}>
                                                 {statusLabels[order.status]}
-                                            </span>
+                                            </h1>
                                         </td>
 
                                     </tr>
