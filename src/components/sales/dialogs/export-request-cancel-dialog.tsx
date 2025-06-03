@@ -31,6 +31,7 @@ export const ExportRequestCancelDialog = ({
 
     const handleSubmit = () => {
         onCancel(reason)
+        onOpenChange(false)
     }
 
     return (

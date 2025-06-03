@@ -20,8 +20,6 @@ import { useEffect, useState } from "react"
 import { fetchWithAuth } from "@/utils/api-utils"
 import type { ApiProduct } from "@/types/export-request"
 import { formatDate, getTotalRequestedQuantity, } from "@/utils/format-export"
-import { CirclePlus, X } from "lucide-react"
-import { ExportRequestCancelDialog } from "./dialogs/export-request-cancel-dialog"
 
 interface ExportRequestDetailDialogProps {
     detailsOpen: boolean
@@ -29,7 +27,7 @@ interface ExportRequestDetailDialogProps {
     selectedRequest: RequestExport | null
     onConfirm?: () => void
     openConfirmDialog: (requestId: number) => void
-    onCancelRequest: (requestId: number, reason: string) => Promise<void>
+    onOpenCancelDialog: (requestId: number) => void
 }
 
 export const ExportRequestDetailDialog = ({
@@ -37,11 +35,9 @@ export const ExportRequestDetailDialog = ({
     detailsOpen,
     setDetailsOpen,
     selectedRequest,
-    onCancelRequest,
+    onOpenCancelDialog,
 }: ExportRequestDetailDialogProps) => {
     const [products, setProducts] = useState<ApiProduct[]>([])
-    const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false)
-    const [isCanceling, setIsCanceling] = useState(false)
 
     // Fetch products for displaying product details
     useEffect(() => {
@@ -114,18 +110,9 @@ export const ExportRequestDetailDialog = ({
         }
     }
 
-    const handleCancel = async (reason: string) => {
-        if (!selectedRequest) return
-        try {
-            setIsCanceling(true)
-            await onCancelRequest(selectedRequest.requestExportId, reason)
-            setIsCancelDialogOpen(false)
-            setDetailsOpen(false)
-        } catch (error) {
-            console.error("Error canceling request:", error)
-        } finally {
-            setIsCanceling(false)
-        }
+    const handleCancelClick = () => {
+        if (!selectedRequest) return;
+        onOpenCancelDialog(selectedRequest.requestExportId);
     }
 
     return (
@@ -256,28 +243,19 @@ export const ExportRequestDetailDialog = ({
                         </ScrollArea>
                     )}
 
-                    <DialogFooter className="pt-4">
-                        {selectedRequest?.status === "Processing" && (
-                            <>
-                                <Button
-                                    variant="destructive"
-                                    onClick={() => setIsCancelDialogOpen(true)}
-                                >
-                                    <X className="w-4 h-4 mr-2" />
-                                    <span>Hủy yêu cầu</span>
-                                </Button>
-                                <Button
-                                    className="bg-green-500 hover:bg-green-600"
-                                    onClick={() => {
-                                        setDetailsOpen(false)
-                                        openConfirmDialog(selectedRequest?.requestExportId || 0)
-                                    }}
-                                >
-                                    <CirclePlus className="w-4 h-4 mr-2" />
-                                    <span>Yêu cầu xuất kho</span>
-                                </Button>
-
-                            </>
+                    <DialogFooter>
+                        {selectedRequest && selectedRequest.status === 'Processing' && (
+                            <Button
+                                variant="destructive"
+                                onClick={handleCancelClick}
+                            >
+                                Hủy yêu cầu
+                            </Button>
+                        )}
+                        {selectedRequest && selectedRequest.status === 'Processing' && (
+                            <Button className="bg-green-500 hover:bg-green-600" onClick={() => openConfirmDialog(selectedRequest.requestExportId)}>
+                                Yêu cầu xuất kho
+                            </Button>
                         )}
                         <Button variant="outline" onClick={() => setDetailsOpen(false)}>
                             Đóng
@@ -285,14 +263,6 @@ export const ExportRequestDetailDialog = ({
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-
-            <ExportRequestCancelDialog
-                isOpen={isCancelDialogOpen}
-                onOpenChange={setIsCancelDialogOpen}
-                requestId={selectedRequest?.requestExportId || 0}
-                onCancel={handleCancel}
-                isLoading={isCanceling}
-            />
         </>
     )
 }
