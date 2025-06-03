@@ -48,13 +48,13 @@ export const ReturnOrderDetailDialog = ({ isOpen, onOpenChange, returnOrder }: R
     return (
         <>
             <Dialog open={isOpen} onOpenChange={onOpenChange}>
-                <DialogContent className="sm:max-w-[700px] max-h-[90vh] flex flex-col">
+                <DialogContent className="sm:max-w-[700px] max-h-[94vh] flex flex-col  ">
                     <DialogHeader>
                         <DialogTitle>Chi tiết đơn trả hàng</DialogTitle>
                         <DialogDescription>Mã đơn trả hàng: {returnOrder.returnRequestCode}</DialogDescription>
                     </DialogHeader>
 
-                    <ScrollArea className="flex-1 pr-4">
+                    <ScrollArea className="flex-1 pr-4 overflow-y-auto">
                         <div className="space-y-6">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
@@ -73,6 +73,13 @@ export const ReturnOrderDetailDialog = ({ isOpen, onOpenChange, returnOrder }: R
                                     <p className="text-sm font-medium text-muted-foreground">Trạng thái</p>
                                     <ReturnStatusBadge status={returnOrder.status} />
                                 </div>
+                                {returnOrder.status === "Rejected" && (
+                                    <div>
+                                        <p className="text-sm font-medium text-muted-foreground">Lý do từ chối:</p>
+                                        <p className="font-medium">{returnOrder.reason}</p>
+                                    </div>
+                                )}
+
                             </div>
 
                             {images.length > 0 && (

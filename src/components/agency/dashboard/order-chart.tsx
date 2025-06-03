@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo, useEffect } from 'react';
-import { Search, DollarSign, Package, Users, TrendingUp, BarChart3 } from 'lucide-react';
+import { Search, DollarSign, Package, TrendingUp, BarChart3 } from 'lucide-react';
 import { Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 import { Order, STATUS_AGENCY_ORDER } from '@/types/agency-orders';
 import { TodayRevenue } from './today-revenue';
@@ -95,28 +95,41 @@ export default function OrderDashboard() {
 
     // Chart data preparation
     const chartData = useMemo(() => {
-        // Generate all months for 2024
+        // Generate all months for the selected year
         const generateMonthlyData = () => {
-            // Create array of all months in 2024
-            const months = Array.from({ length: 12 }, (_, i) => {
-                const month = i + 1;
-                const date = new Date(2024, month - 1, 1).toISOString().split('T')[0];
-                return {
-                    date,
+            // Define the structure of a monthly data point
+            interface MonthlyDataPoint {
+                date: string;
+                monthNumber: number;
+                revenue: number;
+                orders: number;
+                discount: number;
+            }
+
+            const months: MonthlyDataPoint[] = [];
+            for (let i = 0; i < 12; i++) {
+                const month = i + 1; // month is 1-indexed
+                const date = new Date(selectedYear, i, 1); // Use 0-indexed month for Date constructor
+                months.push({
+                    date: date.toISOString().split('T')[0],
+                    monthNumber: month,
                     revenue: 0,
                     orders: 0,
                     discount: 0
-                };
-            });
+                });
+            }
 
             // Add actual data if available
             orders.forEach(order => {
                 const orderDate = new Date(order.orderDate);
-                if (orderDate.getFullYear() === 2024) {
+                if (orderDate.getFullYear() === selectedYear) {
                     const monthIndex = orderDate.getMonth();
-                    months[monthIndex].revenue += order.finalPrice;
-                    months[monthIndex].orders += 1;
-                    months[monthIndex].discount += order.discount;
+                    // Ensure monthIndex is within bounds (0-11)
+                    if (monthIndex >= 0 && monthIndex < 12) {
+                        months[monthIndex].revenue += order.finalPrice;
+                        months[monthIndex].orders += 1;
+                        months[monthIndex].discount += (order.totalPrice - order.finalPrice);
+                    }
                 }
             });
 
@@ -150,6 +163,11 @@ export default function OrderDashboard() {
         };
 
         const revenueData = selectedYear === 2024 ? generateMonthlyData() : processDailyData();
+
+        // Sort monthly data for 2024 to ensure correct order
+        if (selectedYear === 2024) {
+            revenueData.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        }
 
         // Status pie chart data
         const statusData = Object.entries(stats.statusCounts).map(([status, count]) => ({
@@ -249,7 +267,7 @@ export default function OrderDashboard() {
                 </div>
 
                 {/* Statistics Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
                     <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
                         <div className="flex items-center justify-between">
                             <div>
@@ -262,17 +280,6 @@ export default function OrderDashboard() {
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm font-medium text-gray-600">Tổng doanh thu</p>
-                                <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.totalRevenue)}</p>
-                            </div>
-                            <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
-                                <DollarSign className="h-6 w-6 text-green-600" />
-                            </div>
-                        </div>
-                    </div>
 
                     <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
                         <div className="flex items-center justify-between">
@@ -286,17 +293,7 @@ export default function OrderDashboard() {
                         </div>
                     </div>
 
-                    <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm font-medium text-gray-600">Đại lý hoạt động</p>
-                                <p className="text-2xl font-bold text-gray-900">{new Set(orders.map(o => o.agencyName)).size}</p>
-                            </div>
-                            <div className="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                                <Users className="h-6 w-6 text-purple-600" />
-                            </div>
-                        </div>
-                    </div>
+
                 </div>
 
                 {/* Charts Section */}
@@ -321,12 +318,12 @@ export default function OrderDashboard() {
                             <AreaChart data={chartData.revenueData}>
                                 <CartesianGrid strokeDasharray="3 3" />
                                 <XAxis
-                                    dataKey="date"
+                                    dataKey={selectedYear === 2024 ? 'monthNumber' : 'date'}
                                     tickFormatter={(value) => {
-                                        const date = new Date(value);
                                         if (selectedYear === 2024) {
-                                            return `T${date.getMonth() + 1}`;
+                                            return `T${value}`; // Value is now the month number (1-12)
                                         }
+                                        const date = new Date(value);
                                         return `${date.getDate()}/${date.getMonth() + 1}`;
                                     }}
                                 />
@@ -406,6 +403,20 @@ export default function OrderDashboard() {
                                 <Tooltip formatter={(value) => [value, 'Số đơn']} />
                             </PieChart>
                         </ResponsiveContainer>
+
+                        {/* Status Summary */}
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                            <p className="text-sm font-medium text-gray-700 mb-2">Tổng số đơn: <span className="font-semibold text-gray-900">{stats.totalOrders}</span></p>
+                            <ul className="list-disc list-inside text-sm text-gray-600">
+                                {Object.entries(stats.statusCounts).map(([status, count]) => (
+                                    <li key={status} className="flex items-center">
+                                        <span className={`inline-block w-3 h-3 rounded-full mr-2 ${statusColors[status as STATUS_AGENCY_ORDER]}`}></span>
+                                        <span>{statusLabels[status as STATUS_AGENCY_ORDER]}: </span><span className="font-semibold"> {count}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+
                     </div>
                 </div>
 
