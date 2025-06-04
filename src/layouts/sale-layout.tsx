@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { NotificationPopover } from "@/components/notification-popover";
+import { connection } from "@/lib/signalr-client";
 
 interface SalesLayoutProps {
   children: ReactNode;
@@ -32,6 +33,11 @@ interface NavItem {
   title: string;
   href: string;
   icon: React.ReactNode;
+  badge?: number;
+}
+
+interface UnreadCountResponse {
+  unreadCount: number;
 }
 
 export function SalesLayout({ children }: SalesLayoutProps) {
@@ -39,13 +45,68 @@ export function SalesLayout({ children }: SalesLayoutProps) {
   const location = useLocation();
   const userInfo = getUserInfo();
   const [open, setOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const { logout } = useAuth();
+
+  // Fetch unread messages count
+  const fetchUnreadCount = async () => {
+    try {
+      const token = localStorage.getItem("auth_token");
+      const response = await fetch(
+        "https://minhlong.mlhr.org/api/chat/chat/unread-count",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data: UnreadCountResponse = await response.json();
+        setUnreadCount(data.unreadCount);
+      }
+    } catch (error) {
+      console.error("Error fetching unread count:", error);
+    }
+  };
+
   useEffect(() => {
     if (isDesktop) {
       setOpen(false);
     }
   }, [isDesktop]);
+
+  useEffect(() => {
+    // Fetch initial unread count
+    fetchUnreadCount();
+
+    // Setup SignalR connection
+    const startConnection = async () => {
+      try {
+        // Listen for MessagesRead event
+        connection.on("MessagesRead", () => {
+          fetchUnreadCount(); // Refetch unread count when messages are read
+        });
+
+        // You might also want to listen for new message events
+        connection.on("NewMessage", () => {
+          fetchUnreadCount(); // Refetch when new messages arrive
+        });
+      } catch (error) {
+        console.error("Error starting SignalR connection:", error);
+      }
+    };
+
+    startConnection();
+
+    // Cleanup
+    return () => {
+      connection.off("MessagesRead");
+      connection.off("NewMessage");
+    };
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -64,13 +125,11 @@ export function SalesLayout({ children }: SalesLayoutProps) {
       href: "/sales/dashboard",
       icon: <LayoutDashboard className="h-5 w-5" />,
     },
-
     {
       title: "Yêu cầu xuất kho",
       href: "/sales/export",
       icon: <FileText className="h-5 w-5" />,
     },
-
     {
       title: "Duyệt trả hàng",
       href: "/sales/review-order",
@@ -86,7 +145,6 @@ export function SalesLayout({ children }: SalesLayoutProps) {
       href: "/sales/customer",
       icon: <User className="h-5 w-5" />,
     },
-
     {
       title: "Cấp đại lý",
       href: "/sales/level",
@@ -96,20 +154,43 @@ export function SalesLayout({ children }: SalesLayoutProps) {
       title: "Tin nhắn",
       href: "/sales/messages",
       icon: <MessageCircleMore className="h-5 w-5" />,
+      badge: unreadCount > 0 ? unreadCount : undefined,
     },
     {
       title: "Hồ sơ cá nhân",
       href: "/sales/profile",
       icon: <User className="h-5 w-5" />,
     },
-
-
-    // {
-    //   title: "Thuế",
-    //   href: "/sales/tax",
-    //   icon: <Receipt className="h-5 w-5" />,
-    // },
   ];
+
+  const NavItemComponent = ({
+    item,
+    onClick,
+  }: {
+    item: NavItem;
+    onClick?: () => void;
+  }) => (
+    <Link
+      key={item.href}
+      to={item.href}
+      onClick={onClick}
+      className={cn(
+        "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors relative",
+        isActive(item.href)
+          ? "bg-red-600 text-white"
+          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+      )}
+    >
+      {item.icon}
+      {item.title}
+      {item.badge && item.badge > 0 && (
+        <span className="absolute -top-1 left-6 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center min-w-[20px]">
+          {item.badge > 99 ? "99+" : item.badge}
+        </span>
+      )}
+    </Link>
+  );
+
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
@@ -143,20 +224,11 @@ export function SalesLayout({ children }: SalesLayoutProps) {
                       <div className="py-4">
                         <nav className="px-2 space-y-1">
                           {navItems.map((item) => (
-                            <Link
+                            <NavItemComponent
                               key={item.href}
-                              to={item.href}
+                              item={item}
                               onClick={() => setOpen(false)}
-                              className={cn(
-                                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                                isActive(item.href)
-                                  ? "bg-red-600 text-white"
-                                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                              )}
-                            >
-                              {item.icon}
-                              {item.title}
-                            </Link>
+                            />
                           ))}
                         </nav>
                         <Separator className="my-4" />
@@ -212,19 +284,7 @@ export function SalesLayout({ children }: SalesLayoutProps) {
           <ScrollArea className="h-full">
             <nav className="p-4 space-y-1">
               {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  to={item.href}
-                  className={cn(
-                    "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                    isActive(item.href)
-                      ? "bg-red-600 text-white"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                  )}
-                >
-                  {item.icon}
-                  {item.title}
-                </Link>
+                <NavItemComponent key={item.href} item={item} />
               ))}
             </nav>
           </ScrollArea>

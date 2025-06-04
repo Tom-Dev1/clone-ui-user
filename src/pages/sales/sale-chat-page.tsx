@@ -40,7 +40,8 @@ interface ChatRoom {
   lastTimestamp: string;
   members: Member[];
   lastUserId: string;
-  hasUnread?: boolean; // Client-side flag for unread status
+  hasUnread?: boolean;
+  isRead?: boolean;
 }
 
 interface ChatMessage {
@@ -127,20 +128,18 @@ export default function ChatPage() {
       }
 
       const data: Omit<ChatRoom, "hasUnread">[] = await response.json();
-      // Initialize rooms with hasUnread = false
-      const roomsWithUnreadFlag = data.map((room) => ({
-        ...room,
-        hasUnread: false,
-      }));
-      setRooms(roomsWithUnreadFlag);
 
-      if (roomsWithUnreadFlag.length > 0 && !selectedRoom) {
-        // Auto-select the first room. Mark-as-read will be handled by handleRoomClick if needed.
-        await handleRoomClick(
-          roomsWithUnreadFlag[0].chatRoomId,
-          roomsWithUnreadFlag
-        );
-      }
+      // Modify rooms data based on the `isRead` flag of messages
+      const roomsWithUnreadFlag = data.map((room) => {
+        // Check if any message is unread for this room
+        const hasUnreadMessages = room.isRead === false; // Check if any message is unread in this room
+        return {
+          ...room,
+          hasUnread: hasUnreadMessages,
+        };
+      });
+
+      setRooms(roomsWithUnreadFlag);
     } catch (error) {
       console.error("Error fetching chat rooms:", error);
     } finally {
@@ -185,20 +184,23 @@ export default function ChatPage() {
   // Update room list when a new message is received
   const updateRoomWithNewMessage = (message: ChatMessage) => {
     setRooms((prevRooms) => {
-      const currentUserId = localStorage.getItem("id"); // Ensure userId is up-to-date
+      const currentUserId = localStorage.getItem("id");
       return prevRooms
         .map((room) => {
           if (room.chatRoomId === message.chatRoomId) {
             let newHasUnread = room.hasUnread;
+
+            // Mark as unread if the message is unread (isRead === false) and it's not from the current user
             if (
+              message.isRead === false &&
               message.senderId !== currentUserId &&
               message.chatRoomId !== selectedRoom
             ) {
-              newHasUnread = true; // Mark as unread if message from other, and room not active
+              newHasUnread = true; // Set unread if the message is from another user and room is not selected
             } else if (message.chatRoomId === selectedRoom) {
-              newHasUnread = false; // If room is active, it's considered "read" contextually
+              // If you are in the selected room, mark as read
+              newHasUnread = false;
             }
-            // Otherwise, if message from self, or from other in non-selected but already read room, keep current `hasUnread`
 
             return {
               ...room,
@@ -218,7 +220,6 @@ export default function ChatPage() {
           return room;
         })
         .sort(
-          // Keep rooms sorted by last message
           (a, b) =>
             new Date(b.lastTimestamp).getTime() -
             new Date(a.lastTimestamp).getTime()
@@ -530,90 +531,51 @@ export default function ChatPage() {
   };
 
   // Handle clicking a room in the sidebar
-  const handleRoomClick = async (
-    roomId: string,
-    currentRoomsState?: ChatRoom[]
-  ) => {
-    const roomsSource = currentRoomsState || rooms; // Use passed state if available (for initial load)
-    const roomToSelect = roomsSource.find((r) => r.chatRoomId === roomId);
+  const handleRoomClick = async (roomId: string) => {
+    // Call the mark-as-read API when a room is clicked
+    console.log("Calling mark-as-read API for room:", roomId); // Debug log
+    try {
+      const authToken = localStorage.getItem("auth_token");
+      if (!authToken) {
+        console.error("Auth token not found.");
+        setSelectedRoom(roomId);
+        return;
+      }
 
-    if (selectedRoom === roomId && roomToSelect && !roomToSelect.hasUnread)
-      return; // Avoid re-processing if already selected and read
-
-    if (roomToSelect && roomToSelect.hasUnread) {
-      try {
-        const authToken = localStorage.getItem("auth_token");
-        if (!authToken) {
-          console.error("Mark-as-read: Auth token not found.");
-          // Proceed to select room anyway
-          setSelectedRoom(roomId);
-          setRooms((prev) =>
-            prev.map((r) =>
-              r.chatRoomId === roomId ? { ...r, hasUnread: false } : r
-            )
-          );
-          return;
+      const response = await fetch(
+        "https://minhlong.mlhr.org/api/chat/mark-as-read",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
+          body: JSON.stringify({ chatRoomId: roomId }),
         }
-        const response = await fetch(
-          "https://minhlong.mlhr.org/api/chat/mark-as-read",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${authToken}`,
-            },
-            body: JSON.stringify({ chatRoomId: roomId }),
-          }
+      );
+
+      console.log("API Response Status:", response.status); // Debug log
+
+      if (response.ok) {
+        fetchInitialRooms(); // Refresh rooms list after marking as read
+        // Mark the room as read in the local state
+        setRooms((prevRooms) =>
+          prevRooms.map((r) =>
+            r.chatRoomId === roomId ? { ...r, hasUnread: false } : r
+          )
         );
-        if (response.ok) {
-          console.log(`✅ Marked room ${roomId} as read via API.`);
-          setRooms((prevRooms) =>
-            prevRooms.map((r) =>
-              r.chatRoomId === roomId ? { ...r, hasUnread: false } : r
-            )
-          );
-        } else {
-          console.error(
-            `Failed to mark room ${roomId} as read. Status: ${response.status}`
-          );
-          // Optimistically mark as read on client even if API fails, to remove dot
-          setRooms((prevRooms) =>
-            prevRooms.map((r) =>
-              r.chatRoomId === roomId ? { ...r, hasUnread: false } : r
-            )
-          );
-        }
-      } catch (error) {
-        console.error("Error calling mark-as-read API:", error);
-        setRooms(
-          (
-            prevRooms // Optimistically mark as read
-          ) =>
-            prevRooms.map((r) =>
-              r.chatRoomId === roomId ? { ...r, hasUnread: false } : r
-            )
+      } else {
+        console.error(
+          `Failed to mark room ${roomId} as read. Status: ${response.status}`
         );
       }
-    } else if (
-      roomToSelect &&
-      !roomToSelect.hasUnread &&
-      selectedRoom !== roomId
-    ) {
-      // If room is already marked as read on client, but we are selecting it.
-      // No API call needed, just update state if it was not already selected.
+    } catch (error) {
+      console.error("Error calling mark-as-read API:", error);
     }
 
-    // If the room was not previously unread, or after attempting to mark as read
+    // Select the room
     if (selectedRoom !== roomId) {
-      setSelectedRoom(roomId); // This triggers useEffect for messages and SignalR
-    } else {
-      // If it was already the selected room but somehow marked unread and now clicked again
-      // (e.g. optimistic update failed but user clicks again), ensure dot is removed.
-      setRooms((prevRooms) =>
-        prevRooms.map((r) =>
-          r.chatRoomId === roomId ? { ...r, hasUnread: false } : r
-        )
-      );
+      setSelectedRoom(roomId);
     }
   };
 
