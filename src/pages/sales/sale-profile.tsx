@@ -69,7 +69,7 @@ export default function SaleProfile() {
     }, [userInfo?.id])
 
 
-
+    const nameDisplay = localStorage.getItem('name') || 'User'
     return (
         <SalesLayout>
             <div className="container mx-auto py-6 px-4 md:px-6">
@@ -87,10 +87,10 @@ export default function SaleProfile() {
                         <div className="flex flex-col items-center space-y-4">
                             <Avatar className="h-24 w-24">
                                 <AvatarImage src={profileImage} alt="Avatar" />
-                                <AvatarFallback>{userData?.username?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
+                                <AvatarFallback>{nameDisplay.charAt(0).toUpperCase() || "U"}</AvatarFallback>
                             </Avatar>
                             <div className="text-center">
-                                <h3 className="font-medium text-lg">{userData?.username || "Chưa có thông tin"}</h3>
+                                <h3 className="font-medium text-lg">{nameDisplay || "Chưa có thông tin"}</h3>
                                 <p className="text-muted-foreground">{userData?.department || "Nhân viên kinh doanh"}</p>
                             </div>
                         </div>
@@ -102,7 +102,7 @@ export default function SaleProfile() {
                                 <User className="h-5 w-5 text-gray-500" />
                                 <div>
                                     <p className="text-sm font-medium text-gray-500">Tên người dùng</p>
-                                    <p className="text-base">{userData?.username || "Chưa có thông tin"}</p>
+                                    <p className="text-base">{nameDisplay || "Chưa có thông tin"}</p>
                                 </div>
                             </div>
 

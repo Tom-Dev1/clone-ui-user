@@ -4,7 +4,6 @@ import type React from "react";
 
 import { type ReactNode, useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { getUserInfo } from "@/utils/auth-utils";
 import { UserAvatar } from "@/components/user-avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -40,10 +39,12 @@ interface NavItem {
 export function AgencyLayout({ children }: AgencyLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const userInfo = getUserInfo();
   const [open, setOpen] = useState(false);
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const { logout } = useAuth();
+
+
+  const name = localStorage.getItem('name')
   // Close sheet when screen size changes to desktop
   useEffect(() => {
     if (isDesktop) {
@@ -173,7 +174,7 @@ export function AgencyLayout({ children }: AgencyLayoutProps) {
                 <span className="text-sm text-gray-700 hidden md:inline-block">
                   Xin chào,{" "}
                   <span className="font-medium">
-                    {userInfo?.username || "Đại lý"}
+                    {name || "Đại lý"} !
                   </span>
                 </span>
                 <UserAvatar size="sm" />

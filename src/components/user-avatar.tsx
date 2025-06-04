@@ -1,5 +1,4 @@
 import { cn } from "@/lib/utils"
-import { getUserDisplayName } from "@/utils/auth-utils"
 import { User } from "lucide-react"
 
 
@@ -11,7 +10,7 @@ interface UserAvatarProps {
 
 export function UserAvatar({ size = "md", showInitial = true, className }: UserAvatarProps) {
     // Get user's initial from the auth utils
-    const displayName = getUserDisplayName()
+    const displayName = localStorage.getItem('name') || 'User'
     const initial = displayName.charAt(0).toUpperCase()
 
     const sizeClasses = {

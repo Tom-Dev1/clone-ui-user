@@ -37,27 +37,27 @@ type MenuItem = {
 
 // Define the base menu items
 const baseMenuItems: MenuItem[] = [
-    {
-        title: "GIỚI THIỆU",
-        href: "/pages/about-us",
-    },
+    // {
+    //     title: "GIỚI THIỆU",
+    //     href: "/pages/about-us",
+    // },
     {
         title: "SẢN PHẨM",
         href: "/collections",
         items: [], // Will be populated from API
     },
-    {
-        title: "KIẾN THỨC CÂY TRỒNG",
-        href: "/blogs/kien-thuc-cay-trong",
-    },
-    {
-        title: "TIN TỨC",
-        href: "/blogs/news",
-    },
-    {
-        title: "LIÊN HỆ",
-        href: "/pages/lien-he",
-    },
+    // {
+    //     title: "KIẾN THỨC CÂY TRỒNG",
+    //     href: "/blogs/kien-thuc-cay-trong",
+    // },
+    // {
+    //     title: "TIN TỨC",
+    //     href: "/blogs/news",
+    // },
+    // {
+    //     title: "LIÊN HỆ",
+    //     href: "/pages/lien-he",
+    // },
 ]
 
 // Define a new interface for menu items with categoryId

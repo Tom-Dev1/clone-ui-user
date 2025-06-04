@@ -35,7 +35,6 @@ export const PaymentDialog = ({
     paymentAmount,
     onPaymentAmountChange,
     paymentDescription,
-    onPaymentDescriptionChange,
     onPaymentSubmit,
     actionLoading,
     errorMessage, // Add this prop
@@ -108,7 +107,7 @@ export const PaymentDialog = ({
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                    <DialogTitle>Thanh toán đơn hàng</DialogTitle>
+                    <DialogTitle>Thanh toán đơn hàng    </DialogTitle>
                     <DialogDescription>
                         Nhập số tiền bạn muốn thanh toán cho đơn hàng {orderToPayment?.orderCode}
                     </DialogDescription>
@@ -123,7 +122,7 @@ export const PaymentDialog = ({
                     )}
 
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <label htmlFor="amount" className="text-right">
+                        <label htmlFor="amount" className="text-center">
                             Số tiền
                         </label>
                         <Input
@@ -135,20 +134,14 @@ export const PaymentDialog = ({
                             className="col-span-3"
                         />
                     </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <label htmlFor="description" className="text-right">
-                            Mô tả
+                    <div className="grid grid-cols-2 items-center gap-4">
+                        <label htmlFor="description" className="text-center">
+                            Nội dung chuyển tiền:
                         </label>
-                        <Input
-                            id="description"
-                            value={paymentDescription}
-                            onChange={(e) => onPaymentDescriptionChange(e.target.value)}
-                            placeholder="Mô tả thanh toán"
-                            className="col-span-3"
-                        />
+                        <div>{paymentDescription}</div>
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <span className="text-right">Tổng tiền</span>
+                        <span className="text-center">Tổng tiền</span>
                         <span className="col-span-3 font-medium">{orderToPayment?.finalPrice.toLocaleString("vi-VN")} đ</span>
                     </div>
 

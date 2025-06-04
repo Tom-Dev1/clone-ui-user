@@ -1,7 +1,6 @@
 import type React from "react";
 import { type ReactNode, useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { getUserInfo } from "@/utils/auth-utils";
 import { UserAvatar } from "@/components/user-avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -43,12 +42,11 @@ interface UnreadCountResponse {
 export function SalesLayout({ children }: SalesLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const userInfo = getUserInfo();
   const [open, setOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const { logout } = useAuth();
-
+  const nameDis = localStorage.getItem('name')
   // Fetch unread messages count
   const fetchUnreadCount = async () => {
     try {
@@ -257,9 +255,9 @@ export function SalesLayout({ children }: SalesLayoutProps) {
               <NotificationPopover />
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-gray-700 hidden md:inline-block">
-                  Xin chào,{" "}
+                  Xin chào quản lý,{" "}
                   <span className="font-medium">
-                    Quản lý {userInfo?.username || "Quản lý"}
+                    {nameDis || "Quản lý"}
                   </span>
                 </span>
                 <UserAvatar size="sm" />

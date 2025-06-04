@@ -31,6 +31,8 @@ interface UserData {
   username: string;
   email: string;
   password: string;
+  name: string
+
   userType: string;
   phone: string;
   status: boolean;
@@ -311,7 +313,7 @@ export default function AgencyProfile() {
                           Tên người dùng
                         </p>
                         <p className="font-medium">
-                          {userData?.username || "Chưa có thông tin"}
+                          {userData?.name || "Chưa có thông tin"}
                         </p>
                       </div>
                     </div>
