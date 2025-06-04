@@ -496,7 +496,7 @@ export function FloatingChat() {
         chatRoomId: chatRoomId,
         senderId: userId,
         senderName: "You", // This will be replaced when the server confirms
-        messageText: messageInput || "Đã gửi một hình ảnh",
+        messageText: messageInput || "Đã gửi hình ảnh",
         timestamp: new Date().toISOString(),
         isRead: false,
         imageUrls: fileUrls,
@@ -513,7 +513,7 @@ export function FloatingChat() {
         "SendMessage",
         chatRoomId,
         userId,
-        messageInput || "Đã gửi một hình ảnh",
+        messageInput || "Đã gửi hình ảnh",
         fileUrls,
         publicIds
       );
