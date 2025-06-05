@@ -10,13 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import {
-  MoreHorizontal,
-  Eye,
-  CheckCircle,
-  ArrowUpDown,
-  XCircle,
-} from "lucide-react";
+import { MoreHorizontal, Eye, ArrowUpDown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -52,7 +46,6 @@ interface ReturnOrderTableProps {
 export default function ReturnOrderTable({
   returnOrders,
   onViewDetails,
-  onApproveReturn,
   onRejectReturn,
   sortField,
   sortDirection,
@@ -87,12 +80,6 @@ export default function ReturnOrderTable({
   // Get product names as a comma-separated string
   const getProductNames = (order: ReturnRequest) => {
     return order.details.map((detail) => detail.productName).join(", ");
-  };
-
-  const handleRejectClick = (returnRequestId: string) => {
-    setSelectedReturnRequestId(returnRequestId);
-    setRejectReason("");
-    setIsRejectDialogOpen(true);
   };
 
   const handleRejectSubmit = async () => {
@@ -186,7 +173,7 @@ export default function ReturnOrderTable({
                 </TableCell>
                 <TableCell>{order.createdByUserName}</TableCell>
                 <TableCell>{formatDate(order.createdAt)}</TableCell>
-                <TableCell >
+                <TableCell>
                   <ReturnStatusBadge
                     status={order.status}
                     getStatusInVietnamese={getStatusInVietnamese}
@@ -205,29 +192,6 @@ export default function ReturnOrderTable({
                         <Eye className="mr-2 h-4 w-4" />
                         Xem chi tiết
                       </DropdownMenuItem>
-
-                      {order.status === "Pending" && (
-                        <>
-                          <DropdownMenuItem
-                            className="text-green-600"
-                            onClick={() =>
-                              onApproveReturn(order.returnRequestId)
-                            }
-                          >
-                            <CheckCircle className="h-4 w-4 mr-2" />
-                            Chấp nhận
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="text-red-600"
-                            onClick={() =>
-                              handleRejectClick(order.returnRequestId)
-                            }
-                          >
-                            <XCircle className="h-4 w-4 mr-2" />
-                            Từ chối
-                          </DropdownMenuItem>
-                        </>
-                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
