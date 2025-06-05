@@ -144,7 +144,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       setUser(decodedUser);
       localStorage.setItem("auth_token", token);
-      localStorage.setItem("id", decodedUser.id);
       console.log("User authenticated:", decodedUser);
 
       // Fetch additional user details
