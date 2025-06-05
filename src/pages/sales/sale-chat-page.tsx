@@ -1192,7 +1192,7 @@ export default function ChatPage() {
                                   // Style for optimistic messages
                                   message.chatMessageId
                                 ) && message.chatMessageId.startsWith("temp_") // Only if it's a temp ID
-                                  ? "opacity-70" // Example: reduced opacity
+                                  ? "opacity-100"
                                   : "opacity-100"
                               )}
                             >
