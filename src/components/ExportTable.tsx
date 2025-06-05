@@ -113,6 +113,7 @@ export function ExportTable({ data }: ExportTableProps) {
                             type="date"
                             className="px-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             value={dateRange.from}
+                            max={new Date().toISOString().split('T')[0]}
                             onChange={(e) => setDateRange(prev => ({ ...prev, from: e.target.value }))}
                         />
                     </div>
@@ -124,6 +125,7 @@ export function ExportTable({ data }: ExportTableProps) {
                             className="px-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             value={dateRange.to}
                             min={dateRange.from || undefined}
+                            max={new Date().toISOString().split('T')[0]}
                             onChange={(e) => {
                                 const selectedDate = e.target.value;
                                 if (!dateRange.from || selectedDate >= dateRange.from) {
