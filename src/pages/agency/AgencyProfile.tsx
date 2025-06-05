@@ -83,7 +83,7 @@ export default function AgencyProfile() {
         }
 
         const response = await fetch(
-          `https://minhlong.mlhr.org/api/get-info-user/${userInfo.id}`,
+          `https://minhlong.mlhr.org/api/get-info-user`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
