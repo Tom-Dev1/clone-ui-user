@@ -14,10 +14,10 @@ const statusColors: { [key: string]: string } = {
 };
 
 const statusLabels: { [key: string]: string } = {
-    Approved: "Đã duyệt",
+    Approved: "Đã xuất kho",
     Canceled: "Đã hủy",
-    Requested: "Đã yêu cầu",
-    Processing: "Đang xử lý"
+    Requested: "Chờ xuất kho",
+    Processing: "Chờ xử lý"
 };
 
 export function ExportTable({ data }: ExportTableProps) {
