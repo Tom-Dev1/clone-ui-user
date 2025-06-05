@@ -317,7 +317,7 @@ const AgencyOrders = () => {
     <AgencyLayout>
       <div className="m-4">
         <div className="mb-4">
-          <h1 className="text-2xl font-bold">Quản Lý đơn hàng của tôi</h1>
+          <h1 className="text-2xl font-bold">Quản lý đơn hàng của tôi</h1>
           <p className="text-gray-500 mt-1">Xem lại đơn hàng mà bạn đã yêu cầu</p>
         </div>
 

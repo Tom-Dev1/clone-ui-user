@@ -232,6 +232,7 @@ const SalesExports = () => {
     } finally {
       setIsConfirmLoading(false)
       setConfirmDialogOpen(false)
+      setDetailsOpen(false)
       setSelectedRequestForMainWarehouse(null)
     }
   }
