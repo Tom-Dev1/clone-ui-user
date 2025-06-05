@@ -202,7 +202,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
           const details = await fetchUserDetails();
           if (details) {
             setUserDetails(details);
-            console.log("User details fetched:", details);
           }
         } else {
           // Token is invalid or expired
