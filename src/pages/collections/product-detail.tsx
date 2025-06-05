@@ -31,7 +31,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
+import { FloatingChat } from "@/components/floating-chat";
 
 export default function ProductDetail() {
   const { id } = useParams<{ id: string }>();
@@ -267,10 +268,11 @@ export default function ProductDetail() {
                   <button
                     key={index}
                     onClick={() => setActiveImageIndex(index)}
-                    className={`w-20 h-20 rounded-md border overflow-hidden flex-shrink-0 transition-all duration-200 ${activeImageIndex === index
-                      ? "ring-2 ring-primary scale-105"
-                      : "hover:ring-1 hover:ring-primary/50 hover:scale-[1.02]"
-                      }`}
+                    className={`w-20 h-20 rounded-md border overflow-hidden flex-shrink-0 transition-all duration-200 ${
+                      activeImageIndex === index
+                        ? "ring-2 ring-primary scale-105"
+                        : "hover:ring-1 hover:ring-primary/50 hover:scale-[1.02]"
+                    }`}
                     aria-label={`View image ${index + 1}`}
                     aria-current={activeImageIndex === index ? "true" : "false"}
                   >
@@ -437,7 +439,7 @@ export default function ProductDetail() {
         </div>
       </ResponsiveContainer>
 
-      <div className="fixed bottom-6 right-6 z-30">
+      {/* <div className="fixed bottom-6 right-6 z-30">
         <div className="relative">
           <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping"></div>
           <div className="absolute inset-0 bg-primary/20 rounded-full animate-pulse"></div>
@@ -448,7 +450,9 @@ export default function ProductDetail() {
             <Phone className="h-6 w-6 text-primary-foreground" />
           </a>
         </div>
-      </div>
+      </div> */}
+      {/* Floating chat button */}
+      <FloatingChat />
     </div>
   );
 }
