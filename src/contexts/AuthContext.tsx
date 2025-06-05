@@ -27,6 +27,7 @@ export interface UserDetails {
   phone: string;
   status: boolean;
   verifyEmail: boolean;
+  name: string;
 }
 
 // Define the auth context state
