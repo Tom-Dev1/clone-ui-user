@@ -64,8 +64,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const baseURL = `https://minhlong.mlhr.org`;
 
   // Function to fetch user details from API
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const fetchUserDetails = async (userId: string) => {
+  const fetchUserDetails = async () => {
     try {
       const token = localStorage.getItem("auth_token");
       if (!token) return null;
@@ -149,7 +148,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.log("User authenticated:", decodedUser);
 
       // Fetch additional user details
-      const details = await fetchUserDetails(decodedUser.id);
+      const details = await fetchUserDetails();
       if (details) {
         setUserDetails(details);
         console.log("User details fetched:", details);
@@ -200,7 +199,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           setUser(decodedUser);
 
           // Fetch additional user details
-          const details = await fetchUserDetails(decodedUser.id);
+          const details = await fetchUserDetails();
           if (details) {
             setUserDetails(details);
             console.log("User details fetched:", details);
