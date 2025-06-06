@@ -47,10 +47,16 @@ export const OrderDetailDialog = ({
                             <DialogTitle className="text-xl">Chi tiết đơn hàng</DialogTitle>
                             <DialogDescription className="mt-1">
                                 Mã đơn hàng: <span className="font-medium">{selectedOrder.orderCode}</span>
+
                             </DialogDescription>
                         </div>
                         <OrderStatusBadge status={selectedOrder.status} />
                     </div>
+                    {selectedOrder.status === 'Canceled' && (<>
+                        <div className="text-base text-muted-foreground font-bold">Lý do hủy đơn hàng: <span className="text-gray-600 italic">{selectedOrder.reason}</span></div>
+                    </>)}
+
+
                 </DialogHeader>
 
                 <ScrollArea className="px-6 py-4 max-h-[calc(90vh-180px)]">

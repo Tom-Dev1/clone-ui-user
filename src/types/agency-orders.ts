@@ -22,6 +22,7 @@ export interface Order {
     status: STATUS_AGENCY_ORDER
     salesName: string;
     agencyName: string;
+    reason: string,
     requestCode: string;
     orderDetails: OrderDetail[];
 }
