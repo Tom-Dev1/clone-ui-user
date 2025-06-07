@@ -44,7 +44,7 @@ const AgencyPaymentHistoryPage: React.FC = () => {
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState<number>(1)
-  const [itemsPerPage] = useState<number>(8) // Changed from 15 to 8 items per page
+  const [itemsPerPage] = useState<number>(10) // Changed from 15 to 8 items per page
 
   const token = localStorage.getItem("auth_token") || ""
 
