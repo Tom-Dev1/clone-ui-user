@@ -180,7 +180,7 @@ const AgencyPaymentHistoryPage: React.FC = () => {
       }
       console.log("paymentData:...", paymentData)
 
-      const response = await fetch(`https://minhlong.mlhr.org/api/Payment/${userId}`, {
+      const response = await fetch(`https://minhlong.mlhr.org/api/Payment/debt-pay/${userId}`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
