@@ -63,15 +63,15 @@ export const PaymentDialog = ({
     }
 
     // Handle pay all button click
-    const handlePayAll = () => {
-        if (selectedPayment) {
-            // Set payment amount to remaining debt amount
-            onPaymentAmountChange(selectedPayment.remainingDebtAmount.toString())
+    // const handlePayAll = () => {
+    //     if (selectedPayment) {
+    //         // Set payment amount to remaining debt amount
+    //         onPaymentAmountChange(selectedPayment.remainingDebtAmount.toString())
 
-            // Submit the payment
-            onPaymentSubmit()
-        }
-    }
+    //         // Submit the payment
+    //         onPaymentSubmit()
+    //     }
+    // }
 
     // Validate payment amount when it changes
     useEffect(() => {
@@ -153,14 +153,14 @@ export const PaymentDialog = ({
                     <Button variant="outline" onClick={() => onOpenChange(false)} className="sm:order-1">
                         Hủy
                     </Button>
-                    <Button
+                    {/* <Button
                         variant="outline"
                         onClick={handlePayAll}
                         disabled={isLoading || !selectedPayment || selectedPayment.remainingDebtAmount <= 0}
                         className="sm:order-2"
                     >
                         Thanh toán hết
-                    </Button>
+                    </Button> */}
                     <Button
                         onClick={onPaymentSubmit}
                         disabled={isLoading || !!errorMessage || !paymentAmount}
