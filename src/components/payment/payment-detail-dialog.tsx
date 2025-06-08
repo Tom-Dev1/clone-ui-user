@@ -14,7 +14,7 @@ import { vi } from "date-fns/locale"
 import { PaymentStatusBadge } from "./payment-status-badge"
 import { formatCurrency } from "@/utils/format-utils"
 import type { PaymentHistory } from "@/types/payment-history"
-import { Receipt, Calendar, CreditCard, User, Hash, Banknote, ArrowRight, Clock } from "lucide-react"
+import { Receipt, Calendar, CreditCard, User, Hash, Banknote, Clock } from "lucide-react"
 import { DebtStatusBadge } from "./debt-status-badge"
 import { useState } from "react"
 import { PaymentDialog } from "./payment-dialog"
@@ -49,10 +49,10 @@ export function PaymentDetailDialog({
     }
 
     // Handle opening payment dialog
-    const handleOpenPaymentDialog = () => {
-        setIsPaymentDialogOpen(true)
-        onOpenChange(false) // Close the detail dialog
-    }
+    // const handleOpenPaymentDialog = () => {
+    //     setIsPaymentDialogOpen(true)
+    //     onOpenChange(false) // Close the detail dialog
+    // }
 
     // Handle payment dialog close
     const handlePaymentDialogClose = (open: boolean) => {
@@ -212,12 +212,12 @@ export function PaymentDetailDialog({
                     </div>
 
                     <DialogFooter>
-                        {payment.status === "PARTIALLY_PAID" && (
+                        {/* {payment.status === "PARTIALLY_PAID" && (
                             <Button className="mr-auto bg-green-600 hover:bg-green-700" onClick={handleOpenPaymentDialog}>
                                 <ArrowRight className="mr-2 h-4 w-4" />
                                 Tiếp tục thanh toán
                             </Button>
-                        )}
+                        )} */}
                         <Button variant="outline" onClick={() => onOpenChange(false)}>
                             Đóng
                         </Button>

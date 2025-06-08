@@ -136,6 +136,7 @@ export const PaymentDialog = ({
                             className="col-span-3"
                         />
                     </div>
+
                     {selectedPayment && (
                         <>
                             <div className="grid grid-cols-4 items-center gap-4">
